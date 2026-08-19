@@ -138,11 +138,11 @@ background-size:110px 110px,170px 170px}
       <div class="app-tile" onclick="openApp('explorer');toggleStart()"><b>📁</b>ファイル エクスプローラー</div>
       <div class="app-tile" onclick="openApp('editor');toggleStart()"><b>📝</b>テキスト エディター</div>
       <div class="app-tile" onclick="openApp('terminal');toggleStart()"><b>⌨️</b>ターミナル</div>
-      <div class="app-tile" onclick="openQuickSettings();toggleStart()"><b>⚡</b>クイック設定</div>
-      <div class="app-tile" onclick="openApp('taskmgr');toggleStart()"><b>📊</b>タスク マネージャー</div>
+      <!--<div class="app-tile" onclick="openQuickSettings();toggleStart()"><b>⚡</b>クイック設定</div>
+      <div class="app-tile" onclick="openApp('taskmgr');toggleStart()"><b>📊</b>タスク マネージャー</div>-->
       <div class="app-tile" onclick="openApp('calculator');toggleStart()"><b>🧮</b>電卓</div>
       <div class="app-tile" onclick="openApp('browser');toggleStart()"><b>🌐</b>ブラウザ</div>
-      <div class="app-tile" onclick="openApp('settings');toggleStart()"><b>⚙️</b>設定</div>
+      <!--<div class="app-tile" onclick="openApp('settings');toggleStart()"><b>⚙️</b>設定</div>-->
       <div class="app-tile" onclick="openApp('about');toggleStart()"><b>ℹ️</b>WebOS 10 について</div>
     </div>
   </div>
@@ -717,7 +717,7 @@ function openApp(app){
   if(app==='taskmgr')return openTaskManager();
   if(app==='calculator')return openCalculator();
   if(app==='browser')return openBrowser();
-  if(app==='about')return makeWindow('WebOS 10 について',`<div class="about"><h1>WebOS 10</h1><p>ブラウザだけで動くWindows 10風のデスクトップ環境。</p><p>バージョン 1.0</p></div>`,'ℹ️',{width:500,height:330});
+  if(app==='about')return makeWindow('WebOS 10 について',`<div class="about"><h1>WebOS 10</h1><p>ブラウザだけで動くWindows 10のWebOSデスクトップ環境。</p><p>バージョン 2.1.5</p></div>`,'ℹ️',{width:500,height:330});
 }
 
 function openExplorer(){
