@@ -48,7 +48,155 @@ background-size:110px 110px,170px 170px}
 .side button{display:block;width:100%;margin:5px 0;padding:7px;text-align:left;background:#fff;border:1px solid #ccc;cursor:pointer}.side button:hover{background:#eaf5ff}.files{flex:1;padding:15px;display:flex;gap:14px;align-content:flex-start;flex-wrap:wrap}.fileitem{width:86px;height:90px;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;border:1px solid transparent}.fileitem:hover{background:#eef6ff;border-color:#c8def5}.fileitem .big{font-size:38px}.fileitem span{font-size:12px;text-align:center}
 .notepad{height:100%;display:flex;flex-direction:column}.editorbar{height:42px;background:#f2f2f2;border-bottom:1px solid #ccc;display:flex;align-items:center;gap:4px;padding:5px}.editorbar button{padding:6px 12px;background:#fff;border:1px solid #ccc;cursor:pointer}.editorbar button:hover{background:#e5e5e5}.editor{flex:1;display:flex;min-height:0}.lines{width:42px;background:#f3f3f3;color:#888;text-align:right;padding:9px 7px;line-height:20px;font:14px/20px Consolas,monospace;overflow:hidden}.code{flex:1;border:0;outline:0;resize:none;padding:9px;font:14px/20px Consolas,monospace;color:#111;background:#fff;white-space:pre;overflow:auto}
 .terminal{height:100%;background:#0c0c0c;color:#eee;font:14px Consolas,monospace;padding:12px;overflow:auto}.terminal input{background:transparent;border:0;outline:0;color:#fff;width:80%;font:inherit}
-.settings{padding:20px;background:#f5f5f5;height:100%;overflow:auto}.settings section{background:#fff;border:1px solid #ddd;padding:15px;margin-bottom:12px}.settings label{display:block;margin:9px 0}.settings input{margin-left:10px}
+.settings{
+  padding:24px;
+  background:#f5f5f5;
+  height:100%;
+  overflow:auto;
+  color:#222;
+}
+
+.settings h2{
+  color:#222;
+}
+
+.settings section{
+  background:#fff;
+  border:1px solid #ddd;
+  border-radius:4px;
+  padding:18px;
+  margin-bottom:14px;
+  box-shadow:0 1px 2px rgba(0,0,0,.05);
+}
+
+.settings section h3{
+  margin:0 0 14px;
+  font-size:16px;
+  font-weight:400;
+  color:#222;
+}
+
+.settings label{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  margin:10px 0;
+  font-size:13px;
+  color:#444;
+}
+
+.settings label input[type="text"],
+.settings label input[type="password"]{
+  flex:1;
+  min-width:0;
+  padding:8px 10px;
+  border:1px solid #bbb;
+  background:#fff;
+  color:#222;
+  outline:none;
+}
+
+.settings label input[type="text"]:focus,
+.settings label input[type="password"]:focus{
+  border-color:#1683d8;
+}
+
+.settings button{
+  border:1px solid #bbb;
+  background:#fff;
+  color:#222;
+  cursor:pointer;
+  border-radius:2px;
+}
+
+.settings button:hover{
+  background:#eaf5ff;
+  border-color:#1683d8;
+}
+
+.settings input[type="color"]{
+  width:48px;
+  height:32px;
+  padding:2px;
+  border:1px solid #bbb;
+  background:#fff;
+  cursor:pointer;
+}
+.settings-quick-grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:10px;
+  margin-top:10px;
+}
+
+.settings-quick{
+  min-height:75px;
+  padding:12px;
+  display:flex;
+  align-items:center;
+  gap:12px;
+  text-align:left;
+
+  background:#fff;
+  color:#222;
+
+  border:1px solid #ccc;
+  border-radius:4px;
+
+  cursor:pointer;
+  transition:.15s;
+}
+
+.settings-quick:hover{
+  background:#eaf5ff;
+  border-color:#1683d8;
+}
+
+.settings-quick.active{
+  background:#1683d8;
+  color:#fff;
+  border-color:#1683d8;
+}
+
+.settings-quick .quick-icon{
+  font-size:27px;
+  width:35px;
+  text-align:center;
+}
+
+.settings-quick span:last-child{
+  display:flex;
+  flex-direction:column;
+  gap:4px;
+}
+
+.settings-quick b{
+  font-size:13px;
+  font-weight:500;
+}
+
+.settings-quick small{
+  font-size:11px;
+  opacity:.75;
+}
+
+
+.settings-slider{
+  margin-top:18px;
+}
+
+.settings-slider > div{
+  display:flex;
+  justify-content:space-between;
+  margin-bottom:7px;
+  font-size:13px;
+  color:#555;
+}
+
+.settings-slider input[type="range"]{
+  width:100%;
+  margin:0;
+}
 .about{padding:30px}.about h1{font-weight:400}
 #toast{position:absolute;right:20px;bottom:65px;background:#222;color:#fff;padding:12px 18px;border-radius:3px;opacity:0;transform:translateY(10px);transition:.2s;z-index:30000}
 #toast.show{opacity:1;transform:none}
@@ -2117,34 +2265,254 @@ function browserReload(){
 }
 
 function openSettings(){
- const html=`<div class="settings">
 
- <section>
-  <h3>👤 ユーザー</h3>
+  const html = `
+    <div class="settings">
 
-  <label>
-   ユーザーネーム
-   <input
-     id="username"
-     type="text"
-     value="${escapeHtml(config.username)}"
-     placeholder="ユーザーネーム"
-   >
-  </label>
+      <h2 style="font-weight:400;margin:0 0 18px">
+        ⚙️ 設定
+      </h2>
 
-  <button
-    onclick="changeUsername()"
-    style="padding:7px 14px">
-    ユーザーネームを変更
-  </button>
- </section>
 
- <section>
-  <h3>🔐 ロック</h3><label>新しいPIN <input id="newPin" type="password" placeholder="4桁以上"></label><button onclick="changePin()" style="padding:7px 14px">PINを変更</button></section>
- <section><h3>🎨 外観</h3><label>アクセント色 <input id="accent" type="color" value="${config.accent}" onchange="changeAccent(this.value)"></label></section>
- <section><h3>💾 データ</h3><button onclick="resetFiles()" style="padding:7px 14px">初期ファイルに戻す</button></section>
- </div>`;
- return makeWindow('設定',html,'⚙️',{width:570,height:430})
+      <!-- クイック設定 -->
+      <section>
+
+        <h3>⚡ クイック設定</h3>
+
+        <div class="settings-quick-grid">
+
+          <button
+            class="settings-quick active"
+            data-key="wifi"
+            onclick="settingsToggleQuick(this,'Wi-Fi')"
+          >
+            <span class="quick-icon">🌐</span>
+            <span>
+              <b>Wi-Fi</b>
+              <small>オン</small>
+            </span>
+          </button>
+
+
+          <button
+            class="settings-quick"
+            data-key="bluetooth"
+            onclick="settingsToggleQuick(this,'Bluetooth')"
+          >
+            <span class="quick-icon">ᛒ</span>
+            <span>
+              <b>Bluetooth</b>
+              <small>オフ</small>
+            </span>
+          </button>
+
+
+          <button
+            class="settings-quick"
+            data-key="dark"
+            onclick="settingsToggleQuick(this,'ダークモード')"
+          >
+            <span class="quick-icon">🌙</span>
+            <span>
+              <b>ダークモード</b>
+              <small>オフ</small>
+            </span>
+          </button>
+
+
+          <button
+            class="settings-quick"
+            data-key="air"
+            onclick="settingsToggleQuick(this,'機内モード')"
+          >
+            <span class="quick-icon">✈️</span>
+            <span>
+              <b>機内モード</b>
+              <small>オフ</small>
+            </span>
+          </button>
+
+        </div>
+
+
+        <div class="settings-slider">
+
+          <div>
+            <span>🔊 音量</span>
+            <span id="settingsVolumeText">70%</span>
+          </div>
+
+          <input
+            type="range"
+            min="0"
+            max="100"
+            value="70"
+            oninput="
+              document.getElementById('settingsVolumeText').textContent =
+                this.value + '%';
+            "
+          >
+
+        </div>
+
+
+        <div class="settings-slider">
+
+          <div>
+            <span>☀️ 明るさ</span>
+            <span id="settingsBrightnessText">100%</span>
+          </div>
+
+          <input
+            type="range"
+            min="20"
+            max="100"
+            value="100"
+            oninput="
+              document.getElementById('settingsBrightnessText').textContent =
+                this.value + '%';
+
+              document.getElementById('desktop').style.filter =
+                'brightness(' + this.value / 100 + ')';
+            "
+          >
+
+        </div>
+
+      </section>
+
+
+      <!-- ユーザー -->
+      <section>
+
+        <h3>👤 ユーザー</h3>
+
+        <label>
+          <span>ユーザーネーム</span>
+
+          <input
+            id="username"
+            type="text"
+            value="${escapeHtml(config.username)}"
+            placeholder="ユーザーネーム"
+          >
+        </label>
+
+        <button
+          onclick="changeUsername()"
+          style="padding:7px 14px"
+        >
+          ユーザーネームを変更
+        </button>
+
+      </section>
+
+
+      <!-- ロック -->
+      <section>
+
+        <h3>🔐 ロック</h3>
+
+        <label>
+          <span>新しいPIN</span>
+
+          <input
+            id="newPin"
+            type="password"
+            placeholder="4桁以上"
+          >
+        </label>
+
+        <button
+          onclick="changePin()"
+          style="padding:7px 14px"
+        >
+          PINを変更
+        </button>
+
+      </section>
+
+
+      <!-- 外観 -->
+      <section>
+
+        <h3>🎨 外観</h3>
+
+        <label>
+          <span>アクセント色</span>
+
+          <input
+            id="accent"
+            type="color"
+            value="${config.accent}"
+            onchange="changeAccent(this.value)"
+          >
+        </label>
+
+      </section>
+
+
+      <!-- データ -->
+      <section>
+
+        <h3>💾 データ</h3>
+
+        <button
+          onclick="resetFiles()"
+          style="padding:7px 14px"
+        >
+          初期ファイルに戻す
+        </button>
+
+      </section>
+
+
+      <!-- WebOS情報 -->
+      <section>
+
+        <h3>ℹ️ WebOS 10</h3>
+
+        <p style="margin:4px 0;color:#666">
+          WebOS 10
+        </p>
+
+        <p style="margin:4px 0;color:#888;font-size:12px">
+          バージョン 2.1.5
+        </p>
+
+      </section>
+
+    </div>
+  `;
+
+
+  return makeWindow(
+    '設定',
+    html,
+    '⚙️',
+    {
+      width:600,
+      height:650
+    }
+  );
+}
+function settingsToggleQuick(btn,name){
+
+  btn.classList.toggle('active');
+
+  const small =
+    btn.querySelector('small');
+
+  const enabled =
+    btn.classList.contains('active');
+
+  small.textContent =
+    enabled ? 'オン' : 'オフ';
+
+  toast(
+    name + ' ' +
+    (enabled ? 'オン' : 'オフ')
+  );
 }
 function changePin(){const v=document.getElementById('newPin')?.value;if(!v||v.length<4)return toast('4文字以上にしてください');config.pin=v;saveConfig();toast('PINを変更しました')}
     function changeUsername(){
