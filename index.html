@@ -28,8 +28,45 @@ background-size:110px 110px,170px 170px}
 .task{min-width:52px;padding:0 14px;background:#202020;color:#ddd;border-left:1px solid #333;cursor:pointer}
 .task.active{background:#333;color:#fff;border-bottom:2px solid #20a4ff}
 #tray{display:flex;align-items:center;gap:14px;padding:0 14px;font-size:12px}
-#startMenu{position:absolute;left:0;bottom:48px;width:430px;height:520px;background:rgba(30,30,30,.98);box-shadow:0 0 20px #0008;display:none;z-index:11000}
-#startMenu.show{display:flex}
+#startMenu{
+  position:absolute;
+  left:0;
+  bottom:48px;
+  width:430px;
+  height:520px;
+
+  background:rgba(30,30,30,.98);
+  box-shadow:0 0 20px #0008;
+
+  z-index:11000;
+
+  display:flex;
+
+  /* アニメーション開始状態 */
+  opacity:0;
+  visibility:hidden;
+  transform:translateY(35px) scale(.98);
+  transform-origin:bottom left;
+
+  transition:
+    opacity .18s ease,
+    transform .25s cubic-bezier(.2,.8,.2,1),
+    visibility 0s linear .25s;
+}
+
+#startMenu.show{
+  opacity:1;
+  visibility:visible;
+
+  transform:translateY(0) scale(1);
+
+  pointer-events:auto;
+
+  transition:
+    opacity .18s ease,
+    transform .25s cubic-bezier(.2,.8,.2,1),
+    visibility 0s;
+}
 .start-left{width:110px;background:#242424;padding-top:10px;display:flex;flex-direction:column;align-items:center}
 .start-left button{width:90px;height:58px;background:transparent;color:#ddd;cursor:pointer}.start-left button:hover{background:#3b3b3b}
 .start-main{flex:1;padding:18px}.start-main h2{font-weight:400;margin:0 0 14px}
@@ -255,6 +292,399 @@ background-size:110px 110px,170px 170px}
 .browser-frame{
   flex:1;
 }
+/* ==========================================================
+   スタートメニュー アニメーション
+========================================================== */
+
+#startMenu{
+  opacity:0;
+  transform:translateY(25px);
+  pointer-events:none;
+  transition:
+    opacity .18s ease,
+    transform .22s cubic-bezier(.2,.8,.2,1);
+}
+
+#startMenu.show{
+  display:flex;
+  opacity:1;
+  transform:translateY(0);
+  pointer-events:auto;
+}
+
+
+/* ==========================================================
+   クイック設定パネル
+========================================================== */
+
+#quickPanel{
+  position:absolute;
+
+  right:10px;
+  bottom:58px;
+
+  width:360px;
+  max-height:calc(100vh - 75px);
+
+  background:rgba(32,32,32,.97);
+  color:#fff;
+
+  border:1px solid #555;
+  border-radius:4px;
+
+  box-shadow:
+    0 8px 30px rgba(0,0,0,.5);
+
+  padding:16px;
+
+  z-index:12000;
+
+  overflow:auto;
+
+  opacity:0;
+  transform:translateY(25px);
+
+  pointer-events:none;
+
+  transition:
+    opacity .18s ease,
+    transform .22s cubic-bezier(.2,.8,.2,1);
+}
+
+#quickPanel.show{
+  opacity:1;
+  transform:translateY(0);
+  pointer-events:auto;
+}
+
+
+/* クイック設定タイトル */
+
+.quick-panel-title{
+  font-size:16px;
+  margin-bottom:12px;
+  font-weight:400;
+}
+
+
+/* タイル */
+
+.quick-panel-grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:8px;
+}
+
+.quick-panel-btn{
+  min-height:72px;
+
+  padding:10px;
+
+  background:#292929;
+  color:#fff;
+
+  border:1px solid #444;
+  border-radius:3px;
+
+  cursor:pointer;
+
+  text-align:left;
+
+  transition:.12s;
+}
+
+.quick-panel-btn:hover{
+  background:#3a3a3a;
+}
+
+.quick-panel-btn.active{
+  background:#1683d8;
+  border-color:#1683d8;
+}
+
+.quick-panel-btn .qicon{
+  display:block;
+  font-size:22px;
+  margin-bottom:5px;
+}
+
+.quick-panel-btn b{
+  display:block;
+  font-size:12px;
+  font-weight:500;
+}
+
+.quick-panel-btn small{
+  font-size:10px;
+  opacity:.75;
+}
+
+
+/* 音量・明るさ */
+
+.quick-slider{
+  margin-top:16px;
+}
+
+.quick-slider-title{
+  display:flex;
+  justify-content:space-between;
+
+  margin-bottom:6px;
+
+  font-size:12px;
+  color:#ddd;
+}
+
+.quick-slider input{
+  width:100%;
+}
+
+
+/* スタートメニュー内のアプリ */
+
+.start-main{
+  flex:1;
+  padding:18px;
+
+  overflow:auto;
+}
+
+.start-main h2{
+  font-weight:400;
+  margin:0 0 14px;
+}
+
+.start-apps{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:4px;
+}
+
+.start-apps .app-tile{
+  min-height:58px;
+}
+
+
+/* 2行目の設定・タスクマネージャー */
+
+.start-system{
+  margin-top:14px;
+  padding-top:12px;
+
+  border-top:1px solid #444;
+
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:4px;
+}
+
+.start-system .app-tile{
+  min-height:58px;
+}
+
+
+/* 小さい画面 */
+
+@media(max-width:600px){
+
+  #quickPanel{
+    right:6px;
+    left:6px;
+    bottom:54px;
+    width:auto;
+  }
+
+  #startMenu{
+    width:calc(100vw - 10px);
+    max-width:430px;
+  }
+
+}
+/* =========================
+   スタートメニュー アニメーション
+========================= */
+
+#startMenu{
+  display:flex;
+  opacity:0;
+  visibility:hidden;
+  transform:translateY(25px);
+  transition:
+    opacity .18s ease,
+    transform .22s cubic-bezier(.2,.8,.2,1),
+    visibility 0s linear .22s;
+
+  pointer-events:none;
+}
+
+#startMenu.show{
+  opacity:1;
+  visibility:visible;
+  transform:translateY(0);
+  pointer-events:auto;
+
+  transition:
+    opacity .18s ease,
+    transform .22s cubic-bezier(.2,.8,.2,1),
+    visibility 0s;
+}
+
+/* アプリ一覧 */
+.start-main{
+  flex:1;
+  padding:18px;
+  overflow-y:auto;
+}
+
+/* アプリを縦にズラッと並べる */
+.start-apps{
+  display:flex;
+  flex-direction:column;
+  gap:3px;
+}
+
+/* アプリ */
+.app-tile{
+  display:flex;
+  align-items:center;
+  gap:14px;
+
+  width:100%;
+  min-height:52px;
+
+  padding:8px 12px;
+
+  border-radius:3px;
+  cursor:pointer;
+
+  transition:
+    background .12s ease,
+    transform .12s ease;
+}
+
+.app-tile:hover{
+  background:#3b3b3b;
+  transform:translateX(3px);
+}
+
+.app-tile b{
+  width:38px;
+  text-align:center;
+  font-size:25px;
+  font-weight:400;
+}
+
+.app-tile span{
+  font-size:14px;
+}
+#quickPanel{
+  position:absolute;
+  right:12px;
+  bottom:58px;
+
+  width:360px;
+
+  padding:18px;
+
+  background:rgba(35,35,35,.97);
+  color:white;
+
+  border:1px solid #555;
+  border-radius:6px;
+
+  box-shadow:0 8px 35px #0009;
+
+  z-index:40000;
+
+  opacity:0;
+  visibility:hidden;
+  transform:translateY(30px);
+
+  transition:
+    opacity .18s ease,
+    transform .22s cubic-bezier(.2,.8,.2,1),
+    visibility 0s linear .22s;
+}
+
+#quickPanel.show{
+  opacity:1;
+  visibility:visible;
+  transform:translateY(0);
+
+  transition:
+    opacity .18s ease,
+    transform .22s cubic-bezier(.2,.8,.2,1),
+    visibility 0s;
+}
+
+#quickPanel h2{
+  margin:0 0 15px;
+  font-size:20px;
+  font-weight:400;
+}
+
+#quickPanel h3{
+  font-size:13px;
+  font-weight:400;
+  margin:18px 0 7px;
+}
+
+#quickPanel input[type="range"]{
+  width:100%;
+}
+
+.quick-grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:8px;
+}
+
+.quick-grid button{
+  min-height:85px;
+
+  padding:10px;
+
+  display:flex;
+  flex-direction:column;
+  align-items:flex-start;
+  justify-content:center;
+
+  gap:4px;
+
+  background:#333;
+  color:white;
+
+  border:1px solid #555;
+  border-radius:4px;
+
+  cursor:pointer;
+
+  text-align:left;
+}
+
+.quick-grid button:hover{
+  background:#444;
+}
+
+.quick-grid button.active{
+  background:#1683d8;
+  border-color:#1683d8;
+}
+
+.quick-grid button b{
+  font-size:13px;
+  font-weight:400;
+}
+
+.quick-grid button small{
+  color:#bbb;
+  font-size:11px;
+}
+
+.quick-grid button.active small{
+  color:white;
+}
 </style>
 </head>
 <body>
@@ -272,29 +702,224 @@ background-size:110px 110px,170px 170px}
 
   <div id="windows"></div>
   <div id="toast"></div>
+<div id="quickPanel">
 
-  <div id="startMenu">
-    <div class="start-left">
-      <button onclick="openQuickSettings();toggleStart()">⚡<br><small>クイック</small></button>
-      <button onclick="openApp('taskmgr');toggleStart()">📊<br><small>タスク</small></button>
-      <button onclick="openApp('settings');toggleStart()">⚙️<br><small>設定</small></button>
-      <button onclick="lock();toggleStart()">🔒<br><small>ロック</small></button>
-      <button onclick="shutdown();toggleStart()">⏻<br><small>電源</small></button>
-    </div>
-    <div class="start-main">
-      <h2>スタート</h2>
-      <div class="app-tile" onclick="openApp('explorer');toggleStart()"><b>📁</b>ファイル エクスプローラー</div>
-      <div class="app-tile" onclick="openApp('editor');toggleStart()"><b>📝</b>テキスト エディター</div>
-      <div class="app-tile" onclick="openApp('terminal');toggleStart()"><b>⌨️</b>ターミナル</div>
-      <!--<div class="app-tile" onclick="openQuickSettings();toggleStart()"><b>⚡</b>クイック設定</div>
-      <div class="app-tile" onclick="openApp('taskmgr');toggleStart()"><b>📊</b>タスク マネージャー</div>-->
-      <div class="app-tile" onclick="openApp('calculator');toggleStart()"><b>🧮</b>電卓</div>
-      <div class="app-tile" onclick="openApp('browser');toggleStart()"><b>🌐</b>ブラウザ</div>
-      <!--<div class="app-tile" onclick="openApp('settings');toggleStart()"><b>⚙️</b>設定</div>-->
-      <div class="app-tile" onclick="openApp('about');toggleStart()"><b>ℹ️</b>WebOS 10 について</div>
-    </div>
+  <div class="quick-panel-title">
+    ⚡ クイック設定
   </div>
 
+  <div class="quick-panel-grid">
+
+    <button
+      class="quick-panel-btn active"
+      data-key="wifi"
+      onclick="toggleQuickPanel(this,'Wi-Fi')"
+    >
+      <span class="qicon">🌐</span>
+      <b>Wi-Fi</b>
+      <small>オン</small>
+    </button>
+
+
+    <button
+      class="quick-panel-btn"
+      data-key="bluetooth"
+      onclick="toggleQuickPanel(this,'Bluetooth')"
+    >
+      <span class="qicon">ᛒ</span>
+      <b>Bluetooth</b>
+      <small>オフ</small>
+    </button>
+
+
+    <button
+      class="quick-panel-btn"
+      data-key="dark"
+      onclick="toggleQuickPanel(this,'ダークモード')"
+    >
+      <span class="qicon">🌙</span>
+      <b>ダークモード</b>
+      <small>オフ</small>
+    </button>
+
+
+    <button
+      class="quick-panel-btn"
+      data-key="air"
+      onclick="toggleQuickPanel(this,'機内モード')"
+    >
+      <span class="qicon">✈️</span>
+      <b>機内モード</b>
+      <small>オフ</small>
+    </button>
+
+  </div>
+
+
+  <div class="quick-slider">
+
+    <div class="quick-slider-title">
+      <span>🔊 音量</span>
+      <span id="quickVolumeText">70%</span>
+    </div>
+
+    <input
+      type="range"
+      min="0"
+      max="100"
+      value="70"
+      oninput="
+        document.getElementById('quickVolumeText').textContent =
+          this.value + '%';
+      "
+    >
+
+  </div>
+
+
+  <div class="quick-slider">
+
+    <div class="quick-slider-title">
+      <span>☀️ 明るさ</span>
+      <span id="quickBrightnessText">100%</span>
+    </div>
+
+    <input
+      type="range"
+      min="20"
+      max="100"
+      value="100"
+      oninput="
+        document.getElementById('quickBrightnessText').textContent =
+          this.value + '%';
+
+        document.getElementById('desktop').style.filter =
+          'brightness(' + this.value / 100 + ')';
+      "
+    >
+
+  </div>
+
+</div>
+  <div id="startMenu">
+
+  <div class="start-left">
+      
+    <button onclick="openApp('settings');toggleStart()">
+      ⚙️<br>
+      <small>設定</small>
+    </button>
+
+    <button onclick="lock();toggleStart()">
+      🔒<br>
+      <small>ロック</small>
+    </button>
+
+    <button onclick="shutdown();toggleStart()">
+      ⏻<br>
+      <small>電源</small>
+    </button>
+
+  </div>
+
+
+  <div class="start-main">
+
+  <h2>スタート</h2>
+
+  <div class="start-apps">
+
+    <div class="app-tile"
+         onclick="openApp('explorer');toggleStart()">
+      <b>📁</b>
+      <span>ファイル エクスプローラー</span>
+    </div>
+
+    <div class="app-tile"
+         onclick="openApp('editor');toggleStart()">
+      <b>📝</b>
+      <span>テキスト エディター</span>
+    </div>
+
+    <div class="app-tile"
+         onclick="openApp('terminal');toggleStart()">
+      <b>⌨️</b>
+      <span>ターミナル</span>
+    </div>
+
+    <div class="app-tile"
+         onclick="openApp('calculator');toggleStart()">
+      <b>🧮</b>
+      <span>電卓</span>
+    </div>
+
+    <div class="app-tile"
+         onclick="openApp('browser');toggleStart()">
+      <b>🌐</b>
+      <span>ブラウザ</span>
+    </div>
+
+    
+
+  </div>
+
+</div>
+<div id="quickPanel">
+
+  <h2>クイック設定</h2>
+
+  <div class="quick-grid">
+
+    <button onclick="toggleQuickPanel(this,'Wi-Fi')">
+      🌐
+      <b>Wi-Fi</b>
+      <small>オン</small>
+    </button>
+
+    <button onclick="toggleQuickPanel(this,'Bluetooth')">
+      ᛒ
+      <b>Bluetooth</b>
+      <small>オフ</small>
+    </button>
+
+    <button onclick="toggleQuickPanel(this,'ダークモード')">
+      🌙
+      <b>ダークモード</b>
+      <small>オフ</small>
+    </button>
+
+    <button onclick="toggleQuickPanel(this,'機内モード')">
+      ✈️
+      <b>機内モード</b>
+      <small>オフ</small>
+    </button>
+
+  </div>
+
+  <h3>🔊 音量</h3>
+  <input
+    type="range"
+    min="0"
+    max="100"
+    value="70"
+    oninput="toast('音量 '+this.value+'%')"
+  >
+
+  <h3>☀️ 明るさ</h3>
+  <input
+    type="range"
+    min="20"
+    max="100"
+    value="100"
+    oninput="
+      document.getElementById('desktop').style.filter=
+      'brightness('+this.value/100+')'
+    "
+  >
+
+</div>
+</div>
+<div>
   <div id="taskbar">
     <button id="startBtn" onclick="toggleStart()">⊞</button>
     <div id="taskApps"></div>
@@ -802,8 +1427,75 @@ function shutdown(){
   toast('電源を切ったように見せています');
   setTimeout(()=>location.reload(),1200);
 }
-function toggleStart(){document.getElementById('startMenu').classList.toggle('show')}
+function toggleStart(){
 
+  const start =
+    document.getElementById('startMenu');
+
+  const quick =
+    document.getElementById('quickPanel');
+
+  if(!start) return;
+
+  /*
+    クイック設定を閉じる
+  */
+  if(quick){
+    quick.classList.remove('show');
+  }
+
+  /*
+    スタートを開閉
+  */
+  start.classList.toggle('show');
+}
+document.addEventListener('mousedown', function(e){
+
+  const startMenu =
+    document.getElementById('startMenu');
+
+  const startBtn =
+    document.getElementById('startBtn');
+
+  const quickPanel =
+    document.getElementById('quickPanel');
+
+  const quickBtn =
+    document.getElementById('quickBtn');
+
+
+  /*
+    スタートメニュー
+  */
+
+  if(
+    startMenu &&
+    startMenu.classList.contains('show') &&
+    !startMenu.contains(e.target) &&
+    !startBtn.contains(e.target)
+  ){
+
+    startMenu.classList.remove('show');
+
+  }
+
+
+  /*
+    クイック設定
+  */
+
+  if(
+    quickPanel &&
+    quickPanel.classList.contains('show') &&
+    !quickPanel.contains(e.target) &&
+    !quickBtn.contains(e.target)
+  ){
+
+    quickPanel.classList.remove('show');
+
+  }
+
+});
 function makeWindow(title,html,icon='🪟',opts={}){
   const id='w'+(++winId);
   const w=document.createElement('div');
@@ -1837,20 +2529,45 @@ function termCommand(c,out){
 
 
 function openQuickSettings(){
- const html=`<div style="padding:18px;background:#f5f5f5;height:100%;overflow:auto">
-   <h2 style="font-weight:400;margin-top:0">クイック設定</h2>
-   <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
-    <button class="qs" data-key="wifi" onclick="toggleQuick(this,'Wi-Fi')">🌐<br><b>Wi-Fi</b><br><small>オン</small></button>
-    <button class="qs" data-key="bluetooth" onclick="toggleQuick(this,'Bluetooth')">ᛒ<br><b>Bluetooth</b><br><small>オフ</small></button>
-    <button class="qs on" data-key="dark" onclick="toggleQuick(this,'ダークモード')">🌙<br><b>ダークモード</b><br><small>オフ</small></button>
-    <button class="qs on" data-key="air" onclick="toggleQuick(this,'機内モード')">✈️<br><b>機内モード</b><br><small>オフ</small></button>
-   </div>
-   <h3>🔊 音量</h3><input type="range" min="0" max="100" value="70" style="width:100%" oninput="toast('音量 '+this.value+'%')">
-   <h3>☀️ 明るさ</h3><input type="range" min="20" max="100" value="100" style="width:100%" oninput="document.getElementById('desktop').style.filter='brightness('+this.value/100+')'">
-   <p style="color:#666;font-size:12px"></p>
- </div>
- <style>.qs{padding:18px;background:#fff;border:1px solid #ccc;cursor:pointer;text-align:left}.qs:hover{background:#eaf5ff}.qs.active{background:#1683d8;color:#fff}</style>`;
- return makeWindow('クイック設定',html,'⚡',{width:430,height:470});
+
+  const panel =
+    document.getElementById('quickPanel');
+
+  if(!panel) return;
+
+  panel.classList.toggle('show');
+
+}
+function closeQuickSettings(){
+
+  const panel =
+    document.getElementById('quickPanel');
+
+  if(panel){
+    panel.classList.remove('show');
+  }
+
+}
+
+function toggleQuickPanel(button,name){
+
+  button.classList.toggle('active');
+
+  const small =
+    button.querySelector('small');
+
+  if(!small) return;
+
+  const on =
+    button.classList.contains('active');
+
+  small.textContent =
+    on ? 'オン' : 'オフ';
+
+  toast(
+    name + ' ' +
+    (on ? 'オン' : 'オフ')
+  );
 }
 function toggleQuick(btn,name){
  btn.classList.toggle('active');
@@ -2736,6 +3453,72 @@ document.documentElement.style.setProperty(
   '--accent',
   config.accent
 );
+document.addEventListener('mousedown', function(e){
+
+  const panel =
+    document.getElementById('quickPanel');
+
+  const quickBtn =
+    document.getElementById('quickBtn');
+
+  if(!panel) return;
+
+  if(
+    panel.classList.contains('show') &&
+    !panel.contains(e.target) &&
+    !quickBtn.contains(e.target)
+  ){
+
+    closeQuickSettings();
+
+  }
+
+});
+let ctrlAltTriggered = false;
+
+document.addEventListener('keydown', function(e){
+
+  // Windowsキー
+  if(e.key === 'Meta' || e.key === 'OS'){
+
+    e.preventDefault();
+
+    if(!e.repeat){
+      toggleStart();
+    }
+
+    return;
+  }
+
+  // Ctrl + Alt
+  if(e.ctrlKey && e.altKey){
+
+    e.preventDefault();
+
+    if(!ctrlAltTriggered){
+
+      ctrlAltTriggered = true;
+
+      toggleStart();
+
+    }
+
+  }
+
+});
+
+document.addEventListener('keyup', function(e){
+
+  if(
+    e.key === 'Control' ||
+    e.key === 'Alt'
+  ){
+
+    ctrlAltTriggered = false;
+
+  }
+
+});
 </script>
 </body>
 </html>
