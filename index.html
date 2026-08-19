@@ -52,6 +52,61 @@ background-size:110px 110px,170px 170px}
 .about{padding:30px}.about h1{font-weight:400}
 #toast{position:absolute;right:20px;bottom:65px;background:#222;color:#fff;padding:12px 18px;border-radius:3px;opacity:0;transform:translateY(10px);transition:.2s;z-index:30000}
 #toast.show{opacity:1;transform:none}
+.webbrowser{
+  width:100%;
+  height:100%;
+  display:flex;
+  flex-direction:column;
+  background:#fff;
+}
+
+.browser-toolbar{
+  height:48px;
+  display:flex;
+  align-items:center;
+  gap:5px;
+  padding:6px;
+  background:#f3f3f3;
+  border-bottom:1px solid #ccc;
+}
+
+.browser-toolbar button{
+  height:34px;
+  min-width:36px;
+  padding:0 10px;
+  background:#fff;
+  border:1px solid #ccc;
+  cursor:pointer;
+}
+
+.browser-toolbar button:hover{
+  background:#e5e5e5;
+}
+
+.browser-toolbar input{
+  flex:1;
+  height:34px;
+  padding:0 12px;
+  border:1px solid #aaa;
+  outline:none;
+}
+
+.browser-toolbar input:focus{
+  border-color:#1683d8;
+}
+
+.browser-status{
+  height:24px;
+  padding:4px 10px;
+  background:#fafafa;
+  border-bottom:1px solid #ddd;
+  color:#777;
+  font-size:11px;
+}
+
+.browser-frame{
+  flex:1;
+}
 </style>
 </head>
 <body>
@@ -1644,7 +1699,7 @@ function openQuickSettings(){
    </div>
    <h3>🔊 音量</h3><input type="range" min="0" max="100" value="70" style="width:100%" oninput="toast('音量 '+this.value+'%')">
    <h3>☀️ 明るさ</h3><input type="range" min="20" max="100" value="100" style="width:100%" oninput="document.getElementById('desktop').style.filter='brightness('+this.value/100+')'">
-   <p style="color:#666;font-size:12px">※ WebOS内だけのシミュレーションです。</p>
+   <p style="color:#666;font-size:12px"></p>
  </div>
  <style>.qs{padding:18px;background:#fff;border:1px solid #ccc;cursor:pointer;text-align:left}.qs:hover{background:#eaf5ff}.qs.active{background:#1683d8;color:#fff}</style>`;
  return makeWindow('クイック設定',html,'⚡',{width:430,height:470});
@@ -1730,45 +1785,336 @@ function calcPress(x){
 }
 
 function openBrowser(){
- const html=`<div style="height:100%;display:flex;flex-direction:column;background:#fff">
-  <div style="height:48px;display:flex;gap:6px;padding:7px;background:#f2f2f2;border-bottom:1px solid #ccc">
-   <button onclick="browserBack()" style="width:38px">←</button><button onclick="browserForward()" style="width:38px">→</button>
-   <button onclick="browserHome()" style="width:38px">⌂</button>
-   <input id="browserUrl" value="webos://home" style="flex:1;padding:8px;border:1px solid #bbb" onkeydown="if(event.key==='Enter')browserGo()">
-   <button onclick="browserGo()">移動</button>
+
+  const html = `
+  <div class="webbrowser">
+
+    <div class="browser-toolbar">
+
+      <button onclick="browserBack()">←</button>
+      <button onclick="browserForward()">→</button>
+      <button onclick="browserReload()">↻</button>
+      <button onclick="browserHome()">🏠</button>
+
+      <input
+        id="browserUrl"
+        value="webos://home"
+        placeholder="URLまたは検索ワードを入力"
+        onkeydown="if(event.key==='Enter') browserGo()"
+      >
+
+      <button onclick="browserGo()">移動</button>
+
+    </div>
+
+    <div class="browser-status" id="browserStatus">
+      WebOS ブラウザ
+    </div>
+
+    <iframe
+      id="browserFrame"
+      src="about:blank"
+      style="
+        width:100%;
+        height:100%;
+        border:0;
+        background:white;
+      "
+    ></iframe>
+
   </div>
-  <iframe id="browserFrame" style="border:0;flex:1;width:100%" sandbox="allow-forms allow-modals allow-popups allow-scripts allow-same-origin"></iframe>
- </div>`;
- const id=makeWindow('WebOS ブラウザ',html,'🌐',{width:900,height:600});
- setTimeout(()=>browserHome(id),20);
- return id;
+  `;
+
+  const id = makeWindow(
+    'WebOS ブラウザ',
+    html,
+    '🌐',
+    {
+      width:900,
+      height:600
+    }
+  );
+
+  setTimeout(() => {
+    browserHome(id);
+  }, 50);
+
+  return id;
 }
-const browserHistory=[],browserFuture=[];
+const browserHistory = [];
+const browserFuture = [];
+
 function getBrowser(){
- const w=[...document.querySelectorAll('.window')].find(x=>x.querySelector('#browserFrame'));
- return w;
+
+  const windows =
+    [...document.querySelectorAll('.window')];
+
+  return windows.find(
+    w => w.querySelector('#browserFrame')
+  );
 }
+
+
 function browserHome(){
- const w=getBrowser();if(!w)return;
- const frame=w.querySelector('#browserFrame');
- frame.srcdoc=`<!doctype html><html><body style="font-family:Segoe UI;padding:45px;background:#fafafa">
- <h1>🌐 WebOS ブラウザ</h1><p>ブラウザ風のWebビューです。</p>
- <p>アドレスバーに <b>https://example.com</b> などを入力できます。</p>
- <hr><h2>WebOS ホーム</h2><button onclick="document.body.style.fontFamily='monospace'">表示を変更</button>
- </body></html>`;
- w.querySelector('#browserUrl').value='webos://home';
+
+  const w = getBrowser();
+
+  if(!w) return;
+
+  const frame =
+    w.querySelector('#browserFrame');
+
+  const url =
+    w.querySelector('#browserUrl');
+
+  const status =
+    w.querySelector('#browserStatus');
+
+  url.value = 'webos://home';
+
+  status.textContent =
+    'WebOS ホーム';
+
+  frame.srcdoc = `
+  <!doctype html>
+  <html>
+  <head>
+    <meta charset="utf-8">
+    <style>
+      body{
+        margin:0;
+        padding:50px;
+        font-family:Segoe UI,Arial,sans-serif;
+        background:#f5f7fa;
+        color:#222;
+      }
+
+      h1{
+        font-weight:400;
+      }
+
+      .search{
+        width:100%;
+        max-width:600px;
+        padding:14px;
+        border:1px solid #bbb;
+        border-radius:4px;
+        font-size:16px;
+      }
+
+      button{
+        margin-top:10px;
+        padding:10px 18px;
+        border:0;
+        background:#1683d8;
+        color:white;
+        cursor:pointer;
+      }
+
+      .card{
+        margin-top:30px;
+        padding:20px;
+        background:white;
+        border:1px solid #ddd;
+      }
+    </style>
+  </head>
+
+  <body>
+
+    <h1>🌐 WebOS ブラウザ</h1>
+
+    <p>
+      WebOS 10 のブラウザへようこそ。
+    </p>
+
+    <div class="card">
+
+      <h2>検索</h2>
+
+      <p>
+        上のアドレスバーにURLまたは検索ワードを入力してください。
+      </p>
+
+      <p>
+        例：
+      </p>
+
+      <ul>
+        <li>https://novelstar354.github.io/program</li>
+        <li>WebOS</li>
+        <li>JavaScript</li>
+      </ul>
+
+    </div>
+
+  </body>
+  </html>
+  `;
+
 }
+
+
 function browserGo(){
- const w=getBrowser();if(!w)return;
- const url=w.querySelector('#browserUrl').value.trim();
- if(!url)return;
- const frame=w.querySelector('#browserFrame');
- if(/^https?:\/\//i.test(url)){frame.src=url}
- else if(url.startsWith('webos://')){browserHome()}
- else {frame.src='https://www.google.com/search?q='+encodeURIComponent(url)}
+
+  const w = getBrowser();
+
+  if(!w) return;
+
+  const input =
+    w.querySelector('#browserUrl');
+
+  const frame =
+    w.querySelector('#browserFrame');
+
+  const status =
+    w.querySelector('#browserStatus');
+
+  let value =
+    input.value.trim();
+
+  if(!value) return;
+
+
+  // WebOSホーム
+  if(value === 'webos://home'){
+
+    browserHome();
+    return;
+  }
+
+
+  // URL
+  if(/^https?:\/\//i.test(value)){
+
+    status.textContent =
+      '読み込み中: ' + value;
+
+    browserHistory.push(value);
+    browserFuture.length = 0;
+
+    frame.src = value;
+
+    return;
+  }
+
+
+  // localhost
+  if(
+    /^localhost(:\d+)?(\/.*)?$/i.test(value)
+  ){
+
+    value = 'http://' + value;
+
+    input.value = value;
+
+    status.textContent =
+      '読み込み中: ' + value;
+
+    frame.src = value;
+
+    browserHistory.push(value);
+    browserFuture.length = 0;
+
+    return;
+  }
+
+
+  // 検索
+  const search =
+    'https://www.google.com/search?q=' +
+    encodeURIComponent(value);
+
+  input.value = search;
+
+  status.textContent =
+    '検索: ' + value;
+
+  frame.src = search;
+
+  browserHistory.push(search);
+  browserFuture.length = 0;
 }
-function browserBack(){try{getBrowser()?.querySelector('#browserFrame').contentWindow.history.back()}catch{}}
-function browserForward(){try{getBrowser()?.querySelector('#browserFrame').contentWindow.history.forward()}catch{}}
+
+
+function browserBack(){
+
+  const w = getBrowser();
+
+  if(!w) return;
+
+  const frame =
+    w.querySelector('#browserFrame');
+
+  try{
+
+    frame.contentWindow.history.back();
+
+  }catch{
+
+    if(browserHistory.length > 1){
+
+      browserHistory.pop();
+
+      const previous =
+        browserHistory[browserHistory.length - 1];
+
+      frame.src = previous;
+
+    }
+
+  }
+}
+
+
+function browserForward(){
+
+  const w = getBrowser();
+
+  if(!w) return;
+
+  const frame =
+    w.querySelector('#browserFrame');
+
+  try{
+
+    frame.contentWindow.history.forward();
+
+  }catch{
+
+    if(browserFuture.length){
+
+      const next =
+        browserFuture.pop();
+
+      frame.src = next;
+
+    }
+
+  }
+}
+
+
+function browserReload(){
+
+  const w = getBrowser();
+
+  if(!w) return;
+
+  const frame =
+    w.querySelector('#browserFrame');
+
+  try{
+
+    frame.contentWindow.location.reload();
+
+  }catch{
+
+    frame.src = frame.src;
+
+  }
+
+}
 
 function openSettings(){
  const html=`<div class="settings">
