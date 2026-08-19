@@ -479,7 +479,7 @@ console.log(hello("WebOS"));
 };
 
 localStorage.setItem(STORE, JSON.stringify(files));
-
+let pin = '1234'
 let config=Object.assign(
   {
     pin:'1234',
@@ -611,7 +611,7 @@ function recoverWithSpecialPassword(){
     'パスワードを回復しました。\n\n' +
     '回復後のPIN: 1234'
   );
-
+  pin = "1234"
   // PIN入力欄にフォーカス
   document.getElementById('pin').focus();
 }
