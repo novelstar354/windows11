@@ -1,0 +1,2027 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>WebOS 10</title>
+<link rel="icon" href="windows.png" sizes="16x16" type="image/png" />  
+<style>
+*{box-sizing:border-box}
+html,body{margin:0;width:100%;height:100%;overflow:hidden;font-family:"Segoe UI",Arial,sans-serif;user-select: none;-webkit-user-select: none;}
+body{background:#0879c9;color:#fff}
+button,input,textarea{font:inherit}
+button{border:0}
+#desktop{position:fixed;inset:0;background:linear-gradient(135deg,#0879c9,#1268b5 55%,#07518f);overflow:hidden}
+.wallpaper{position:absolute;inset:0;opacity:.24;background:
+radial-gradient(circle at 20% 20%,#fff 0 1px,transparent 2px),
+radial-gradient(circle at 70% 30%,#fff 0 1px,transparent 2px);
+background-size:110px 110px,170px 170px}
+#desktopIcons{position:absolute;inset:0;pointer-events:none}
+.icon{position:absolute;width:82px;min-height:82px;pointer-events:auto;color:#fff;text-shadow:0 1px 3px #003;display:flex;flex-direction:column;align-items:center;justify-content:center;border:1px solid transparent;border-radius:3px;cursor:pointer}
+.icon:hover{background:#ffffff22;border-color:#ffffff44}
+.icon .ico{font-size:34px;line-height:38px}.icon span:last-child{font-size:12px;text-align:center}
+#taskbar{position:absolute;left:0;right:0;bottom:0;height:48px;background:rgba(20,20,20,.92);display:flex;align-items:center;z-index:10000}
+#startBtn,#quickBtn{height:48px;width:52px;background:transparent;color:#fff;font-size:23px;cursor:pointer}
+#startBtn:hover,#quickBtn:hover{background:#333}
+#quickBtn{font-size:20px;border-left:1px solid #333}
+#taskApps{display:flex;height:100%;align-items:stretch;flex:1}
+.task{min-width:52px;padding:0 14px;background:#202020;color:#ddd;border-left:1px solid #333;cursor:pointer}
+.task.active{background:#333;color:#fff;border-bottom:2px solid #20a4ff}
+#tray{display:flex;align-items:center;gap:14px;padding:0 14px;font-size:12px}
+#startMenu{position:absolute;left:0;bottom:48px;width:430px;height:520px;background:rgba(30,30,30,.98);box-shadow:0 0 20px #0008;display:none;z-index:11000}
+#startMenu.show{display:flex}
+.start-left{width:110px;background:#242424;padding-top:10px;display:flex;flex-direction:column;align-items:center}
+.start-left button{width:90px;height:58px;background:transparent;color:#ddd;cursor:pointer}.start-left button:hover{background:#3b3b3b}
+.start-main{flex:1;padding:18px}.start-main h2{font-weight:400;margin:0 0 14px}
+.app-tile{display:flex;align-items:center;gap:12px;padding:11px;border-radius:3px;cursor:pointer}
+.app-tile:hover{background:#3b3b3b}.app-tile b{font-size:25px;font-weight:400}
+.window{position:absolute;left:180px;top:100px;width:720px;height:480px;background:#f4f4f4;color:#111;border:1px solid #777;box-shadow:0 8px 30px #0008;display:flex;flex-direction:column;min-width:280px;min-height:180px;resize:both;overflow:hidden}
+.window.max{left:0!important;top:0!important;width:100%!important;height:calc(100% - 48px)!important;resize:none}
+.titlebar{height:38px;background:#fff;display:flex;align-items:center;user-select:none;border-bottom:1px solid #ddd;cursor:default}
+.titlebar .appmark{width:40px;text-align:center;font-size:20px}.titlebar .title{flex:1;font-size:13px}
+.controls{display:flex;height:100%}.controls button{width:46px;background:transparent;color:#333;cursor:pointer}.controls button:hover{background:#e5e5e5}.controls .close:hover{background:#e81123;color:#fff}
+.content{flex:1;min-height:0;overflow:auto}
+.lock{position:fixed;inset:0;background:linear-gradient(135deg,#0b5ca8,#143c70);z-index:50000;display:flex;align-items:center;justify-content:center;transition:opacity .35s}
+.lock.hidden{opacity:0;pointer-events:none}
+.lockbox{text-align:center;width:320px}.lockbox .avatar{font-size:72px;margin-bottom:10px}.lockbox h1{font-weight:400;margin:5px}.lockbox p{margin:8px 0 18px;color:#dcecff}.lockbox input{width:240px;padding:11px;border:1px solid #ddd}.lockbox button{margin-top:10px;padding:10px 25px;background:#1683d8;color:#fff;cursor:pointer}.hint{font-size:11px;opacity:.7;margin-top:15px}
+.explorer{height:100%;display:flex;background:#fff}.side{width:190px;border-right:1px solid #ddd;padding:10px;background:#f7f7f7}.side div{padding:8px;cursor:pointer}.side div:hover,.side .sel{background:#e5f2ff}
+.side button{display:block;width:100%;margin:5px 0;padding:7px;text-align:left;background:#fff;border:1px solid #ccc;cursor:pointer}.side button:hover{background:#eaf5ff}.files{flex:1;padding:15px;display:flex;gap:14px;align-content:flex-start;flex-wrap:wrap}.fileitem{width:86px;height:90px;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;border:1px solid transparent}.fileitem:hover{background:#eef6ff;border-color:#c8def5}.fileitem .big{font-size:38px}.fileitem span{font-size:12px;text-align:center}
+.notepad{height:100%;display:flex;flex-direction:column}.editorbar{height:42px;background:#f2f2f2;border-bottom:1px solid #ccc;display:flex;align-items:center;gap:4px;padding:5px}.editorbar button{padding:6px 12px;background:#fff;border:1px solid #ccc;cursor:pointer}.editorbar button:hover{background:#e5e5e5}.editor{flex:1;display:flex;min-height:0}.lines{width:42px;background:#f3f3f3;color:#888;text-align:right;padding:9px 7px;line-height:20px;font:14px/20px Consolas,monospace;overflow:hidden}.code{flex:1;border:0;outline:0;resize:none;padding:9px;font:14px/20px Consolas,monospace;color:#111;background:#fff;white-space:pre;overflow:auto}
+.terminal{height:100%;background:#0c0c0c;color:#eee;font:14px Consolas,monospace;padding:12px;overflow:auto}.terminal input{background:transparent;border:0;outline:0;color:#fff;width:80%;font:inherit}
+.settings{padding:20px;background:#f5f5f5;height:100%;overflow:auto}.settings section{background:#fff;border:1px solid #ddd;padding:15px;margin-bottom:12px}.settings label{display:block;margin:9px 0}.settings input{margin-left:10px}
+.about{padding:30px}.about h1{font-weight:400}
+#toast{position:absolute;right:20px;bottom:65px;background:#222;color:#fff;padding:12px 18px;border-radius:3px;opacity:0;transform:translateY(10px);transition:.2s;z-index:30000}
+#toast.show{opacity:1;transform:none}
+</style>
+</head>
+<body>
+<div id="desktop">
+  <div class="wallpaper"></div>
+  <div id="desktopIcons">
+    <div class="icon" data-app="explorer" ondblclick="openApp('explorer')"><div class="ico">📁</div><span>ファイル</span></div>
+    <div class="icon" data-app="editor" ondblclick="openApp('editor')"><div class="ico">📝</div><span>テキスト エディター</span></div>
+    <div class="icon" data-app="terminal" ondblclick="openApp('terminal')"><div class="ico">⌨️</div><span>ターミナル</span></div>
+    <div class="icon" data-app="calculator" ondblclick="openApp('calculator')"><div class="ico">🧮</div><span>電卓</span></div>
+    <div class="icon" data-app="browser" ondblclick="openApp('browser')"><div class="ico">🌐</div><span>ブラウザ</span></div>
+    <div class="icon" data-app="taskmgr" ondblclick="openApp('taskmgr')"><div class="ico">📊</div><span>タスク マネージャー</span></div>
+    <div class="icon" data-app="settings" ondblclick="openApp('settings')"><div class="ico">⚙️</div><span>設定</span></div>
+  </div>
+
+  <div id="windows"></div>
+  <div id="toast"></div>
+
+  <div id="startMenu">
+    <div class="start-left">
+      <button onclick="openQuickSettings();toggleStart()">⚡<br><small>クイック</small></button>
+      <button onclick="openApp('taskmgr');toggleStart()">📊<br><small>タスク</small></button>
+      <button onclick="openApp('settings');toggleStart()">⚙️<br><small>設定</small></button>
+      <button onclick="lock();toggleStart()">🔒<br><small>ロック</small></button>
+      <button onclick="shutdown();toggleStart()">⏻<br><small>電源</small></button>
+    </div>
+    <div class="start-main">
+      <h2>スタート</h2>
+      <div class="app-tile" onclick="openApp('explorer');toggleStart()"><b>📁</b>ファイル エクスプローラー</div>
+      <div class="app-tile" onclick="openApp('editor');toggleStart()"><b>📝</b>テキスト エディター</div>
+      <div class="app-tile" onclick="openApp('terminal');toggleStart()"><b>⌨️</b>ターミナル</div>
+      <div class="app-tile" onclick="openQuickSettings();toggleStart()"><b>⚡</b>クイック設定</div>
+      <div class="app-tile" onclick="openApp('taskmgr');toggleStart()"><b>📊</b>タスク マネージャー</div>
+      <div class="app-tile" onclick="openApp('calculator');toggleStart()"><b>🧮</b>電卓</div>
+      <div class="app-tile" onclick="openApp('browser');toggleStart()"><b>🌐</b>ブラウザ</div>
+      <div class="app-tile" onclick="openApp('settings');toggleStart()"><b>⚙️</b>設定</div>
+      <div class="app-tile" onclick="openApp('about');toggleStart()"><b>ℹ️</b>WebOS 10 について</div>
+    </div>
+  </div>
+
+  <div id="taskbar">
+    <button id="startBtn" onclick="toggleStart()">⊞</button>
+    <div id="taskApps"></div>
+      <button id="quickBtn" onclick="openQuickSettings()" title="クイック設定">⚡</button>
+    <div id="tray"><span id="net">🌐</span><span>🔊</span><span id="clock"></span></div>
+  </div>
+</div>
+
+<div id="lock" class="lock">
+  <div class="lockbox">
+    <div class="avatar">👤</div>
+    <h1 id="lockUsername">WebOS User</h1>
+    <p id="lockTime"></p>
+    <input id="pin" type="password" placeholder="PIN"
+       onkeydown="if(event.key==='Enter')unlock()">
+
+<div id="pinError" style="
+  color:#ffb4b4;
+  font-size:13px;
+  margin-top:8px;
+  min-height:18px;
+"></div>
+
+<br>
+<button onclick="unlock()">サインイン</button>
+
+<div class="hint">
+  初期PIN: 1234　（設定から変更できます）
+</div>
+
+<button
+  onclick="showPasswordRecovery()"
+  style="
+    margin-top:10px;
+    background:transparent;
+    color:#cfe8ff;
+    text-decoration:underline;
+    cursor:pointer;
+    font-size:12px;
+  "
+>
+  パスワードが分からない場合
+</button>
+  </div>
+</div>
+<div id="recoveryDialog"
+     style="
+       position:fixed;
+       inset:0;
+       background:rgba(0,0,0,.65);
+       z-index:60000;
+       display:none;
+       align-items:center;
+       justify-content:center;
+     ">
+
+  <div style="
+    width:360px;
+    background:#fff;
+    color:#111;
+    padding:24px;
+    border-radius:6px;
+    box-shadow:0 10px 40px #000;
+  ">
+
+    <h2 style="margin-top:0;font-weight:400">
+      パスワードの回復
+    </h2>
+
+    <p style="font-size:13px;color:#555">
+      パスワードが分からない場合の回復方法を選択してください。
+    </p>
+
+    <button
+      onclick="resetEverything()"
+      style="
+        width:100%;
+        padding:12px;
+        margin-top:8px;
+        background:#e81123;
+        color:#fff;
+        cursor:pointer;
+      "
+    >
+      🗑すべて初期化する
+    </button>
+
+    <button
+      onclick="showSpecialRecovery()"
+      style="
+        width:100%;
+        padding:12px;
+        margin-top:8px;
+        background:#1683d8;
+        color:#fff;
+        cursor:pointer;
+      "
+    >
+      特別なパスワードで回復
+    </button>
+
+    <button
+      onclick="closeRecovery()"
+      style="
+        width:100%;
+        padding:12px;
+        margin-top:8px;
+        background:#eee;
+        color:#222;
+        cursor:pointer;
+      "
+    >
+      キャンセル
+    </button>
+
+  </div>
+</div>
+<div id="specialRecoveryDialog"
+     style="
+       position:fixed;
+       inset:0;
+       background:rgba(0,0,0,.65);
+       z-index:61000;
+       display:none;
+       align-items:center;
+       justify-content:center;
+     ">
+
+  <div style="
+    width:360px;
+    background:#fff;
+    color:#111;
+    padding:24px;
+    border-radius:6px;
+    box-shadow:0 10px 40px #000;
+  ">
+
+    <h2 style="margin-top:0;font-weight:400">
+      特別なパスワード
+    </h2>
+
+    <p style="font-size:13px;color:#555">
+      回復用パスワードを入力してください。
+    </p>
+
+    <input
+      id="recoveryPassword"
+      type="password"
+      placeholder="回復用パスワード"
+      style="
+        width:100%;
+        padding:11px;
+        border:1px solid #bbb;
+      "
+      onkeydown="
+        if(event.key==='Enter'){
+          recoverWithSpecialPassword();
+        }
+      "
+    >
+
+    <div id="recoveryError"
+         style="
+           color:#d00;
+           font-size:12px;
+           min-height:18px;
+           margin-top:7px;
+         ">
+    </div>
+
+    <button
+      onclick="recoverWithSpecialPassword()"
+      style="
+        width:100%;
+        padding:11px;
+        margin-top:8px;
+        background:#1683d8;
+        color:#fff;
+        cursor:pointer;
+      "
+    >
+      回復
+    </button>
+
+    <button
+      onclick="closeSpecialRecovery()"
+      style="
+        width:100%;
+        padding:11px;
+        margin-top:8px;
+        background:#eee;
+        cursor:pointer;
+      "
+    >
+      戻る
+    </button>
+
+  </div>
+</div>
+<script>
+/* ==========================================================
+   WebOS 10
+   - ロック画面
+   - ウィンドウマネージャー
+   - ファイルシステム(localStorage)
+   - テキストエディター
+   - 独自JS APIによるウィンドウ生成
+   ========================================================== */
+let currentFolder = "";
+const CONFIG='webos10_config_v1';
+
+const STORE = "webos10_files_v2";
+
+let files = JSON.parse(localStorage.getItem(STORE) || "null") || {
+  "README.md": {
+    type: "file",
+    content: `# WebOS 10
+
+WebOS 10 はブラウザ上で動作するWindows 10風のWeb OSです。
+
+## ファイル操作
+
+- New File
+- New Folder
+- Open File
+- Rename
+- Delete
+- フォルダ移動
+
+## JavaScript
+
+apps.jsにはWebOS専用JavaScript APIのサンプルがあります。
+`
+  },
+
+  "hello.txt": {
+    type: "file",
+    content: "Hello, WebOS 10!"
+  },
+
+  "apps.js": {
+    type: "file",
+    content: `// WebOS 10 JavaScript
+
+// 普通のJavaScript
+let name = "WebOS";
+console.log(name);
+
+// ウィンドウを作る
+OS.window(
+  "My App",
+  "<h1>Hello WebOS!</h1><p>自作アプリです。</p>"
+);
+
+// 通知
+OS.toast("Hello!");
+
+// 電卓を開く
+OS.openApp("calculator");
+
+// ファイルを作る
+OS.writeFile(
+  "hello.txt",
+  "JavaScriptから書き込みました！"
+);
+
+// ファイルを読む
+let text = OS.readFile("README.md");
+console.log(text);
+
+// ファイル一覧
+console.log(OS.listFiles());
+
+//フォルダを作る
+    OS.mkdir("Games");
+
+//フォルダの中にファイルを作る
+OS.mkdir("Games/MyGame");
+
+//ファイルを編集する
+OS.writeFile(
+  "Games/MyGame/main.js",
+  'console.log("Hello Game");'
+);
+
+console.log(
+  OS.listFolder("Games/MyGame")
+);
+`
+  },
+
+  "Documents": {
+    type: "folder"
+  },
+
+  "Documents/memo.txt": {
+    type: "file",
+    content: `これはDocumentsフォルダの中にあるファイルです。
+`
+  },
+
+  "Projects": {
+    type: "folder"
+  },
+
+  "Projects/example.js": {
+    type: "file",
+    content: `// プロジェクト用JavaScript
+  
+function hello(name) {
+  return "Hello, " + name;
+}
+
+console.log(hello("WebOS"));
+`
+  },
+
+  "Projects/apps": {
+    type: "folder"
+  },
+
+  "Projects/apps/test.js": {
+    type: "file",
+    content: `OS.window(
+  "Test App",
+  "<h2>Test App</h2><p>これはテストアプリです。</p>"
+);
+`
+  }
+};
+
+localStorage.setItem(STORE, JSON.stringify(files));
+
+let config=Object.assign(
+  {
+    pin:'1234',
+    accent:'#0879c9',
+    username:'WebOS User'
+  },
+  JSON.parse(localStorage.getItem(CONFIG)||'{}')
+);
+let z=200, winId=0, activeFile='README.md', windowsMap={};
+
+function saveFiles(){localStorage.setItem(STORE,JSON.stringify(files))}
+function saveConfig(){localStorage.setItem(CONFIG,JSON.stringify(config))}
+function toast(s){const t=document.getElementById('toast');t.textContent=s;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),1800)}
+
+function lock(){
+  document.getElementById('lock').classList.remove('hidden');
+  document.getElementById('pin').value='';
+  setTimeout(()=>document.getElementById('pin').focus(),150);
+}
+function unlock(){
+
+  const input =
+    document.getElementById('pin');
+
+  const error =
+    document.getElementById('pinError');
+
+  if(input.value === config.pin){
+
+    error.textContent = "";
+
+    document
+      .getElementById('lock')
+      .classList.add('hidden');
+
+  }else{
+
+    error.textContent =
+      "パスワードが違います";
+
+    input.value = "";
+
+    input.focus();
+  }
+}
+const SPECIAL_RECOVERY_PASSWORD = "appleQer!";
+
+function showPasswordRecovery(){
+
+  document.getElementById(
+    'recoveryDialog'
+  ).style.display = 'flex';
+
+}
+
+function closeRecovery(){
+
+  document.getElementById(
+    'recoveryDialog'
+  ).style.display = 'none';
+
+}
+
+function showSpecialRecovery(){
+
+  closeRecovery();
+
+  const dialog =
+    document.getElementById(
+      'specialRecoveryDialog'
+    );
+
+  dialog.style.display = 'flex';
+
+  const input =
+    document.getElementById(
+      'recoveryPassword'
+    );
+
+  input.value = '';
+
+  document.getElementById(
+    'recoveryError'
+  ).textContent = '';
+
+  setTimeout(() => input.focus(), 100);
+
+}
+
+function closeSpecialRecovery(){
+
+  document.getElementById(
+    'specialRecoveryDialog'
+  ).style.display = 'none';
+
+}
+
+function recoverWithSpecialPassword(){
+
+  const input =
+    document.getElementById('recoveryPassword');
+
+  const error =
+    document.getElementById('recoveryError');
+
+  if(input.value !== SPECIAL_RECOVERY_PASSWORD){
+
+    error.textContent =
+      '回復用パスワードが違います。';
+
+    input.value = '';
+    input.focus();
+
+    return;
+  }
+
+  // PINを初期PINに戻す
+  config.pin = '1234';
+
+  saveConfig();
+
+  closeSpecialRecovery();
+
+  // PIN入力欄を空にする
+  document.getElementById('pin').value = '';
+
+  // 回復したPINを表示
+  alert(
+    'パスワードを回復しました。\n\n' +
+    '回復後のPIN: 1234'
+  );
+
+  // PIN入力欄にフォーカス
+  document.getElementById('pin').focus();
+}
+function resetEverything(){
+
+  const ok = confirm(
+    '本当にすべて初期化しますか？\n\n' +
+    'ファイル、PIN、設定、デスクトップアイコンの位置が初期状態に戻ります。'
+  );
+
+  if(!ok){
+    return;
+  }
+
+  // ファイル
+  localStorage.removeItem(STORE);
+
+  // 設定
+  localStorage.removeItem(CONFIG);
+
+  // デスクトップアイコン位置
+  localStorage.removeItem(
+    'webos10_desktop_positions_v1'
+  );
+
+  // 初期状態へ
+  location.reload();
+
+}
+function updateUsername(){
+  const el = document.getElementById('lockUsername');
+
+  if(el){
+    el.textContent = config.username || 'WebOS User';
+  }
+}
+function shutdown(){
+  document.getElementById('desktop').style.display='none';
+  document.getElementById('lock').classList.remove('hidden');
+  toast('電源を切ったように見せています');
+  setTimeout(()=>location.reload(),1200);
+}
+function toggleStart(){document.getElementById('startMenu').classList.toggle('show')}
+
+function makeWindow(title,html,icon='🪟',opts={}){
+  const id='w'+(++winId);
+  const w=document.createElement('div');
+  w.className='window';
+  w.id=id;
+  w.style.zIndex=++z;
+  if(opts.x!=null)w.style.left=opts.x+'px';
+  if(opts.y!=null)w.style.top=opts.y+'px';
+  if(opts.width)w.style.width=opts.width+'px';
+  if(opts.height)w.style.height=opts.height+'px';
+  w.innerHTML=`<div class="titlebar">
+    <div class="appmark">${icon}</div><div class="title">${escapeHtml(title)}</div>
+    <div class="controls">
+      <button onclick="minimizeWindow('${id}')">—</button>
+      <button onclick="maximizeWindow('${id}')">□</button>
+      <button class="close" onclick="closeWindow('${id}')">×</button>
+    </div>
+  </div><div class="content">${html}</div>`;
+  document.getElementById('windows').appendChild(w);
+  windowsMap[id]={id,title,icon,w};
+  makeDraggable(w,w.querySelector('.titlebar'));
+  w.addEventListener('mousedown',()=>focusWindow(id));
+  addTask(id,title,icon);
+  return id;
+}
+function focusWindow(id){const o=windowsMap[id];if(!o)return;o.w.style.zIndex=++z;document.querySelectorAll('.task').forEach(x=>x.classList.toggle('active',x.dataset.id===id))}
+function closeWindow(id){const o=windowsMap[id];if(!o)return;o.w.remove();delete windowsMap[id];document.querySelector(`.task[data-id="${id}"]`)?.remove()}
+function minimizeWindow(id){const o=windowsMap[id];if(!o)return;o.w.style.display='none';document.querySelector(`.task[data-id="${id}"]`)?.classList.remove('active')}
+function restoreWindow(id){const o=windowsMap[id];if(!o)return;o.w.style.display='flex';focusWindow(id)}
+function maximizeWindow(id){windowsMap[id]?.w.classList.toggle('max');focusWindow(id)}
+function addTask(id,title,icon){
+  const b=document.createElement('button');b.className='task';b.dataset.id=id;b.textContent=icon+' '+title;
+  b.onclick=()=>{const w=windowsMap[id];if(!w)return;if(w.w.style.display==='none')restoreWindow(id);else if(w.w.style.zIndex==z)minimizeWindow(id);else focusWindow(id)};
+  document.getElementById('taskApps').appendChild(b);focusWindow(id)
+}
+function makeDraggable(w,bar){
+  let drag=false,dx=0,dy=0;
+  bar.addEventListener('mousedown',e=>{
+    if(e.target.closest('button')||w.classList.contains('max'))return;
+    drag=true;dx=e.clientX-w.offsetLeft;dy=e.clientY-w.offsetTop;focusWindow(w.id)
+  });
+  document.addEventListener('mousemove',e=>{
+    if(!drag)return;
+    const maxX=innerWidth-w.offsetWidth,maxY=innerHeight-48-w.offsetHeight;
+    w.style.left=Math.max(0,Math.min(maxX,e.clientX-dx))+'px';
+    w.style.top=Math.max(0,Math.min(maxY,e.clientY-dy))+'px';
+  });
+  document.addEventListener('mouseup',()=>drag=false);
+  bar.addEventListener('dblclick',e=>{if(!e.target.closest('button'))maximizeWindow(w.id)})
+}
+function escapeHtml(s){return String(s).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]))}
+
+function openApp(app){
+  if(app==='explorer')return openExplorer();
+  if(app==='editor')return openEditor(activeFile);
+  if(app==='terminal')return openTerminal();
+  if(app==='settings')return openSettings();
+  if(app==='quick')return openQuickSettings();
+  if(app==='taskmgr')return openTaskManager();
+  if(app==='calculator')return openCalculator();
+  if(app==='browser')return openBrowser();
+  if(app==='about')return makeWindow('WebOS 10 について',`<div class="about"><h1>WebOS 10</h1><p>ブラウザだけで動くWindows 10風のデスクトップ環境。</p><p>バージョン 1.0</p></div>`,'ℹ️',{width:500,height:330});
+}
+
+function openExplorer(){
+ const html=`<div class="explorer"><div class="side">
+  <div class="sel" onclick="goHomeFolder()">🏠 ホーム</div><div>💻 PC</div><div>📄 ドキュメント</div><div>⬇️ ダウンロード</div>
+  <hr>
+  <button onclick="newFile()">＋ New File</button>
+<button onclick="openFileDialog()">📂 Open File</button>
+<button onclick="renameSelectedFile()">✏️ Rename</button>
+<button onclick="deleteSelectedFile()">🗑️ Delete</button>
+<button onclick="newFolder()">📁 New Folder</button>
+<button onclick="goBackFolder()">⬅️ Back</button>
+  <div id="explorerSelected" style="font-size:11px;color:#666;padding:8px">選択なし</div>
+  </div><div class="files" id="fileGrid"></div></div>`;
+ const id=makeWindow('ファイル エクスプローラー',html,'📁',{width:760,height:500});
+ renderFiles(id);return id;
+}
+let selectedExplorerFile = null;
+
+/* =========================
+   パス関連
+========================= */
+
+function normalizePath(path){
+  return String(path || "")
+    .replace(/\\/g, "/")
+    .replace(/^\/+|\/+$/g, "");
+}
+
+function joinPath(folder, name){
+  folder = normalizePath(folder);
+  name = normalizePath(name);
+
+  return folder ? folder + "/" + name : name;
+}
+
+/* =========================
+   現在のフォルダにある項目だけ取得
+========================= */
+
+function getCurrentFolderItems(){
+  const result = [];
+
+  Object.keys(files).forEach(path => {
+    path = normalizePath(path);
+
+    if(!path) return;
+
+    const parts = path.split("/");
+    const parent = parts.slice(0, -1).join("/");
+    const name = parts[parts.length - 1];
+
+    // 現在のフォルダ直下だけ表示
+    if(parent === currentFolder){
+      result.push({
+        path,
+        name,
+        data: files[path]
+      });
+    }
+  });
+
+  return result.sort((a,b) => {
+
+    // フォルダを先に表示
+    if(a.data.type === "folder" && b.data.type !== "folder") return -1;
+    if(a.data.type !== "folder" && b.data.type === "folder") return 1;
+
+    return a.name.localeCompare(b.name, "ja");
+  });
+}
+
+/* =========================
+   Explorer表示
+========================= */
+
+function renderFiles(winId){
+
+  const grid =
+    document.querySelector(`#${winId} #fileGrid`);
+
+  if(!grid) return;
+
+  grid.innerHTML = "";
+
+  /*
+    現在位置表示
+  */
+
+  const explorer =
+    document.querySelector(`#${winId} .files`);
+
+  if(explorer){
+
+    const oldPath =
+      explorer.querySelector(".current-path");
+
+    if(oldPath) oldPath.remove();
+
+    const pathBar =
+      document.createElement("div");
+
+    pathBar.className = "current-path";
+
+    pathBar.style.cssText =
+      "position:absolute;left:205px;right:15px;top:8px;" +
+      "height:30px;padding:6px 10px;" +
+      "background:#f5f5f5;border:1px solid #ddd;" +
+      "font-size:12px;color:#555;";
+
+    pathBar.textContent =
+      "📍 ホーム" +
+      (currentFolder ? " > " + currentFolder : "");
+
+    explorer.parentElement.style.position = "relative";
+    explorer.appendChild(pathBar);
+  }
+
+  /*
+    ファイル一覧
+  */
+
+  const items = getCurrentFolderItems();
+
+  items.forEach(item => {
+
+    const d =
+      document.createElement("div");
+
+    d.className = "fileitem";
+
+    d.dataset.name = item.path;
+
+    const isFolder =
+      item.data.type === "folder";
+
+    const ico =
+      isFolder
+        ? "📁"
+        : getFileIcon(item.name);
+
+    d.innerHTML = `
+      <div class="big">${ico}</div>
+      <span>${escapeHtml(item.name)}</span>
+    `;
+
+    /*
+      クリック
+    */
+
+    d.onclick = () => {
+      selectExplorerFile(item.path);
+    };
+
+    /*
+      ダブルクリック
+    */
+
+    d.ondblclick = () => {
+
+      if(isFolder){
+
+        // フォルダへ移動
+        currentFolder = item.path;
+
+        selectedExplorerFile = null;
+
+        renderFiles(winId);
+
+      }else{
+
+        openFile(item.path);
+
+      }
+
+    };
+
+    grid.appendChild(d);
+  });
+
+  /*
+    空フォルダ
+  */
+
+  if(items.length === 0){
+
+    const empty =
+      document.createElement("div");
+
+    empty.style.cssText =
+      "width:100%;padding:40px;text-align:center;color:#888;";
+
+    empty.textContent =
+      "このフォルダは空です";
+
+    grid.appendChild(empty);
+  }
+}
+
+
+/* =========================
+   ファイルアイコン
+========================= */
+
+function getFileIcon(name){
+
+  const ext =
+    name.split(".").pop().toLowerCase();
+
+  if(ext === "js") return "📜";
+  if(ext === "html") return "🌐";
+  if(ext === "css") return "🎨";
+  if(ext === "md") return "📘";
+  if(ext === "txt") return "📄";
+  if(ext === "json") return "⚙️";
+
+  return "📄";
+}
+
+
+/* =========================
+   ファイル選択
+========================= */
+
+function selectExplorerFile(name){
+
+  selectedExplorerFile = name;
+
+  document
+    .querySelectorAll(".fileitem")
+    .forEach(x => {
+      x.style.outline = "";
+    });
+
+  const el =
+    [...document.querySelectorAll(".fileitem")]
+      .find(x => x.dataset.name === name);
+
+  if(el){
+    el.style.outline =
+      "1px solid #1683d8";
+  }
+
+  document
+    .querySelectorAll("#explorerSelected")
+    .forEach(x => {
+
+      x.textContent =
+        "選択: " + name;
+
+    });
+}
+
+
+/* =========================
+   現在のExplorerを取得
+========================= */
+
+function getExplorerWindow(){
+
+  return [
+    ...document.querySelectorAll(".window")
+  ].find(w =>
+    w.querySelector("#fileGrid")
+  );
+}
+
+
+/* =========================
+   ファイルを開く
+========================= */
+
+function openFileDialog(){
+
+  const name =
+    prompt(
+      "開くファイル名を入力してください",
+      selectedExplorerFile || ""
+    );
+
+  if(!name) return;
+
+  const path = normalizePath(name);
+
+  if(!files[path]){
+
+    toast("ファイルが見つかりません");
+
+    return;
+  }
+
+  if(files[path].type === "folder"){
+
+    toast("これはフォルダです");
+
+    return;
+  }
+
+  openFile(path);
+}
+
+
+/* =========================
+   新しいファイル
+========================= */
+
+function newFile(){
+
+  const name =
+    prompt(
+      "新しいファイル名",
+      "new.js"
+    );
+
+  if(!name) return;
+
+  const path =
+    joinPath(currentFolder, name);
+
+  if(files[path] !== undefined){
+
+    toast(
+      "そのファイルは既に存在します"
+    );
+
+    return;
+  }
+
+  let content = "";
+
+  if(name.toLowerCase().endsWith(".js")){
+
+    content =
+`// WebOS 10 JavaScript
+
+let name = "WebOS";
+
+console.log(name);
+
+// 普通のJavaScriptが使えます
+function hello(name) {
+  return "Hello, " + name;
+}
+
+console.log(hello("WebOS"));
+`;
+
+  }
+
+  files[path] = {
+    type: "file",
+    content: content
+  };
+
+  saveFiles();
+
+  selectedExplorerFile = path;
+  activeFile = path;
+
+  toast(
+    name + " を作成しました"
+  );
+
+  const ex =
+    getExplorerWindow();
+
+  if(ex){
+
+    renderFiles(ex.id);
+
+  }
+
+  openFile(path);
+}
+
+
+/* =========================
+   新しいフォルダ
+========================= */
+
+function newFolder(){
+
+  const name =
+    prompt(
+      "新しいフォルダ名",
+      "New Folder"
+    );
+
+  if(!name) return;
+
+  const path =
+    joinPath(currentFolder, name);
+
+  if(files[path] !== undefined){
+
+    toast(
+      "その名前は既に使われています"
+    );
+
+    return;
+  }
+
+  files[path] = {
+    type: "folder"
+  };
+
+  saveFiles();
+
+  toast(
+    name + " を作成しました"
+  );
+
+  const ex =
+    getExplorerWindow();
+
+  if(ex){
+
+    renderFiles(ex.id);
+
+  }
+}
+
+
+/* =========================
+   1つ上のフォルダへ
+========================= */
+
+function goBackFolder(){
+
+  if(!currentFolder){
+
+    toast("これ以上戻れません");
+
+    return;
+  }
+
+  const parts =
+    currentFolder.split("/");
+
+  parts.pop();
+
+  currentFolder =
+    parts.join("/");
+
+  selectedExplorerFile = null;
+
+  const ex =
+    getExplorerWindow();
+
+  if(ex){
+
+    renderFiles(ex.id);
+
+  }
+}
+
+
+/* =========================
+   ホームへ戻る
+========================= */
+
+function goHomeFolder(){
+
+  currentFolder = "";
+
+  selectedExplorerFile = null;
+
+  const ex =
+    getExplorerWindow();
+
+  if(ex){
+
+    renderFiles(ex.id);
+
+  }
+}
+
+
+/* =========================
+   名前変更
+========================= */
+
+function renameSelectedFile(){
+
+  const old =
+    selectedExplorerFile || activeFile;
+
+  if(!old || files[old] === undefined){
+
+    toast(
+      "ファイルまたはフォルダを選択してください"
+    );
+
+    return;
+  }
+
+  const oldName =
+    old.split("/").pop();
+
+  const newName =
+    prompt(
+      "新しい名前",
+      oldName
+    );
+
+  if(!newName || newName === oldName)
+    return;
+
+  const parent =
+    old.split("/").slice(0,-1).join("/");
+
+  const newPath =
+    joinPath(parent, newName);
+
+  if(files[newPath] !== undefined){
+
+    toast(
+      "その名前は既に使われています"
+    );
+
+    return;
+  }
+
+  /*
+    フォルダの場合は中身も全部変更
+  */
+
+  if(files[old].type === "folder"){
+
+    const prefix = old + "/";
+
+    const children =
+      Object.keys(files)
+        .filter(path =>
+          path.startsWith(prefix)
+        );
+
+    files[newPath] = files[old];
+
+    children.forEach(path => {
+
+      const relative =
+        path.substring(prefix.length);
+
+      const newChild =
+        newPath + "/" + relative;
+
+      files[newChild] =
+        files[path];
+
+      delete files[path];
+
+    });
+
+    delete files[old];
+
+  }else{
+
+    files[newPath] =
+      files[old];
+
+    delete files[old];
+
+  }
+
+  if(activeFile === old){
+
+    activeFile =
+      newPath;
+
+  }
+
+  if(selectedExplorerFile === old){
+
+    selectedExplorerFile =
+      newPath;
+
+  }
+
+  /*
+    現在フォルダそのものを
+    リネームした場合
+  */
+
+  if(currentFolder === old){
+
+    currentFolder =
+      newPath;
+
+  }
+
+  saveFiles();
+
+  const ex =
+    getExplorerWindow();
+
+  if(ex){
+
+    renderFiles(ex.id);
+
+  }
+
+  toast(
+    "名前を変更しました"
+  );
+}
+
+
+/* =========================
+   削除
+========================= */
+
+function deleteSelectedFile(){
+
+  const path =
+    selectedExplorerFile || activeFile;
+
+  if(!path || files[path] === undefined){
+
+    toast(
+      "削除するファイルまたはフォルダを選択してください"
+    );
+
+    return;
+  }
+
+  const item =
+    files[path];
+
+  const name =
+    path.split("/").pop();
+
+  if(!confirm(
+    `「${name}」を削除しますか？`
+  )){
+
+    return;
+  }
+
+  /*
+    フォルダなら中身も削除
+  */
+
+  if(item.type === "folder"){
+
+    const prefix =
+      path + "/";
+
+    Object.keys(files)
+      .filter(x =>
+        x.startsWith(prefix)
+      )
+      .forEach(x => {
+
+        delete files[x];
+
+      });
+  }
+
+  delete files[path];
+
+  if(activeFile === path){
+
+    activeFile = null;
+
+  }
+
+  selectedExplorerFile = null;
+
+  saveFiles();
+
+  const ex =
+    getExplorerWindow();
+
+  if(ex){
+
+    renderFiles(ex.id);
+
+  }
+
+  document
+    .querySelectorAll("#explorerSelected")
+    .forEach(x =>
+      x.textContent = "選択なし"
+    );
+
+  toast(
+    name + " を削除しました"
+  );
+}
+
+
+/* =========================
+   ファイルを開く
+========================= */
+
+function openFile(name){
+
+  if(!files[name]){
+
+    toast("ファイルが見つかりません");
+
+    return;
+  }
+
+  if(files[name].type === "folder"){
+
+    toast("フォルダはダブルクリックして開いてください");
+
+    return;
+  }
+
+  activeFile = name;
+
+  const ext =
+    name.split(".").pop().toLowerCase();
+
+  if(
+    ext === "js" ||
+    ext === "txt" ||
+    ext === "md" ||
+    ext === "html" ||
+    ext === "css" ||
+    ext === "json"
+  ){
+
+    openEditor(name);
+
+  }else{
+
+    toast(
+      "このファイル形式には対応していません"
+    );
+
+  }
+}
+
+
+/* =========================
+   テキストエディター
+========================= */
+
+function openEditor(name){
+
+  activeFile = name;
+
+  const text =
+    files[name]?.type === "file"
+      ? files[name].content
+      : "";
+
+  const html = `
+<div class="notepad">
+
+  <div class="editorbar">
+
+    <button onclick="editorSave('${encodeURIComponent(name)}')">
+      保存
+    </button>
+
+    <button onclick="editorRunJS('${encodeURIComponent(name)}')">
+      ▶ JSを実行
+    </button>
+
+    <button onclick="editorNew()">
+      新規
+    </button>
+
+    <span
+      style="margin-left:auto;font-size:12px;color:#666"
+      id="editorName">
+      ${escapeHtml(name)}
+    </span>
+
+  </div>
+
+  <div class="editor">
+
+    <div class="lines" id="lines"></div>
+
+    <textarea
+      class="code"
+      id="code"
+      spellcheck="false"
+    >${escapeHtml(text)}</textarea>
+
+  </div>
+
+</div>
+`;
+
+  const id =
+    makeWindow(
+      "テキスト エディター - " + name,
+      html,
+      "📝",
+      {
+        width:820,
+        height:560
+      }
+    );
+
+  const ta =
+    document.querySelector(
+      `#${id} .code`
+    );
+
+  const lines =
+    document.querySelector(
+      `#${id} .lines`
+    );
+
+  function sync(){
+
+    lines.textContent =
+      Array.from(
+        {
+          length:
+            Math.max(
+              1,
+              ta.value.split("\n").length
+            )
+        },
+        (_,i) => i + 1
+      ).join("\n");
+
+  }
+
+  ta.addEventListener(
+    "input",
+    sync
+  );
+
+  ta.addEventListener(
+    "scroll",
+    () => {
+      lines.scrollTop =
+        ta.scrollTop;
+    }
+  );
+
+  sync();
+
+  return id;
+}
+
+
+/* =========================
+   保存
+========================= */
+
+function editorSave(enc){
+
+  const name =
+    decodeURIComponent(enc);
+
+  const w =
+    [...document.querySelectorAll(".window")]
+      .find(x =>
+        x.querySelector("#code")
+      );
+
+  if(!w) return;
+
+  if(!files[name]){
+
+    toast(
+      "ファイルが存在しません"
+    );
+
+    return;
+  }
+
+  files[name] = {
+
+    type: "file",
+
+    content:
+      w.querySelector("#code").value
+
+  };
+
+  saveFiles();
+
+  toast("保存しました");
+}
+
+
+/* =========================
+   JavaScript実行
+========================= */
+
+function editorRunJS(enc){
+
+  const name =
+    decodeURIComponent(enc);
+
+  const w =
+    [...document.querySelectorAll(".window")]
+      .find(x =>
+        x.querySelector("#code")
+      );
+
+  if(!w) return;
+
+  const code =
+    w.querySelector("#code").value;
+
+  try{
+
+    new Function(
+      "OS",
+      "files",
+      "toast",
+      code
+    )(
+      OS,
+      files,
+      toast
+    );
+
+    toast(
+      "JSを実行しました"
+    );
+
+  }catch(e){
+
+    toast(
+      "JSエラー: " +
+      e.message
+    );
+
+    console.error(e);
+
+  }
+}
+
+
+/* =========================
+   新規エディター
+========================= */
+
+function editorNew(){
+
+  newFile();
+
+}
+
+function openTerminal(){
+ const html=`<div class="terminal" id="term"><div>WebOS Terminal [Version 10.0]</div><div>「help」と入力するとコマンド一覧を表示します。</div><br><div id="termout"></div><div><span>webos&gt; </span><input id="termInput" autocomplete="off"></div></div>`;
+ const id=makeWindow('ターミナル',html,'⌨️',{width:680,height:430});
+ const input=document.querySelector(`#${id} #termInput`),out=document.querySelector(`#${id} #termout`);
+ input.focus();
+ input.onkeydown=e=>{if(e.key!=='Enter')return;const c=input.value.trim();input.value='';out.innerHTML+=`<div>webos&gt; ${escapeHtml(c)}</div>`;termCommand(c,out);setTimeout(()=>input.focus(),0)}
+ return id
+}
+function termCommand(c,out){
+ const [cmd,...args]=c.split(' ');
+ if(cmd==='help')out.innerHTML+='<div>help, dir, open, cls, lock, date, echo, shutdown</div>';
+ else if(cmd==='dir')Object.keys(files).forEach(x=>out.innerHTML+=`<div>${escapeHtml(x)}</div>`);
+ else if(cmd==='open'&&args[0])openFile(args.join(' '));
+ else if(cmd==='cls')out.innerHTML='';
+ else if(cmd==='lock')lock();
+ else if(cmd==='date')out.innerHTML+=`<div>${new Date().toLocaleString('ja-JP')}</div>`;
+ else if(cmd==='echo')out.innerHTML+=`<div>${escapeHtml(args.join(' '))}</div>`;
+ else if(cmd==='shutdown')shutdown();
+ else if(c)out.innerHTML+='<div>コマンドが見つかりません。</div>'
+}
+
+
+function openQuickSettings(){
+ const html=`<div style="padding:18px;background:#f5f5f5;height:100%;overflow:auto">
+   <h2 style="font-weight:400;margin-top:0">クイック設定</h2>
+   <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+    <button class="qs" data-key="wifi" onclick="toggleQuick(this,'Wi-Fi')">🌐<br><b>Wi-Fi</b><br><small>オン</small></button>
+    <button class="qs" data-key="bluetooth" onclick="toggleQuick(this,'Bluetooth')">ᛒ<br><b>Bluetooth</b><br><small>オフ</small></button>
+    <button class="qs on" data-key="dark" onclick="toggleQuick(this,'ダークモード')">🌙<br><b>ダークモード</b><br><small>オフ</small></button>
+    <button class="qs on" data-key="air" onclick="toggleQuick(this,'機内モード')">✈️<br><b>機内モード</b><br><small>オフ</small></button>
+   </div>
+   <h3>🔊 音量</h3><input type="range" min="0" max="100" value="70" style="width:100%" oninput="toast('音量 '+this.value+'%')">
+   <h3>☀️ 明るさ</h3><input type="range" min="20" max="100" value="100" style="width:100%" oninput="document.getElementById('desktop').style.filter='brightness('+this.value/100+')'">
+   <p style="color:#666;font-size:12px">※ WebOS内だけのシミュレーションです。</p>
+ </div>
+ <style>.qs{padding:18px;background:#fff;border:1px solid #ccc;cursor:pointer;text-align:left}.qs:hover{background:#eaf5ff}.qs.active{background:#1683d8;color:#fff}</style>`;
+ return makeWindow('クイック設定',html,'⚡',{width:430,height:470});
+}
+function toggleQuick(btn,name){
+ btn.classList.toggle('active');
+ const small=btn.querySelector('small');
+ small.textContent=btn.classList.contains('active')?'オン':'オフ';
+ toast(name+' '+small.textContent);
+}
+
+function openTaskManager(){
+ const html=`<div style="height:100%;display:flex;flex-direction:column;background:#f5f5f5">
+  <div style="padding:12px 16px;background:#fff;border-bottom:1px solid #ddd">
+   <b>タスク マネージャー</b><span style="float:right" id="tmstats"></span>
+  </div>
+  <div style="padding:10px;background:#fafafa;border-bottom:1px solid #ddd">
+   <button onclick="tmRefresh('${Date.now()}')">更新</button>
+   <button onclick="tmEndSelected()">タスクの終了</button>
+  </div>
+  <div id="tmList" style="flex:1;overflow:auto"></div>
+ </div>`;
+ const id=makeWindow('タスク マネージャー',html,'📊',{width:650,height:430});
+ setTimeout(()=>refreshTaskManager(id),20);
+ return id;
+}
+function refreshTaskManager(winId){
+ const list=document.querySelector(`#${winId} #tmList`); if(!list)return;
+ list.innerHTML='';
+ const rows=Object.values(windowsMap);
+ rows.forEach((o,i)=>{
+   const row=document.createElement('div');
+   row.dataset.id=o.id;
+   row.style.cssText='display:flex;align-items:center;padding:10px 14px;border-bottom:1px solid #ddd;background:#fff;cursor:pointer';
+   row.innerHTML=`<input type="radio" name="tm-${winId}" value="${o.id}" style="margin-right:12px">
+    <span style="font-size:22px;width:38px">${o.icon}</span>
+    <span style="flex:1">${escapeHtml(o.title)}</span>
+    <span style="font-size:11px;color:#777">実行中</span>`;
+   row.onclick=()=>{row.querySelector('input').checked=true;focusWindow(o.id)};
+   list.appendChild(row);
+ });
+ document.querySelector(`#${winId} #tmstats`).textContent=rows.length+' 個のアプリ';
+}
+function tmRefresh(token){
+ const mgr=[...document.querySelectorAll('.window')].find(w=>w.querySelector('#tmList'));
+ if(mgr)refreshTaskManager(mgr.id);
+}
+function tmEndSelected(){
+ const mgr=[...document.querySelectorAll('.window')].find(w=>w.querySelector('#tmList'));
+ if(!mgr)return;
+ const checked=mgr.querySelector('input[type=radio]:checked');
+ if(checked){closeWindow(checked.value);setTimeout(()=>refreshTaskManager(mgr.id),20)}
+ else toast('終了するタスクを選択してください');
+}
+
+function openCalculator(){
+ const html=`<div style="height:100%;background:#202020;padding:14px;display:flex;flex-direction:column">
+  <input id="calcDisplay" readonly value="0" style="height:70px;background:#111;color:#fff;border:0;text-align:right;padding:10px;font-size:30px">
+  <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:10px;flex:1">
+   ${['C','⌫','%','÷','7','8','9','×','4','5','6','−','1','2','3','+','±','0','.','='].map(x=>`<button onclick="calcPress('${x}')" style="font-size:20px;background:${x==='='?'#1683d8':'#3a3a3a'};color:#fff;border:0;cursor:pointer">${x}</button>`).join('')}
+  </div>
+ </div>`;
+ return makeWindow('電卓',html,'🧮',{width:330,height:490});
+}
+let calcExpr='';
+function calcPress(x){
+ const d=document.getElementById('calcDisplay');if(!d)return;
+ if(x==='C'){calcExpr='';d.value='0';return}
+ if(x==='⌫'){calcExpr=calcExpr.slice(0,-1);d.value=calcExpr||'0';return}
+ if(x==='='){
+   try{
+     const safe=calcExpr.replace(/×/g,'*').replace(/÷/g,'/').replace(/−/g,'-').replace(/%/g,'/100');
+     if(!/^[0-9+*/(). -]+$/.test(safe))throw Error();
+     const result=Function('"use strict";return ('+safe+')')();
+     calcExpr=String(result);d.value=calcExpr;
+   }catch{d.value='エラー';calcExpr=''}
+   return
+ }
+ if(x==='±'){
+   if(calcExpr.startsWith('-'))calcExpr=calcExpr.slice(1);else calcExpr='-'+calcExpr;
+ }else calcExpr+=x;
+ d.value=calcExpr||'0';
+}
+
+function openBrowser(){
+ const html=`<div style="height:100%;display:flex;flex-direction:column;background:#fff">
+  <div style="height:48px;display:flex;gap:6px;padding:7px;background:#f2f2f2;border-bottom:1px solid #ccc">
+   <button onclick="browserBack()" style="width:38px">←</button><button onclick="browserForward()" style="width:38px">→</button>
+   <button onclick="browserHome()" style="width:38px">⌂</button>
+   <input id="browserUrl" value="webos://home" style="flex:1;padding:8px;border:1px solid #bbb" onkeydown="if(event.key==='Enter')browserGo()">
+   <button onclick="browserGo()">移動</button>
+  </div>
+  <iframe id="browserFrame" style="border:0;flex:1;width:100%" sandbox="allow-forms allow-modals allow-popups allow-scripts allow-same-origin"></iframe>
+ </div>`;
+ const id=makeWindow('WebOS ブラウザ',html,'🌐',{width:900,height:600});
+ setTimeout(()=>browserHome(id),20);
+ return id;
+}
+const browserHistory=[],browserFuture=[];
+function getBrowser(){
+ const w=[...document.querySelectorAll('.window')].find(x=>x.querySelector('#browserFrame'));
+ return w;
+}
+function browserHome(){
+ const w=getBrowser();if(!w)return;
+ const frame=w.querySelector('#browserFrame');
+ frame.srcdoc=`<!doctype html><html><body style="font-family:Segoe UI;padding:45px;background:#fafafa">
+ <h1>🌐 WebOS ブラウザ</h1><p>ブラウザ風のWebビューです。</p>
+ <p>アドレスバーに <b>https://example.com</b> などを入力できます。</p>
+ <hr><h2>WebOS ホーム</h2><button onclick="document.body.style.fontFamily='monospace'">表示を変更</button>
+ </body></html>`;
+ w.querySelector('#browserUrl').value='webos://home';
+}
+function browserGo(){
+ const w=getBrowser();if(!w)return;
+ const url=w.querySelector('#browserUrl').value.trim();
+ if(!url)return;
+ const frame=w.querySelector('#browserFrame');
+ if(/^https?:\/\//i.test(url)){frame.src=url}
+ else if(url.startsWith('webos://')){browserHome()}
+ else {frame.src='https://www.google.com/search?q='+encodeURIComponent(url)}
+}
+function browserBack(){try{getBrowser()?.querySelector('#browserFrame').contentWindow.history.back()}catch{}}
+function browserForward(){try{getBrowser()?.querySelector('#browserFrame').contentWindow.history.forward()}catch{}}
+
+function openSettings(){
+ const html=`<div class="settings">
+
+ <section>
+  <h3>👤 ユーザー</h3>
+
+  <label>
+   ユーザーネーム
+   <input
+     id="username"
+     type="text"
+     value="${escapeHtml(config.username)}"
+     placeholder="ユーザーネーム"
+   >
+  </label>
+
+  <button
+    onclick="changeUsername()"
+    style="padding:7px 14px">
+    ユーザーネームを変更
+  </button>
+ </section>
+
+ <section>
+  <h3>🔐 ロック</h3><label>新しいPIN <input id="newPin" type="password" placeholder="4桁以上"></label><button onclick="changePin()" style="padding:7px 14px">PINを変更</button></section>
+ <section><h3>🎨 外観</h3><label>アクセント色 <input id="accent" type="color" value="${config.accent}" onchange="changeAccent(this.value)"></label></section>
+ <section><h3>💾 データ</h3><button onclick="resetFiles()" style="padding:7px 14px">初期ファイルに戻す</button></section>
+ </div>`;
+ return makeWindow('設定',html,'⚙️',{width:570,height:430})
+}
+function changePin(){const v=document.getElementById('newPin')?.value;if(!v||v.length<4)return toast('4文字以上にしてください');config.pin=v;saveConfig();toast('PINを変更しました')}
+    function changeUsername(){
+
+  const input =
+    document.getElementById('username');
+
+  if(!input) return;
+
+  const name =
+    input.value.trim();
+
+  if(!name){
+    return toast('ユーザーネームを入力してください');
+  }
+
+  config.username = name;
+
+  saveConfig();
+  updateUsername();
+
+  toast('ユーザーネームを変更しました');
+}
+function changeAccent(v){config.accent=v;saveConfig();document.documentElement.style.setProperty('--accent',v);toast('アクセント色を変更しました')}
+function resetFiles(){if(confirm('初期ファイルに戻しますか？')){localStorage.removeItem(STORE);location.reload()}}
+
+/* ==========================================================
+   独自JavaScript API
+   テキストエディターから使えるAPI:
+   OS.window(title, html, options)
+   OS.close(id)
+   OS.toast(text)
+   OS.openApp(name)
+   OS.writeFile(name,text)
+   OS.readFile(name)
+   OS.listFiles()
+   OS.lock()
+   ========================================================== */
+window.OS = {
+
+  window(title, html, options = {}) {
+    return makeWindow(
+      title,
+      html,
+      "🧩",
+      options
+    );
+  },
+
+  close(id) {
+    closeWindow(id);
+  },
+
+  toast,
+
+  openApp,
+
+  lock,
+
+  mkdir(path) {
+
+    path = normalizePath(path);
+
+    if(!path) return false;
+
+    if(files[path] !== undefined)
+      return false;
+
+    files[path] = {
+      type: "folder"
+    };
+
+    saveFiles();
+
+    return true;
+  },
+
+  writeFile(name, text) {
+
+    name = normalizePath(name);
+
+    files[name] = {
+      type: "file",
+      content: String(text)
+    };
+
+    saveFiles();
+
+    return true;
+  },
+
+  readFile(name) {
+
+    name = normalizePath(name);
+
+    if(!files[name])
+      return null;
+
+    if(files[name].type !== "file")
+      return null;
+
+    return files[name].content;
+  },
+
+  delete(path) {
+
+    path = normalizePath(path);
+
+    if(!files[path])
+      return false;
+
+    if(files[path].type === "folder"){
+
+      const prefix =
+        path + "/";
+
+      Object.keys(files)
+        .filter(x =>
+          x.startsWith(prefix)
+        )
+        .forEach(x =>
+          delete files[x]
+        );
+    }
+
+    delete files[path];
+
+    saveFiles();
+
+    return true;
+  },
+
+  listFiles() {
+
+    return Object.keys(files);
+  },
+
+  listFolder(folder = "") {
+
+  folder = normalizePath(folder);
+
+  const result = [];
+
+  Object.keys(files).forEach(path => {
+
+    const parts = path.split("/");
+    const parent = parts.slice(0,-1).join("/");
+
+    if(parent !== folder)
+      return;
+
+    result.push({
+      name: parts[parts.length - 1],
+      path: path,
+      type: files[path].type
+    });
+
+  });
+
+  return result;
+},
+
+  html(s) {
+
+    return escapeHtml(s);
+
+  }
+
+};
+
+const desktopPositionsKey='webos10_desktop_positions_v1';
+let desktopPositions=JSON.parse(localStorage.getItem(desktopPositionsKey)||'null')||{};
+function saveDesktopPositions(){localStorage.setItem(desktopPositionsKey,JSON.stringify(desktopPositions))}
+function initDesktopIcons(){
+ const icons=[...document.querySelectorAll('.icon')];
+ icons.forEach((el,i)=>{
+   const key=el.dataset.app;
+   if(!desktopPositions[key])desktopPositions[key]={x:12,y:18+i*88};
+   applyIconPosition(el);
+   let dragging=false,dx=0,dy=0;
+   el.addEventListener('mousedown',e=>{
+     if(e.button!==0)return;
+     dragging=true;
+     const r=el.getBoundingClientRect();
+     dx=e.clientX-r.left;dy=e.clientY-r.top;
+     el.style.zIndex=20;
+     e.preventDefault();
+   });
+   document.addEventListener('mousemove',e=>{
+     if(!dragging)return;
+     const d=desktopPositions[key];
+     d.x=Math.max(0,Math.min(innerWidth-90,e.clientX-dx));
+     d.y=Math.max(0,Math.min(innerHeight-100,e.clientY-dy));
+     applyIconPosition(el);
+   });
+   document.addEventListener('mouseup',()=>{
+     if(dragging){dragging=false;saveDesktopPositions()}
+   });
+ });
+}
+function applyIconPosition(el){
+ const p=desktopPositions[el.dataset.app];
+ el.style.left=p.x+'px';el.style.top=p.y+'px';
+}
+window.addEventListener('resize',()=>{
+ document.querySelectorAll('.icon').forEach(applyIconPosition)
+});
+
+function updateClock(){
+ const d=new Date();
+ const time=d.toLocaleTimeString('ja-JP',{hour:'2-digit',minute:'2-digit'});
+ const date=d.toLocaleDateString('ja-JP',{month:'2-digit',day:'2-digit'});
+ document.getElementById('clock').textContent=time;
+ document.getElementById('lockTime').textContent=time+'　'+date;
+}
+setInterval(updateClock,1000);updateClock();
+initDesktopIcons();
+updateUsername();
+
+document.documentElement.style.setProperty(
+  '--accent',
+  config.accent
+);
+</script>
+</body>
+</html>
