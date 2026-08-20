@@ -978,7 +978,6 @@ background-size:110px 110px,170px 170px}
 
 .task-preview{
   position:fixed;
-
   bottom:53px;
 
   display:flex;
@@ -1004,14 +1003,11 @@ background-size:110px 110px,170px 170px}
 
   z-index:20000;
 
-  /* 画面内に収める */
   max-width:calc(100vw - 16px);
-
   overflow-x:auto;
 }
 
-/* マウスを乗せたとき */
-.task-group:hover .task-preview{
+.task-preview.show{
   opacity:1;
   visibility:visible;
   pointer-events:auto;
@@ -1075,10 +1071,7 @@ background-size:110px 110px,170px 170px}
   font-size:32px;
 }
 
-/* 1個だけの場合 */
-.task-group.single .task-preview{
-  display:none;
-}
+
 .task-preview-title{
   position:relative;
 
@@ -1099,8 +1092,8 @@ background-size:110px 110px,170px 170px}
 .task-preview-close{
   flex:none;
 
-  width:22px;
-  height:22px;
+  width:24px;
+  height:24px;
 
   margin-left:6px;
   padding:0;
@@ -1108,13 +1101,27 @@ background-size:110px 110px,170px 170px}
   border:0;
   border-radius:4px;
 
-  background:transparent;
-  color:#fff;
+  background:#e5e5e5;
+  color:#222;
 
-  font-size:16px;
-  line-height:22px;
+  font-size:17px;
+  font-weight:500;
+  line-height:24px;
 
   cursor:pointer;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+
+.task-preview-close:hover{
+  background:#e81123;
+  color:#fff;
+}
+
+.task-preview-close:active{
+  background:#c50f1f;
+  color:#fff;
 }
 
 .task-preview-close:hover{
@@ -2112,30 +2119,77 @@ function addTask(id,title,icon){
 
   if(!group){
 
-    group =
-      document.createElement('div');
+  group =
+    document.createElement('div');
 
-    group.className =
-      'task-group single';
+  group.className =
+    'task-group';
 
-    group.dataset.app =
-      appKey;
+  group.dataset.app =
+    appKey;
 
-    group.innerHTML = `
+  group.innerHTML = `
+    <button
+      class="task"
+      title="${escapeHtml(title)}"
+    >
+      ${icon}
+    </button>
 
-      <button
-        class="task"
-        title="${escapeHtml(title)}"
-      >
-        ${icon}
-      </button>
+    <div class="task-preview"></div>
+  `;
 
-      <div class="task-preview"></div>
+  taskApps.appendChild(group);
 
-    `;
+  const preview =
+    group.querySelector('.task-preview');
 
-    taskApps.appendChild(group);
-  }
+  let hideTimer = null;
+
+  // タスクバーから入った
+  group.addEventListener('mouseenter', () => {
+
+    clearTimeout(hideTimer);
+
+    preview.classList.add('show');
+
+    requestAnimationFrame(() => {
+      positionTaskPreview(group);
+    });
+  });
+
+  // タスクバーから離れた
+  group.addEventListener('mouseleave', () => {
+
+    hideTimer = setTimeout(() => {
+
+      // プレビューに移動していたら消さない
+      if(preview.matches(':hover')){
+        return;
+      }
+
+      preview.classList.remove('show');
+
+    }, 300);
+  });
+
+  // プレビューに入った
+  preview.addEventListener('mouseenter', () => {
+
+    clearTimeout(hideTimer);
+
+    preview.classList.add('show');
+  });
+
+  // プレビューから出た
+  preview.addEventListener('mouseleave', () => {
+
+    hideTimer = setTimeout(() => {
+      preview.classList.remove('show');
+    }, 150);
+
+  });
+}
 
   /*
    * タスクボタン
@@ -2188,69 +2242,64 @@ function addTask(id,title,icon){
     );
 
   updateTaskGroup(appKey);
-    /* =========================
-   プレビュー位置調整
-========================= */
+    // プレビューの表示・非表示を管理
+if(!group._previewTimer){
+  group._previewTimer = null;
+}
 
 group.addEventListener('mouseenter', () => {
+
+  if(group._previewTimer){
+    clearTimeout(group._previewTimer);
+    group._previewTimer = null;
+  }
 
   const preview =
     group.querySelector('.task-preview');
 
   if(!preview) return;
 
-  // 1個しかない場合は表示しない
-  const ids = getAppWindowIds(appKey);
-
-  if(ids.length <= 1) return;
-
-  // 一時的に表示してサイズを取得
-  preview.style.visibility = 'hidden';
-  preview.style.display = 'flex';
+  preview.classList.add('show');
 
   requestAnimationFrame(() => {
-
-    const button =
-      group.querySelector('.task');
-
-    if(!button) return;
-
-    const rect =
-      button.getBoundingClientRect();
-
-    const previewRect =
-      preview.getBoundingClientRect();
-
-    const margin = 8;
-
-    let left =
-      rect.left +
-      rect.width / 2 -
-      previewRect.width / 2;
-
-    // 左端
-    left = Math.max(
-      margin,
-      left
-    );
-
-    // 右端
-    left = Math.min(
-      left,
-      window.innerWidth -
-      previewRect.width -
-      margin
-    );
-
-    preview.style.left =
-      left + 'px';
-
-    preview.style.right =
-      'auto';
-
-    preview.style.visibility =
-      '';
+    positionTaskPreview(group);
   });
+});
+
+group.addEventListener('mouseleave', () => {
+
+  group._previewTimer =
+    setTimeout(() => {
+
+      const preview =
+        group.querySelector('.task-preview');
+
+      if(!preview) return;
+
+      // プレビュー上にマウスがあるなら消さない
+      if(preview.matches(':hover')){
+        return;
+      }
+
+      preview.classList.remove('show');
+
+    }, 250);
+});
+    /* =========================
+   プレビュー位置調整
+========================= */
+
+group.addEventListener('mouseenter', () => {
+  positionTaskPreview(group);
+});
+window.addEventListener('resize', () => {
+
+  document
+    .querySelectorAll('.task-group')
+    .forEach(group => {
+      positionTaskPreview(group);
+    });
+
 });
 }
 /* =========================
@@ -2324,19 +2373,8 @@ function updateTaskGroup(appKey){
   group.dataset.windows =
     JSON.stringify(ids);
 
-  /*
-   * ウィンドウが1個ならプレビューなし
-   */
-
-  if(ids.length <= 1){
-
-    group.classList.add('single');
-
-  }else{
-
-    group.classList.remove('single');
-
-  }
+  // ウィンドウが1個あればプレビューを表示
+group.classList.remove('single');
 
   const preview =
     group.querySelector('.task-preview');
@@ -2379,16 +2417,38 @@ function updateTaskGroup(appKey){
 `;
 
     item.onclick = e => {
+  e.stopPropagation();
 
-      e.stopPropagation();
+  const w = windowsMap[id];
 
-      restoreWindow(id);
+  if(!w) return;
 
-    };
+  w.w.style.display = 'flex';
+
+  // 最前面へ
+  focusWindow(id);
+};
 
     preview.appendChild(item);
 
   });
+    preview.addEventListener('mouseenter', () => {
+
+  if(group._previewTimer){
+    clearTimeout(group._previewTimer);
+    group._previewTimer = null;
+  }
+
+  preview.classList.add('show');
+});
+
+preview.addEventListener('mouseleave', () => {
+
+  group._previewTimer =
+    setTimeout(() => {
+      preview.classList.remove('show');
+    }, 150);
+});
 }
 function positionTaskPreview(group){
 
@@ -2402,12 +2462,13 @@ function positionTaskPreview(group){
 
   if(!button) return;
 
-  /*
-   * 一度表示可能な状態にして
-   * サイズを取得
-   */
-  preview.style.left = '0px';
-  preview.style.right = 'auto';
+  // 表示状態にしてサイズを取得
+  const oldVisibility = preview.style.visibility;
+  const oldOpacity = preview.style.opacity;
+
+  preview.style.visibility = 'hidden';
+  preview.style.opacity = '1';
+  preview.style.pointerEvents = 'none';
 
   const rect =
     button.getBoundingClientRect();
@@ -2417,46 +2478,50 @@ function positionTaskPreview(group){
 
   const margin = 8;
 
-  /*
-   * 基本はアイコン中央
-   */
+  // 基本位置：アイコンの中央
   let left =
     rect.left +
     rect.width / 2 -
     previewRect.width / 2;
 
-  /*
-   * 左端からはみ出す場合
-   */
+  // 左にはみ出さない
   if(left < margin){
-
     left = margin;
-
   }
 
-  /*
-   * 右端からはみ出す場合
-   */
-  if(
-    left + previewRect.width >
-    window.innerWidth - margin
-  ){
+  // 右にはみ出さない
+  if(left + previewRect.width >
+     window.innerWidth - margin){
 
     left =
       window.innerWidth -
       previewRect.width -
       margin;
-
   }
 
-  /*
-   * 最終的な位置
-   */
+  // 下からの位置
+  const bottom =
+    window.innerHeight -
+    rect.top +
+    5;
+
   preview.style.left =
-    Math.max(
-      margin,
-      left
-    ) + 'px';
+    Math.round(left) + 'px';
+
+  preview.style.bottom =
+    Math.round(bottom) + 'px';
+
+  preview.style.right =
+    'auto';
+
+  preview.style.visibility =
+    oldVisibility;
+
+  preview.style.opacity =
+    oldOpacity;
+
+  preview.style.pointerEvents =
+    '';
 }
 
 function makeDraggable(w,bar){
