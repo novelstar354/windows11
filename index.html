@@ -797,12 +797,28 @@ background-size:110px 110px,170px 170px}
 .tm-row{
   display:grid;
   grid-template-columns:
+    36px
     minmax(200px,1fr)
     110px
     80px
     100px;
 
   align-items:center;
+}
+
+.tm-check{
+  width:17px;
+  height:17px;
+  cursor:pointer;
+  accent-color:#1683d8;
+}
+
+.tm-row{
+  cursor:pointer;
+}
+
+.tm-row:has(.tm-check:checked){
+  background:#dceeff;
 }
 
 .tm-table-header{
@@ -3650,11 +3666,12 @@ function openTaskManager(){
       </div>
 
       <div class="tm-table-header">
-        <span>名前</span>
-        <span>状態</span>
-        <span>CPU</span>
-        <span>メモリ</span>
-      </div>
+  <span></span>
+  <span>名前</span>
+  <span>状態</span>
+  <span>CPU</span>
+  <span>メモリ</span>
+</div>
 
       <div id="tmList" class="tm-list"></div>
 
@@ -3737,23 +3754,7 @@ const timer =
 
 return id;
 }
-function refreshTaskManager(winId){
- const list=document.querySelector(`#${winId} #tmList`); if(!list)return;
- list.innerHTML='';
- const rows=Object.values(windowsMap);
- rows.forEach((o,i)=>{
-   const row=document.createElement('div');
-   row.dataset.id=o.id;
-   row.style.cssText='display:flex;align-items:center;padding:10px 14px;border-bottom:1px solid #ddd;background:#fff;cursor:pointer';
-   row.innerHTML=`<input type="radio" name="tm-${winId}" value="${o.id}" style="margin-right:12px">
-    <span style="font-size:22px;width:38px">${o.icon}</span>
-    <span style="flex:1">${escapeHtml(o.title)}</span>
-    <span style="font-size:11px;color:#777">実行中</span>`;
-   row.onclick=()=>{row.querySelector('input').checked=true;focusWindow(o.id)};
-   list.appendChild(row);
- });
- document.querySelector(`#${winId} #tmstats`).textContent=rows.length+' 個のアプリ';
-}
+
 function tmRefresh(){
 
   const manager =
@@ -3812,28 +3813,27 @@ function tmShowTab(button, tab){
 
 function refreshTaskManager(winId){
 
-  const manager =
-    document.getElementById(winId);
-
+  const manager = document.getElementById(winId);
   if(!manager) return;
 
-  const list =
-    manager.querySelector('#tmList');
-
+  const list = manager.querySelector('#tmList');
   if(!list) return;
+
+  // 現在チェックされているタスクを保存
+  const checkedIds = new Set(
+    [...list.querySelectorAll('.tm-check:checked')]
+      .map(cb => cb.dataset.id)
+  );
 
   list.innerHTML = '';
 
-  const rows =
-    Object.values(windowsMap);
+  const rows = Object.values(windowsMap);
 
   rows.forEach(o => {
 
-    const row =
-      document.createElement('div');
+    const row = document.createElement('div');
 
     row.className = 'tm-row';
-
     row.dataset.id = o.id;
 
     const cpu =
@@ -3843,6 +3843,12 @@ function refreshTaskManager(winId){
       (Math.random() * 4 + 1).toFixed(1);
 
     row.innerHTML = `
+      <input
+        type="checkbox"
+        class="tm-check"
+        data-id="${o.id}"
+        title="このタスクを選択"
+      >
 
       <span class="tm-app-name">
         <span class="tm-icon">
@@ -3865,22 +3871,29 @@ function refreshTaskManager(winId){
       <span>
         ${memory} MB
       </span>
-
     `;
 
-    row.onclick = () => {
+    const checkbox =
+      row.querySelector('.tm-check');
 
-      manager
-        .querySelectorAll('.tm-row')
-        .forEach(x =>
-          x.classList.remove('selected')
-        );
+    // 以前チェックされていたタスクなら復元
+    if(checkedIds.has(o.id)){
+      checkbox.checked = true;
+    }
 
-      row.classList.add('selected');
+    // チェックボックス操作では行クリックを発生させない
+    checkbox.addEventListener('click', e => {
+      e.stopPropagation();
+    });
+
+    // 行クリック
+    row.addEventListener('click', e => {
+
+      if(e.target === checkbox) return;
 
       focusWindow(o.id);
 
-    };
+    });
 
     list.appendChild(row);
 
@@ -3895,6 +3908,7 @@ function refreshTaskManager(winId){
     `;
 
   }
+
 }
 
 
@@ -4008,16 +4022,14 @@ function tmEndSelected(){
 
   const manager =
     [...document.querySelectorAll('.window')]
-      .find(w =>
-        w.querySelector('#tmList')
-      );
+      .find(w => w.querySelector('#tmList'));
 
   if(!manager) return;
 
-  const selected =
-    manager.querySelector('.tm-row.selected');
+  const checked =
+    [...manager.querySelectorAll('.tm-check:checked')];
 
-  if(!selected){
+  if(checked.length === 0){
 
     toast(
       '終了するタスクを選択してください'
@@ -4026,33 +4038,49 @@ function tmEndSelected(){
     return;
   }
 
-  const id =
-    selected.dataset.id;
+  const targets = checked
+    .map(cb => windowsMap[cb.dataset.id])
+    .filter(Boolean);
 
-  const target =
-    windowsMap[id];
+  if(targets.length === 0) return;
 
-  if(!target) return;
+  const names =
+    targets
+      .map(t => t.title)
+      .join('、');
 
   if(!confirm(
-    '「' +
-    target.title +
-    '」を終了しますか？'
+    targets.length === 1
+      ? `「${names}」を終了しますか？`
+      : `${targets.length} 個のタスクを終了しますか？\n\n${names}`
   )){
-
     return;
-
   }
 
-  closeWindow(id);
+  targets.forEach(target => {
+
+    // タスクマネージャー自身は終了対象から除外
+    if(target.id === manager.id){
+      return;
+    }
+
+    closeWindow(target.id);
+
+  });
 
   setTimeout(() => {
 
     refreshTaskManager(manager.id);
-
+    refreshTaskDetails(manager.id);
     updateTaskManagerStats(manager.id);
 
   }, 20);
+
+  toast(
+    targets.length === 1
+      ? 'タスクを終了しました'
+      : `${targets.length} 個のタスクを終了しました`
+  );
 
 }
 
