@@ -4906,48 +4906,110 @@ const desktopPositionsKey='webos10_desktop_positions_v1';
 let desktopPositions=JSON.parse(localStorage.getItem(desktopPositionsKey)||'null')||{};
 function saveDesktopPositions(){localStorage.setItem(desktopPositionsKey,JSON.stringify(desktopPositions))}
 function initOneDesktopIcon(el){
- const key=el.dataset.app;
- if(!key)return;
- if(key==='browser'){
-   // ブラウザは必ず2行目
-   desktopPositions[key]={x:12,y:106};
- }else if(!desktopPositions[key]){
-   const normal=[...document.querySelectorAll('.icon[data-app]')].filter(x=>x!==el && x.dataset.app!=='browser');
-   const index=Math.max(0,normal.indexOf(el));
-   desktopPositions[key]={x:12,y:18+index*88};
- }
- applyIconPosition(el);
- let dragging=false,dx=0,dy=0;
- el.addEventListener('mousedown',e=>{
-   if(e.button!==0 || el.dataset.trash==='true')return;
-   dragging=true;
-   const r=el.getBoundingClientRect();
-   dx=e.clientX-r.left;dy=e.clientY-r.top;
-   el.style.zIndex=20;
-   e.preventDefault();
- });
- document.addEventListener('mousemove',e=>{
-   if(!dragging)return;
-   const trash=document.getElementById('trashIcon');
-   const tr=trash?.getBoundingClientRect();
-   if(tr && e.clientX>=tr.left && e.clientX<=tr.right && e.clientY>=tr.top && e.clientY<=tr.bottom){
-     trash.classList.add('drag-over');
-   }else trash?.classList.remove('drag-over');
-   const d=desktopPositions[key];
-   d.x=Math.max(0,Math.min(innerWidth-90,e.clientX-dx));
-   d.y=Math.max(0,Math.min(innerHeight-100,e.clientY-dy));
-   applyIconPosition(el);
- });
- document.addEventListener('mouseup',e=>{
-   if(!dragging)return;
-   dragging=false;
-   const trash=document.getElementById('trashIcon');
-   const tr=trash?.getBoundingClientRect();
-   const over=tr && e.clientX>=tr.left && e.clientX<=tr.right && e.clientY>=tr.top && e.clientY<=tr.bottom;
-   trash?.classList.remove('drag-over');
-   if(over)moveDesktopIconToTrash(el);
-   else saveDesktopPositions();
- });
+  const key = el.dataset.app;
+  if(!key) return;
+
+  // ホーム画面の初期配置
+  const positions = {
+  // 1行目
+  explorer:    {x: 94,  y: 12},
+  editor:      {x: 176, y: 12},
+  terminal:    {x: 258, y: 12},
+  calculator:  {x: 340, y: 12},
+
+  // 2行目
+  browser:     {x: 12,  y: 106},
+  taskmanager: {x: 94,  y: 106},
+  settings:    {x: 176, y: 106}
+};
+
+  // 保存済みの位置がなければ初期位置を使用
+  if(!desktopPositions[key] && positions[key]){
+    desktopPositions[key] = positions[key];
+  }
+
+  // 念のため位置がないアイコンは左上に配置
+  if(!desktopPositions[key]){
+    desktopPositions[key] = {x: 12, y: 12};
+  }
+
+  applyIconPosition(el);
+
+  let dragging = false;
+  let dx = 0;
+  let dy = 0;
+
+  el.addEventListener('mousedown', e => {
+    if(e.button !== 0 || el.dataset.trash === 'true') return;
+
+    dragging = true;
+
+    const r = el.getBoundingClientRect();
+
+    dx = e.clientX - r.left;
+    dy = e.clientY - r.top;
+
+    el.style.zIndex = 20;
+
+    e.preventDefault();
+  });
+
+  document.addEventListener('mousemove', e => {
+    if(!dragging) return;
+
+    const trash = document.getElementById('trashIcon');
+    const tr = trash?.getBoundingClientRect();
+
+    if(
+      tr &&
+      e.clientX >= tr.left &&
+      e.clientX <= tr.right &&
+      e.clientY >= tr.top &&
+      e.clientY <= tr.bottom
+    ){
+      trash.classList.add('drag-over');
+    }else{
+      trash?.classList.remove('drag-over');
+    }
+
+    const d = desktopPositions[key];
+
+    d.x = Math.max(
+      0,
+      Math.min(innerWidth - 90, e.clientX - dx)
+    );
+
+    d.y = Math.max(
+      0,
+      Math.min(innerHeight - 100, e.clientY - dy)
+    );
+
+    applyIconPosition(el);
+  });
+
+  document.addEventListener('mouseup', e => {
+    if(!dragging) return;
+
+    dragging = false;
+
+    const trash = document.getElementById('trashIcon');
+    const tr = trash?.getBoundingClientRect();
+
+    const over =
+      tr &&
+      e.clientX >= tr.left &&
+      e.clientX <= tr.right &&
+      e.clientY >= tr.top &&
+      e.clientY <= tr.bottom;
+
+    trash?.classList.remove('drag-over');
+
+    if(over){
+      moveDesktopIconToTrash(el);
+    }else{
+      saveDesktopPositions();
+    }
+  });
 }
 function initDesktopIcons(){
  document.querySelectorAll('.icon[data-app]').forEach(initOneDesktopIcon);
