@@ -4877,19 +4877,51 @@ function renderTrash(){
   });
 }
 function restoreDesktopIcon(index){
-  const item=desktopTrash[index];
-  if(!item)return;
-  const icons=document.getElementById('desktopIcons');
-  const el=document.createElement('div');
-  el.className='icon';
-  el.dataset.app=item.app;
-  el.ondblclick=()=>openApp(item.app);
-  el.innerHTML=`<div class="ico">${escapeHtml(item.icon)}</div><span>${escapeHtml(item.name)}</span>`;
+  const item = desktopTrash[index];
+  if(!item) return;
+
+  const icons = document.getElementById('desktopIcons');
+  if(!icons) return;
+
+  const el = document.createElement('div');
+
+  el.className = 'icon';
+  el.dataset.app = item.app;
+
+  el.ondblclick = () => openApp(item.app);
+
+  el.innerHTML = `
+    <div class="ico">${escapeHtml(item.icon)}</div>
+    <span>${escapeHtml(item.name)}</span>
+  `;
+
   icons.appendChild(el);
-  desktopTrash.splice(index,1);
+
+  /*
+   * 復元したアプリの保存済み座標を削除
+   * → initOneDesktopIcon() がデフォルト位置を設定する
+   */
+  delete desktopPositions[item.app];
+
+  /*
+   * 新しい位置を保存
+   */
+  saveDesktopPositions();
+
+  /*
+   * ゴミ箱から削除
+   */
+  desktopTrash.splice(index, 1);
   saveDesktopTrash();
+
+  /*
+   * デフォルト位置で初期化
+   */
   initOneDesktopIcon(el);
+
   renderTrash();
+
+  toast(item.name + ' を復元しました');
 }
 function moveDesktopIconToTrash(el){
   if(!el || el.dataset.trash==='true')return;
@@ -4919,7 +4951,7 @@ function initOneDesktopIcon(el){
 
   // 2行目
   browser:     {x: 12,  y: 388},
-  taskmanager: {x: 90,  y: 12},
+  taskmgr:     {x: 90,  y: 12},
   settings:    {x: 90,  y: 200}
 };
 
@@ -5104,6 +5136,45 @@ document.addEventListener('keyup', function(e){
   }
 
 });
+/* ==========================================================
+   デスクトップアイコンの初期配置修正版
+   ========================================================== */
+
+(function fixDesktopIconPositions(){
+
+  const positions = {
+  // 1行目
+  explorer:    {x: 12,  y: 106},
+  editor:      {x: 12, y: 200},
+  terminal:    {x: 90, y: 106},
+  calculator:  {x: 12, y: 294},
+
+  // 2行目
+  browser:     {x: 12,  y: 388},
+  taskmgr:     {x: 90,  y: 12},
+  settings:    {x: 90,  y: 200}
+};
+
+  document.querySelectorAll('#desktopIcons .icon').forEach(icon => {
+
+    const app = icon.dataset.app;
+
+    if(app && positions[app]){
+      icon.style.left = positions[app].x + 'px';
+      icon.style.top  = positions[app].y + 'px';
+    }
+
+  });
+
+  // ゴミ箱
+  const trash = document.getElementById('trashIcon');
+
+  if(trash){
+    trash.style.left = positions.trash.x + 'px';
+    trash.style.top  = positions.trash.y + 'px';
+  }
+
+})();
 </script>
 </body>
 </html>
