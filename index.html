@@ -4084,7 +4084,7 @@ function tmEndSelected(){
       ? 'タスクを終了しました'
       : `${targets.length} 個のタスクを終了しました`
   );
-}fu
+}
 
 function openCalculator(){
  const html=`<div style="height:100%;background:#202020;padding:14px;display:flex;flex-direction:column">
@@ -5174,6 +5174,7 @@ document.addEventListener('keyup', function(e){
 
   const positions = {
   // 1行目
+  trash: {x:12, y:12},
   explorer:    {x: 12,  y: 106},
   editor:      {x: 12, y: 200},
   terminal:    {x: 90, y: 106},
