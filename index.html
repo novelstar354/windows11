@@ -4912,21 +4912,21 @@ function initOneDesktopIcon(el){
   // ホーム画面の初期配置
   const positions = {
   // 1行目
-  explorer:    {x: 94,  y: 12},
-  editor:      {x: 176, y: 12},
-  terminal:    {x: 258, y: 12},
-  calculator:  {x: 340, y: 12},
+  explorer:    {x: 12,  y: 106},
+  editor:      {x: 12, y: 200},
+  terminal:    {x: 90, y: 106},
+  calculator:  {x: 12, y: 294},
 
   // 2行目
-  browser:     {x: 12,  y: 106},
-  taskmanager: {x: 94,  y: 106},
-  settings:    {x: 176, y: 106}
+  browser:     {x: 12,  y: 388},
+  taskmanager: {x: 90,  y: 12},
+  settings:    {x: 90,  y: 200}
 };
 
-  // 保存済みの位置がなければ初期位置を使用
-  if(!desktopPositions[key] && positions[key]){
-    desktopPositions[key] = positions[key];
-  }
+// 保存済みの位置がなければ初期位置を使用
+if(!desktopPositions[key] && positions[key]){
+  desktopPositions[key] = positions[key];
+}
 
   // 念のため位置がないアイコンは左上に配置
   if(!desktopPositions[key]){
