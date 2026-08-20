@@ -685,6 +685,211 @@ background-size:110px 110px,170px 170px}
 .quick-grid button.active small{
   color:white;
 }
+/* =========================
+   タスク マネージャー
+========================= */
+
+.task-manager{
+  width:100%;
+  height:100%;
+  display:flex;
+  flex-direction:column;
+  background:#f5f5f5;
+  color:#222;
+}
+
+.tm-header{
+  height:72px;
+  padding:12px 16px;
+  display:flex;
+  align-items:center;
+  background:#fff;
+  border-bottom:1px solid #ddd;
+}
+
+.tm-title{
+  font-size:20px;
+  font-weight:400;
+}
+
+.tm-subtitle{
+  margin-top:3px;
+  color:#777;
+  font-size:11px;
+}
+
+.tm-performance{
+  margin-left:auto;
+  display:flex;
+  gap:18px;
+  color:#666;
+  font-size:12px;
+}
+
+.tm-tabs{
+  display:flex;
+  height:42px;
+  background:#fff;
+  border-bottom:1px solid #ccc;
+}
+
+.tm-tab{
+  padding:0 20px;
+  background:transparent;
+  border-bottom:2px solid transparent;
+  cursor:pointer;
+  color:#555;
+}
+
+.tm-tab:hover{
+  background:#f2f2f2;
+}
+
+.tm-tab.active{
+  color:#1683d8;
+  border-bottom-color:#1683d8;
+}
+
+.tm-page{
+  flex:1;
+  min-height:0;
+  overflow:auto;
+}
+
+.tm-toolbar{
+  height:48px;
+  padding:8px;
+  display:flex;
+  gap:6px;
+  background:#f3f3f3;
+  border-bottom:1px solid #ddd;
+}
+
+.tm-toolbar button{
+  padding:6px 14px;
+  background:#fff;
+  border:1px solid #ccc;
+  cursor:pointer;
+}
+
+.tm-toolbar button:hover{
+  background:#e8f4ff;
+}
+
+.tm-table-header,
+.tm-row{
+  display:grid;
+  grid-template-columns:
+    minmax(200px,1fr)
+    110px
+    80px
+    100px;
+
+  align-items:center;
+}
+
+.tm-table-header{
+  min-height:34px;
+  padding:0 12px;
+  background:#fafafa;
+  color:#666;
+  font-size:11px;
+  border-bottom:1px solid #ddd;
+}
+
+.tm-row{
+  min-height:52px;
+  padding:0 12px;
+  background:#fff;
+  border-bottom:1px solid #eee;
+  cursor:pointer;
+  font-size:12px;
+}
+
+.tm-row:hover{
+  background:#f1f8ff;
+}
+
+.tm-row.selected{
+  background:#dceeff;
+}
+
+.tm-app-name{
+  display:flex;
+  align-items:center;
+  gap:10px;
+}
+
+.tm-icon{
+  width:30px;
+  font-size:21px;
+  text-align:center;
+}
+
+.tm-running{
+  color:#16883a;
+  font-size:11px;
+}
+
+.tm-empty{
+  padding:50px;
+  text-align:center;
+  color:#888;
+}
+
+.tm-performance-page{
+  padding:20px;
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:14px;
+}
+
+.tm-card{
+  padding:18px;
+  background:#fff;
+  border:1px solid #ddd;
+  border-radius:4px;
+}
+
+.tm-card h3{
+  margin:0 0 15px;
+  font-weight:400;
+}
+
+.tm-big{
+  font-size:32px;
+  margin-bottom:12px;
+}
+
+.tm-bar{
+  height:8px;
+  background:#ddd;
+  border-radius:4px;
+  overflow:hidden;
+}
+
+.tm-bar div{
+  width:0;
+  height:100%;
+  background:#1683d8;
+  transition:width .3s;
+}
+
+.tm-details{
+  background:#fff;
+}
+
+.tm-detail-row{
+  display:grid;
+  grid-template-columns:2fr 1fr 1fr 1fr;
+  padding:11px 14px;
+  border-bottom:1px solid #eee;
+  font-size:12px;
+}
+
+.tm-detail-row:hover{
+  background:#f3f8fc;
+}
 </style>
 </head>
 <body>
@@ -2577,19 +2782,135 @@ function toggleQuick(btn,name){
 }
 
 function openTaskManager(){
- const html=`<div style="height:100%;display:flex;flex-direction:column;background:#f5f5f5">
-  <div style="padding:12px 16px;background:#fff;border-bottom:1px solid #ddd">
-   <b>タスク マネージャー</b><span style="float:right" id="tmstats"></span>
+
+  const html = `
+  <div class="task-manager">
+
+    <div class="tm-header">
+      <div>
+        <div class="tm-title">タスク マネージャー</div>
+        <div class="tm-subtitle">WebOS 10 の実行中のアプリとリソース</div>
+      </div>
+
+      <div class="tm-performance">
+        <span id="tmCpu">CPU 0%</span>
+        <span id="tmMemory">メモリ 0%</span>
+      </div>
+    </div>
+
+    <div class="tm-tabs">
+      <button class="tm-tab active" onclick="tmShowTab(this,'processes')">
+        プロセス
+      </button>
+
+      <button class="tm-tab" onclick="tmShowTab(this,'performance')">
+        パフォーマンス
+      </button>
+
+      <button class="tm-tab" onclick="tmShowTab(this,'details')">
+        詳細
+      </button>
+    </div>
+
+    <div id="tmProcesses" class="tm-page">
+
+      <div class="tm-toolbar">
+        <button onclick="tmRefresh()">
+  ↻ 更新
+</button>
+
+        <button onclick="tmEndSelected()">
+          ⛔ タスクの終了
+        </button>
+      </div>
+
+      <div class="tm-table-header">
+        <span>名前</span>
+        <span>状態</span>
+        <span>CPU</span>
+        <span>メモリ</span>
+      </div>
+
+      <div id="tmList" class="tm-list"></div>
+
+    </div>
+
+    <div id="tmPerformance"
+         class="tm-page"
+         style="display:none">
+
+      <div class="tm-performance-page">
+
+        <div class="tm-card">
+          <h3>CPU</h3>
+          <div class="tm-big" id="tmCpuBig">0%</div>
+          <div class="tm-bar">
+            <div id="tmCpuBar"></div>
+          </div>
+        </div>
+
+        <div class="tm-card">
+          <h3>メモリ</h3>
+          <div class="tm-big" id="tmMemoryBig">0%</div>
+          <div class="tm-bar">
+            <div id="tmMemoryBar"></div>
+          </div>
+        </div>
+
+        <div class="tm-card">
+          <h3>アプリ</h3>
+          <div class="tm-big" id="tmAppCount">0</div>
+          <div>実行中のウィンドウ</div>
+        </div>
+
+      </div>
+
+    </div>
+
+    <div id="tmDetails"
+         class="tm-page"
+         style="display:none">
+
+      <div id="tmDetailsList" class="tm-details"></div>
+
+    </div>
+
   </div>
-  <div style="padding:10px;background:#fafafa;border-bottom:1px solid #ddd">
-   <button onclick="tmRefresh('${Date.now()}')">更新</button>
-   <button onclick="tmEndSelected()">タスクの終了</button>
-  </div>
-  <div id="tmList" style="flex:1;overflow:auto"></div>
- </div>`;
- const id=makeWindow('タスク マネージャー',html,'📊',{width:650,height:430});
- setTimeout(()=>refreshTaskManager(id),20);
- return id;
+  `;
+
+  const id = makeWindow(
+    'タスク マネージャー',
+    html,
+    '📊',
+    {
+      width:760,
+      height:520
+    }
+  );
+
+  setTimeout(() => {
+
+  refreshTaskManager(id);
+  updateTaskManagerStats(id);
+
+}, 30);
+
+const timer =
+  setInterval(() => {
+
+    if(!windowsMap[id]){
+
+      clearInterval(timer);
+      return;
+
+    }
+
+    refreshTaskManager(id);
+    updateTaskManagerStats(id);
+
+  }, 1000);
+
+return id;
 }
 function refreshTaskManager(winId){
  const list=document.querySelector(`#${winId} #tmList`); if(!list)return;
@@ -2608,16 +2929,306 @@ function refreshTaskManager(winId){
  });
  document.querySelector(`#${winId} #tmstats`).textContent=rows.length+' 個のアプリ';
 }
-function tmRefresh(token){
- const mgr=[...document.querySelectorAll('.window')].find(w=>w.querySelector('#tmList'));
- if(mgr)refreshTaskManager(mgr.id);
+function tmRefresh(){
+
+  const manager =
+    [...document.querySelectorAll('.window')]
+      .find(w =>
+        w.querySelector('#tmList')
+      );
+
+  if(!manager) return;
+
+  refreshTaskManager(manager.id);
+  updateTaskManagerStats(manager.id);
+
+  // 詳細タブも更新
+  refreshTaskDetails(manager.id);
+
+  toast('タスク一覧を更新しました');
 }
+function tmShowTab(button, tab){
+
+  const manager =
+    button.closest('.window');
+
+  if(!manager) return;
+
+  manager
+    .querySelectorAll('.tm-tab')
+    .forEach(x => {
+      x.classList.remove('active');
+    });
+
+  button.classList.add('active');
+
+  manager.querySelector('#tmProcesses').style.display =
+    tab === 'processes' ? 'block' : 'none';
+
+  manager.querySelector('#tmPerformance').style.display =
+    tab === 'performance' ? 'block' : 'none';
+
+  manager.querySelector('#tmDetails').style.display =
+    tab === 'details' ? 'block' : 'none';
+
+  if(tab === 'processes'){
+    refreshTaskManager(manager.id);
+  }
+
+  if(tab === 'performance'){
+    updateTaskManagerStats(manager.id);
+  }
+
+  if(tab === 'details'){
+    refreshTaskDetails(manager.id);
+  }
+}
+
+
+function refreshTaskManager(winId){
+
+  const manager =
+    document.getElementById(winId);
+
+  if(!manager) return;
+
+  const list =
+    manager.querySelector('#tmList');
+
+  if(!list) return;
+
+  list.innerHTML = '';
+
+  const rows =
+    Object.values(windowsMap);
+
+  rows.forEach(o => {
+
+    const row =
+      document.createElement('div');
+
+    row.className = 'tm-row';
+
+    row.dataset.id = o.id;
+
+    const cpu =
+      Math.floor(Math.random() * 8);
+
+    const memory =
+      (Math.random() * 4 + 1).toFixed(1);
+
+    row.innerHTML = `
+
+      <span class="tm-app-name">
+        <span class="tm-icon">
+          ${o.icon}
+        </span>
+
+        ${escapeHtml(o.title)}
+      </span>
+
+      <span>
+        <span class="tm-running">
+          ● 実行中
+        </span>
+      </span>
+
+      <span>
+        ${cpu}%
+      </span>
+
+      <span>
+        ${memory} MB
+      </span>
+
+    `;
+
+    row.onclick = () => {
+
+      manager
+        .querySelectorAll('.tm-row')
+        .forEach(x =>
+          x.classList.remove('selected')
+        );
+
+      row.classList.add('selected');
+
+      focusWindow(o.id);
+
+    };
+
+    list.appendChild(row);
+
+  });
+
+  if(rows.length === 0){
+
+    list.innerHTML = `
+      <div class="tm-empty">
+        実行中のアプリはありません。
+      </div>
+    `;
+
+  }
+}
+
+
+function refreshTaskDetails(winId){
+
+  const manager =
+    document.getElementById(winId);
+
+  if(!manager) return;
+
+  const list =
+    manager.querySelector('#tmDetailsList');
+
+  if(!list) return;
+
+  list.innerHTML = '';
+
+  Object.values(windowsMap)
+    .forEach(o => {
+
+      const item =
+        document.createElement('div');
+
+      item.className = 'tm-detail-row';
+
+      item.innerHTML = `
+        <span>${escapeHtml(o.title)}</span>
+        <span>${o.id}</span>
+        <span>WebOS</span>
+        <span>実行中</span>
+      `;
+
+      list.appendChild(item);
+
+    });
+}
+
+
+function updateTaskManagerStats(winId){
+
+  const manager =
+    document.getElementById(winId);
+
+  if(!manager) return;
+
+  const cpu =
+    Math.floor(
+      Math.random() * 18 + 2
+    );
+
+  const memory =
+    Math.floor(
+      Math.random() * 30 + 25
+    );
+
+  const count =
+    Object.keys(windowsMap).length;
+
+  const cpuText =
+    manager.querySelector('#tmCpu');
+
+  const memoryText =
+    manager.querySelector('#tmMemory');
+
+  const cpuBig =
+    manager.querySelector('#tmCpuBig');
+
+  const memoryBig =
+    manager.querySelector('#tmMemoryBig');
+
+  const cpuBar =
+    manager.querySelector('#tmCpuBar');
+
+  const memoryBar =
+    manager.querySelector('#tmMemoryBar');
+
+  const appCount =
+    manager.querySelector('#tmAppCount');
+
+  if(cpuText)
+    cpuText.textContent =
+      'CPU ' + cpu + '%';
+
+  if(memoryText)
+    memoryText.textContent =
+      'メモリ ' + memory + '%';
+
+  if(cpuBig)
+    cpuBig.textContent =
+      cpu + '%';
+
+  if(memoryBig)
+    memoryBig.textContent =
+      memory + '%';
+
+  if(cpuBar)
+    cpuBar.style.width =
+      cpu + '%';
+
+  if(memoryBar)
+    memoryBar.style.width =
+      memory + '%';
+
+  if(appCount)
+    appCount.textContent =
+      count;
+}
+
+
 function tmEndSelected(){
- const mgr=[...document.querySelectorAll('.window')].find(w=>w.querySelector('#tmList'));
- if(!mgr)return;
- const checked=mgr.querySelector('input[type=radio]:checked');
- if(checked){closeWindow(checked.value);setTimeout(()=>refreshTaskManager(mgr.id),20)}
- else toast('終了するタスクを選択してください');
+
+  const manager =
+    [...document.querySelectorAll('.window')]
+      .find(w =>
+        w.querySelector('#tmList')
+      );
+
+  if(!manager) return;
+
+  const selected =
+    manager.querySelector('.tm-row.selected');
+
+  if(!selected){
+
+    toast(
+      '終了するタスクを選択してください'
+    );
+
+    return;
+  }
+
+  const id =
+    selected.dataset.id;
+
+  const target =
+    windowsMap[id];
+
+  if(!target) return;
+
+  if(!confirm(
+    '「' +
+    target.title +
+    '」を終了しますか？'
+  )){
+
+    return;
+
+  }
+
+  closeWindow(id);
+
+  setTimeout(() => {
+
+    refreshTaskManager(manager.id);
+
+    updateTaskManagerStats(manager.id);
+
+  }, 20);
+
 }
 
 function openCalculator(){
