@@ -890,6 +890,240 @@ background-size:110px 110px,170px 170px}
 .tm-detail-row:hover{
   background:#f3f8fc;
 }
+/* =========================
+   タスクバー
+========================= */
+
+#taskbar{
+  position:absolute;
+  left:0;
+  right:0;
+  bottom:0;
+  height:48px;
+  background:rgba(20,20,20,.94);
+  display:flex;
+  align-items:center;
+  z-index:10000;
+  box-shadow:0 -1px 5px #0005;
+}
+
+#startBtn,
+#quickBtn{
+  flex:none;
+  height:48px;
+  width:52px;
+  background:transparent;
+  color:#fff;
+  font-size:23px;
+  cursor:pointer;
+}
+
+#startBtn:hover,
+#quickBtn:hover{
+  background:#333;
+}
+
+#quickBtn{
+  font-size:20px;
+  border-left:1px solid #333;
+}
+
+#taskApps{
+  display:flex;
+  height:48px;
+  align-items:stretch;
+  flex:1;
+  overflow:visible;
+}
+
+/* アプリごとのタスク */
+.task-group{
+  position:relative;
+  height:48px;
+  min-width:52px;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+}
+
+/* タスクバーのアイコン */
+.task{
+  width:52px;
+  height:48px;
+  padding:0;
+  margin:0;
+  background:transparent;
+  color:#fff;
+  border:0;
+  border-bottom:2px solid transparent;
+  cursor:pointer;
+  font-size:22px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+
+.task:hover{
+  background:#333;
+}
+
+.task.active{
+  background:#292929;
+  border-bottom:2px solid #20a4ff;
+}
+
+/* =========================
+   ウィンドウプレビュー
+========================= */
+
+.task-preview{
+  position:fixed;
+
+  bottom:53px;
+
+  display:flex;
+  gap:8px;
+
+  padding:8px;
+
+  background:rgba(35,35,35,.97);
+  border:1px solid #555;
+  box-shadow:0 5px 25px #0009;
+
+  border-radius:4px;
+
+  opacity:0;
+  visibility:hidden;
+  pointer-events:none;
+
+  transform:translateY(8px);
+
+  transition:
+    opacity .16s ease,
+    transform .16s ease;
+
+  z-index:20000;
+
+  /* 画面内に収める */
+  max-width:calc(100vw - 16px);
+
+  overflow-x:auto;
+}
+
+/* マウスを乗せたとき */
+.task-group:hover .task-preview{
+  opacity:1;
+  visibility:visible;
+  pointer-events:auto;
+  transform:translateY(0);
+}
+
+/* プレビュー */
+.task-preview-item{
+  width:180px;
+  height:115px;
+
+  background:#fff;
+  color:#222;
+
+  border:1px solid #777;
+  border-radius:3px;
+
+  overflow:hidden;
+  cursor:pointer;
+
+  box-shadow:0 3px 10px #0006;
+
+  position:relative;
+}
+
+.task-preview-item:hover{
+  border-color:#1683d8;
+  transform:translateY(-2px);
+}
+
+/* プレビュー上部 */
+.task-preview-title{
+  height:28px;
+
+  display:flex;
+  align-items:center;
+
+  padding:0 8px;
+
+  background:#f3f3f3;
+  border-bottom:1px solid #ccc;
+
+  font-size:11px;
+
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+
+/* 簡易ウィンドウプレビュー */
+.task-preview-content{
+  height:87px;
+  padding:10px;
+
+  background:#fff;
+
+  display:flex;
+  align-items:center;
+  justify-content:center;
+
+  font-size:32px;
+}
+
+/* 1個だけの場合 */
+.task-group.single .task-preview{
+  display:none;
+}
+.task-preview-title{
+  position:relative;
+
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+
+  min-width:0;
+  padding-right:4px;
+}
+
+.task-preview-app{
+  overflow:hidden;
+  white-space:nowrap;
+  text-overflow:ellipsis;
+}
+
+.task-preview-close{
+  flex:none;
+
+  width:22px;
+  height:22px;
+
+  margin-left:6px;
+  padding:0;
+
+  border:0;
+  border-radius:4px;
+
+  background:transparent;
+  color:#fff;
+
+  font-size:16px;
+  line-height:22px;
+
+  cursor:pointer;
+}
+
+.task-preview-close:hover{
+  background:#e81123;
+}
+
+.task-preview-close:active{
+  background:#c50f1f;
+}
 </style>
 </head>
 <body>
@@ -1726,16 +1960,505 @@ function makeWindow(title,html,icon='🪟',opts={}){
   addTask(id,title,icon);
   return id;
 }
-function focusWindow(id){const o=windowsMap[id];if(!o)return;o.w.style.zIndex=++z;document.querySelectorAll('.task').forEach(x=>x.classList.toggle('active',x.dataset.id===id))}
-function closeWindow(id){const o=windowsMap[id];if(!o)return;o.w.remove();delete windowsMap[id];document.querySelector(`.task[data-id="${id}"]`)?.remove()}
-function minimizeWindow(id){const o=windowsMap[id];if(!o)return;o.w.style.display='none';document.querySelector(`.task[data-id="${id}"]`)?.classList.remove('active')}
+function focusWindow(id){
+
+  const o =
+    windowsMap[id];
+
+  if(!o) return;
+
+  o.w.style.zIndex =
+    ++z;
+
+  /*
+   * 現在のウィンドウのアプリ
+   */
+
+  const appKey =
+    getTaskAppKey(o.title);
+
+  /*
+   * アプリのタスクをアクティブにする
+   */
+
+  document
+    .querySelectorAll('.task-group')
+    .forEach(group => {
+
+      group.classList.remove('active');
+
+    });
+
+  const group =
+    [...document.querySelectorAll('.task-group')]
+      .find(g =>
+        g.dataset.app === appKey
+      );
+
+  if(group){
+
+    const task =
+      group.querySelector('.task');
+
+    if(task){
+      task.classList.add('active');
+    }
+
+  }
+
+  /*
+   * 他のアプリのアイコンは解除
+   */
+
+  document
+    .querySelectorAll('.task')
+    .forEach(task => {
+
+      if(!group ||
+         !group.contains(task)){
+
+        task.classList.remove('active');
+
+      }
+
+    });
+}
+function closeWindow(id){
+
+  const o =
+    windowsMap[id];
+
+  if(!o) return;
+
+  const appKey =
+    getTaskAppKey(o.title);
+
+  o.w.remove();
+
+  delete windowsMap[id];
+
+  updateTaskGroup(appKey);
+
+  /*
+   * そのアプリのウィンドウが
+   * もう存在しないならタスクも削除
+   */
+
+  const remaining =
+    getAppWindowIds(appKey);
+
+  if(remaining.length === 0){
+
+    const group =
+      [...document.querySelectorAll('.task-group')]
+        .find(g =>
+          g.dataset.app === appKey
+        );
+
+    if(group){
+      group.remove();
+    }
+
+  }
+}
+function minimizeWindow(id){
+
+  const o =
+    windowsMap[id];
+
+  if(!o) return;
+
+  o.w.style.display =
+    'none';
+
+  /*
+   * タスク自体は消さない
+   */
+
+  const appKey =
+    getTaskAppKey(o.title);
+
+  updateTaskGroup(appKey);
+}
 function restoreWindow(id){const o=windowsMap[id];if(!o)return;o.w.style.display='flex';focusWindow(id)}
 function maximizeWindow(id){windowsMap[id]?.w.classList.toggle('max');focusWindow(id)}
 function addTask(id,title,icon){
-  const b=document.createElement('button');b.className='task';b.dataset.id=id;b.textContent=icon+' '+title;
-  b.onclick=()=>{const w=windowsMap[id];if(!w)return;if(w.w.style.display==='none')restoreWindow(id);else if(w.w.style.zIndex==z)minimizeWindow(id);else focusWindow(id)};
-  document.getElementById('taskApps').appendChild(b);focusWindow(id)
+
+  const taskApps =
+    document.getElementById('taskApps');
+
+  if(!taskApps) return;
+
+  /*
+   * アプリを識別するキー
+   * 例:
+   * ファイル エクスプローラー → explorer
+   * 電卓 → calculator
+   */
+
+  let appKey = getTaskAppKey(title);
+
+  /*
+   * 同じアプリ用のグループを探す
+   */
+
+  let group =
+    [...taskApps.querySelectorAll('.task-group')]
+      .find(g => g.dataset.app === appKey);
+
+  /*
+   * なければ新規作成
+   */
+
+  if(!group){
+
+    group =
+      document.createElement('div');
+
+    group.className =
+      'task-group single';
+
+    group.dataset.app =
+      appKey;
+
+    group.innerHTML = `
+
+      <button
+        class="task"
+        title="${escapeHtml(title)}"
+      >
+        ${icon}
+      </button>
+
+      <div class="task-preview"></div>
+
+    `;
+
+    taskApps.appendChild(group);
+  }
+
+  /*
+   * タスクボタン
+   */
+
+  const button =
+    group.querySelector('.task');
+
+  button.onclick = () => {
+
+    const w =
+      windowsMap[id];
+
+    if(!w) return;
+
+    /*
+     * 最小化されていた場合
+     */
+
+    if(w.w.style.display === 'none'){
+
+      restoreWindow(id);
+
+      return;
+    }
+
+    /*
+     * すでに最前面なら最小化
+     */
+
+    if(Number(w.w.style.zIndex) === z){
+
+      minimizeWindow(id);
+
+    }else{
+
+      focusWindow(id);
+
+    }
+
+  };
+
+  /*
+   * このウィンドウを登録
+   */
+
+  group.dataset.windows =
+    JSON.stringify(
+      getAppWindowIds(appKey)
+    );
+
+  updateTaskGroup(appKey);
+    /* =========================
+   プレビュー位置調整
+========================= */
+
+group.addEventListener('mouseenter', () => {
+
+  const preview =
+    group.querySelector('.task-preview');
+
+  if(!preview) return;
+
+  // 1個しかない場合は表示しない
+  const ids = getAppWindowIds(appKey);
+
+  if(ids.length <= 1) return;
+
+  // 一時的に表示してサイズを取得
+  preview.style.visibility = 'hidden';
+  preview.style.display = 'flex';
+
+  requestAnimationFrame(() => {
+
+    const button =
+      group.querySelector('.task');
+
+    if(!button) return;
+
+    const rect =
+      button.getBoundingClientRect();
+
+    const previewRect =
+      preview.getBoundingClientRect();
+
+    const margin = 8;
+
+    let left =
+      rect.left +
+      rect.width / 2 -
+      previewRect.width / 2;
+
+    // 左端
+    left = Math.max(
+      margin,
+      left
+    );
+
+    // 右端
+    left = Math.min(
+      left,
+      window.innerWidth -
+      previewRect.width -
+      margin
+    );
+
+    preview.style.left =
+      left + 'px';
+
+    preview.style.right =
+      'auto';
+
+    preview.style.visibility =
+      '';
+  });
+});
 }
+/* =========================
+   タスクバー用アプリキー
+========================= */
+
+function getTaskAppKey(title){
+
+  if(title.includes('ファイル エクスプローラー'))
+    return 'explorer';
+
+  if(title.includes('テキスト エディター'))
+    return 'editor';
+
+  if(title.includes('ターミナル'))
+    return 'terminal';
+
+  if(title.includes('電卓'))
+    return 'calculator';
+
+  if(title.includes('ブラウザ'))
+    return 'browser';
+
+  if(title.includes('タスク マネージャー'))
+    return 'taskmgr';
+
+  if(title.includes('クイック設定'))
+    return 'quick';
+
+  if(title.includes('設定'))
+    return 'settings';
+
+  if(title.includes('WebOS 10 について'))
+    return 'about';
+
+  return title;
+}
+
+
+/* =========================
+   同じアプリのウィンドウ
+========================= */
+
+function getAppWindowIds(appKey){
+
+  return Object.values(windowsMap)
+    .filter(o =>
+      getTaskAppKey(o.title) === appKey
+    )
+    .map(o => o.id);
+}
+
+
+/* =========================
+   タスクグループ更新
+========================= */
+
+function updateTaskGroup(appKey){
+
+  const group =
+    [...document.querySelectorAll('.task-group')]
+      .find(g =>
+        g.dataset.app === appKey
+      );
+
+  if(!group) return;
+
+  const ids =
+    getAppWindowIds(appKey);
+
+  group.dataset.windows =
+    JSON.stringify(ids);
+
+  /*
+   * ウィンドウが1個ならプレビューなし
+   */
+
+  if(ids.length <= 1){
+
+    group.classList.add('single');
+
+  }else{
+
+    group.classList.remove('single');
+
+  }
+
+  const preview =
+    group.querySelector('.task-preview');
+
+  if(!preview) return;
+
+  preview.innerHTML = '';
+
+  ids.forEach(id => {
+
+    const o =
+      windowsMap[id];
+
+    if(!o) return;
+
+    const item =
+      document.createElement('div');
+
+    item.className =
+      'task-preview-item';
+
+    item.innerHTML = `
+  <div class="task-preview-title">
+    <span class="task-preview-app">
+      ${escapeHtml(o.icon)}
+      &nbsp;
+      ${escapeHtml(o.title)}
+    </span>
+
+    <button
+      class="task-preview-close"
+      title="閉じる"
+      onclick="event.stopPropagation(); closeWindow('${id}')"
+    >×</button>
+  </div>
+
+  <div class="task-preview-content">
+    ${escapeHtml(o.icon)}
+  </div>
+`;
+
+    item.onclick = e => {
+
+      e.stopPropagation();
+
+      restoreWindow(id);
+
+    };
+
+    preview.appendChild(item);
+
+  });
+}
+function positionTaskPreview(group){
+
+  const preview =
+    group.querySelector('.task-preview');
+
+  if(!preview) return;
+
+  const button =
+    group.querySelector('.task');
+
+  if(!button) return;
+
+  /*
+   * 一度表示可能な状態にして
+   * サイズを取得
+   */
+  preview.style.left = '0px';
+  preview.style.right = 'auto';
+
+  const rect =
+    button.getBoundingClientRect();
+
+  const previewRect =
+    preview.getBoundingClientRect();
+
+  const margin = 8;
+
+  /*
+   * 基本はアイコン中央
+   */
+  let left =
+    rect.left +
+    rect.width / 2 -
+    previewRect.width / 2;
+
+  /*
+   * 左端からはみ出す場合
+   */
+  if(left < margin){
+
+    left = margin;
+
+  }
+
+  /*
+   * 右端からはみ出す場合
+   */
+  if(
+    left + previewRect.width >
+    window.innerWidth - margin
+  ){
+
+    left =
+      window.innerWidth -
+      previewRect.width -
+      margin;
+
+  }
+
+  /*
+   * 最終的な位置
+   */
+  preview.style.left =
+    Math.max(
+      margin,
+      left
+    ) + 'px';
+}
+
 function makeDraggable(w,bar){
   let drag=false,dx=0,dy=0;
   bar.addEventListener('mousedown',e=>{
