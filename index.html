@@ -4030,11 +4030,7 @@ function tmEndSelected(){
     [...manager.querySelectorAll('.tm-check:checked')];
 
   if(checked.length === 0){
-
-    toast(
-      '終了するタスクを選択してください'
-    );
-
+    toast('終了するタスクを選択してください');
     return;
   }
 
@@ -4044,10 +4040,9 @@ function tmEndSelected(){
 
   if(targets.length === 0) return;
 
-  const names =
-    targets
-      .map(t => t.title)
-      .join('、');
+  const names = targets
+    .map(t => t.title)
+    .join('、');
 
   if(!confirm(
     targets.length === 1
@@ -4057,18 +4052,26 @@ function tmEndSelected(){
     return;
   }
 
+  // タスクマネージャー自身が選択されているか確認
+  const managerWillClose =
+    targets.some(t => t.id === manager.id);
+
+  // 選択されたタスクをすべて終了
   targets.forEach(target => {
-
-    // タスクマネージャー自身は終了対象から除外
-    if(target.id === manager.id){
-      return;
-    }
-
     closeWindow(target.id);
-
   });
 
+  // タスクマネージャー自身を終了した場合は
+  // ここで処理を終了する
+  if(managerWillClose){
+    toast('タスクを終了しました');
+    return;
+  }
+
+  // タスクマネージャーが残っている場合だけ更新
   setTimeout(() => {
+
+    if(!windowsMap[manager.id]) return;
 
     refreshTaskManager(manager.id);
     refreshTaskDetails(manager.id);
@@ -4081,8 +4084,7 @@ function tmEndSelected(){
       ? 'タスクを終了しました'
       : `${targets.length} 個のタスクを終了しました`
   );
-
-}
+}fu
 
 function openCalculator(){
  const html=`<div style="height:100%;background:#202020;padding:14px;display:flex;flex-direction:column">
