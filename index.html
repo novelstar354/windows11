@@ -17,6 +17,23 @@ radial-gradient(circle at 20% 20%,#fff 0 1px,transparent 2px),
 radial-gradient(circle at 70% 30%,#fff 0 1px,transparent 2px);
 background-size:110px 110px,170px 170px}
 #desktopIcons{position:absolute;inset:0;pointer-events:none}
+#trashIcon{position:absolute;left:12px;top:12px;width:82px;height:82px;z-index:50}
+#trashIcon.drag-over{background:#ffffff33;border-color:#ffffffaa;transform:scale(1.06)}
+#trashIcon .ico{font-size:34px}
+.trash-dialog{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:60000;display:none;align-items:center;justify-content:center}
+.trash-dialog.show{display:flex}
+.trash-box{width:min(520px,calc(100vw - 30px));max-height:min(620px,calc(100vh - 40px));background:#f5f5f5;color:#222;border-radius:6px;box-shadow:0 15px 50px #0009;overflow:hidden;display:flex;flex-direction:column}
+.trash-head{height:54px;background:#fff;border-bottom:1px solid #ddd;display:flex;align-items:center;padding:0 16px;font-size:17px}
+.trash-head span{flex:1}
+.trash-head button{width:34px;height:34px;background:transparent;color:#444;font-size:22px;cursor:pointer;border-radius:4px}
+.trash-head button:hover{background:#eee}
+.trash-list{padding:12px;overflow:auto;display:flex;flex-direction:column;gap:7px}
+.trash-item{background:#fff;border:1px solid #ddd;border-radius:4px;min-height:58px;display:flex;align-items:center;padding:8px 10px;gap:10px}
+.trash-item .trash-item-icon{font-size:26px;width:36px;text-align:center}
+.trash-item .trash-item-name{flex:1;font-size:13px}
+.trash-item button{padding:7px 11px;background:#1683d8;color:#fff;border:0;border-radius:3px;cursor:pointer}
+.trash-item button:hover{background:#0f70b8}
+.trash-empty{padding:35px;text-align:center;color:#777}
 .icon{position:absolute;width:82px;min-height:82px;pointer-events:auto;color:#fff;text-shadow:0 1px 3px #003;display:flex;flex-direction:column;align-items:center;justify-content:center;border:1px solid transparent;border-radius:3px;cursor:pointer}
 .icon:hover{background:#ffffff22;border-color:#ffffff44}
 .icon .ico{font-size:34px;line-height:38px}.icon span:last-child{font-size:12px;text-align:center}
@@ -1149,6 +1166,7 @@ background-size:110px 110px,170px 170px}
 <div id="desktop">
   <div class="wallpaper"></div>
   <div id="desktopIcons">
+    <div id="trashIcon" class="icon" data-trash="true" title="ゴミ箱" onclick="openTrash()"><div class="ico">🗑️</div><span>ゴミ箱</span></div>
     <div class="icon" data-app="explorer" ondblclick="openApp('explorer')"><div class="ico">📁</div><span>ファイル</span></div>
     <div class="icon" data-app="editor" ondblclick="openApp('editor')"><div class="ico">📝</div><span>テキスト エディター</span></div>
     <div class="icon" data-app="terminal" ondblclick="openApp('terminal')"><div class="ico">⌨️</div><span>ターミナル</span></div>
@@ -1156,6 +1174,13 @@ background-size:110px 110px,170px 170px}
     <div class="icon" data-app="browser" ondblclick="openApp('browser')"><div class="ico">🌐</div><span>ブラウザ</span></div>
     <div class="icon" data-app="taskmgr" ondblclick="openApp('taskmgr')"><div class="ico">📊</div><span>タスク マネージャー</span></div>
     <div class="icon" data-app="settings" ondblclick="openApp('settings')"><div class="ico">⚙️</div><span>設定</span></div>
+  </div>
+
+  <div id="trashDialog" class="trash-dialog" onclick="if(event.target===this)closeTrash()">
+    <div class="trash-box">
+      <div class="trash-head"><span>🗑️ ゴミ箱</span><button onclick="closeTrash()">×</button></div>
+      <div id="trashList" class="trash-list"></div>
+    </div>
   </div>
 
   <div id="windows"></div>
@@ -4811,36 +4836,123 @@ window.OS = {
 
 };
 
+// =========================
+// デスクトップのゴミ箱
+// =========================
+const trashStorageKey = 'webos14_desktop_trash_v1';
+let desktopTrash = JSON.parse(localStorage.getItem(trashStorageKey) || '[]');
+function saveDesktopTrash(){
+  localStorage.setItem(trashStorageKey, JSON.stringify(desktopTrash));
+}
+function getDesktopIconMeta(el){
+  return {
+    app: el.dataset.app,
+    icon: el.querySelector('.ico')?.textContent || '📄',
+    name: el.querySelector('span:last-child')?.textContent || el.dataset.app || '項目'
+  };
+}
+function openTrash(){
+  const d=document.getElementById('trashDialog');
+  if(!d)return;
+  renderTrash();
+  d.classList.add('show');
+}
+function closeTrash(){
+  document.getElementById('trashDialog')?.classList.remove('show');
+}
+function renderTrash(){
+  const list=document.getElementById('trashList');
+  if(!list)return;
+  list.innerHTML='';
+  if(!desktopTrash.length){
+    list.innerHTML='<div class="trash-empty">ゴミ箱は空です</div>';
+    return;
+  }
+  desktopTrash.forEach((item,index)=>{
+    const row=document.createElement('div');
+    row.className='trash-item';
+    row.innerHTML=`<div class="trash-item-icon">${escapeHtml(item.icon)}</div><div class="trash-item-name">${escapeHtml(item.name)}</div><button>復元</button>`;
+    row.querySelector('button').onclick=()=>restoreDesktopIcon(index);
+    list.appendChild(row);
+  });
+}
+function restoreDesktopIcon(index){
+  const item=desktopTrash[index];
+  if(!item)return;
+  const icons=document.getElementById('desktopIcons');
+  const el=document.createElement('div');
+  el.className='icon';
+  el.dataset.app=item.app;
+  el.ondblclick=()=>openApp(item.app);
+  el.innerHTML=`<div class="ico">${escapeHtml(item.icon)}</div><span>${escapeHtml(item.name)}</span>`;
+  icons.appendChild(el);
+  desktopTrash.splice(index,1);
+  saveDesktopTrash();
+  initOneDesktopIcon(el);
+  renderTrash();
+}
+function moveDesktopIconToTrash(el){
+  if(!el || el.dataset.trash==='true')return;
+  const item=getDesktopIconMeta(el);
+  const existing=desktopTrash.find(x=>x.app===item.app && x.name===item.name);
+  if(!existing)desktopTrash.push(item);
+  saveDesktopTrash();
+  el.remove();
+  const trash=document.getElementById('trashIcon');
+  trash?.classList.remove('drag-over');
+}
+
 const desktopPositionsKey='webos10_desktop_positions_v1';
 let desktopPositions=JSON.parse(localStorage.getItem(desktopPositionsKey)||'null')||{};
 function saveDesktopPositions(){localStorage.setItem(desktopPositionsKey,JSON.stringify(desktopPositions))}
-function initDesktopIcons(){
- const icons=[...document.querySelectorAll('.icon')];
- icons.forEach((el,i)=>{
-   const key=el.dataset.app;
-   if(!desktopPositions[key])desktopPositions[key]={x:12,y:18+i*88};
+function initOneDesktopIcon(el){
+ const key=el.dataset.app;
+ if(!key)return;
+ if(key==='browser'){
+   // ブラウザは必ず2行目
+   desktopPositions[key]={x:12,y:106};
+ }else if(!desktopPositions[key]){
+   const normal=[...document.querySelectorAll('.icon[data-app]')].filter(x=>x!==el && x.dataset.app!=='browser');
+   const index=Math.max(0,normal.indexOf(el));
+   desktopPositions[key]={x:12,y:18+index*88};
+ }
+ applyIconPosition(el);
+ let dragging=false,dx=0,dy=0;
+ el.addEventListener('mousedown',e=>{
+   if(e.button!==0 || el.dataset.trash==='true')return;
+   dragging=true;
+   const r=el.getBoundingClientRect();
+   dx=e.clientX-r.left;dy=e.clientY-r.top;
+   el.style.zIndex=20;
+   e.preventDefault();
+ });
+ document.addEventListener('mousemove',e=>{
+   if(!dragging)return;
+   const trash=document.getElementById('trashIcon');
+   const tr=trash?.getBoundingClientRect();
+   if(tr && e.clientX>=tr.left && e.clientX<=tr.right && e.clientY>=tr.top && e.clientY<=tr.bottom){
+     trash.classList.add('drag-over');
+   }else trash?.classList.remove('drag-over');
+   const d=desktopPositions[key];
+   d.x=Math.max(0,Math.min(innerWidth-90,e.clientX-dx));
+   d.y=Math.max(0,Math.min(innerHeight-100,e.clientY-dy));
    applyIconPosition(el);
-   let dragging=false,dx=0,dy=0;
-   el.addEventListener('mousedown',e=>{
-     if(e.button!==0)return;
-     dragging=true;
-     const r=el.getBoundingClientRect();
-     dx=e.clientX-r.left;dy=e.clientY-r.top;
-     el.style.zIndex=20;
-     e.preventDefault();
-   });
-   document.addEventListener('mousemove',e=>{
-     if(!dragging)return;
-     const d=desktopPositions[key];
-     d.x=Math.max(0,Math.min(innerWidth-90,e.clientX-dx));
-     d.y=Math.max(0,Math.min(innerHeight-100,e.clientY-dy));
-     applyIconPosition(el);
-   });
-   document.addEventListener('mouseup',()=>{
-     if(dragging){dragging=false;saveDesktopPositions()}
-   });
+ });
+ document.addEventListener('mouseup',e=>{
+   if(!dragging)return;
+   dragging=false;
+   const trash=document.getElementById('trashIcon');
+   const tr=trash?.getBoundingClientRect();
+   const over=tr && e.clientX>=tr.left && e.clientX<=tr.right && e.clientY>=tr.top && e.clientY<=tr.bottom;
+   trash?.classList.remove('drag-over');
+   if(over)moveDesktopIconToTrash(el);
+   else saveDesktopPositions();
  });
 }
+function initDesktopIcons(){
+ document.querySelectorAll('.icon[data-app]').forEach(initOneDesktopIcon);
+}
+
 function applyIconPosition(el){
  const p=desktopPositions[el.dataset.app];
  el.style.left=p.x+'px';el.style.top=p.y+'px';
