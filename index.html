@@ -1176,6 +1176,66 @@ background-size:110px 110px,170px 170px}
 .task-preview-close:active{
   background:#c50f1f;
 }
+.terminal{
+  width:100%;
+  height:100%;
+  box-sizing:border-box;
+  background:#050505;
+  color:#f1f1f1;
+  font-family:
+    "Cascadia Mono",
+    "Consolas",
+    monospace;
+  font-size:14px;
+  padding:12px;
+  overflow:hidden;
+}
+
+.term-header{
+  display:flex;
+  justify-content:space-between;
+  color:#aaa;
+  border-bottom:1px solid #333;
+  padding-bottom:8px;
+  margin-bottom:8px;
+}
+
+.term-output{
+  height:calc(100% - 60px);
+  overflow-y:auto;
+  white-space:pre-wrap;
+  line-height:1.5;
+}
+
+.term-input-line{
+  display:flex;
+  align-items:center;
+  gap:6px;
+}
+
+.term-input-line span{
+  white-space:nowrap;
+}
+
+.term-input-line input{
+  flex:1;
+  background:transparent;
+  border:0;
+  outline:none;
+  color:white;
+  font-family:inherit;
+  font-size:inherit;
+  caret-color:white;
+}
+
+.command{
+  margin-top:4px;
+}
+
+.terminal-running{
+  color:#999;
+  font-style:italic;
+}
 </style>
 </head>
 <body>
@@ -3559,24 +3619,938 @@ function editorNew(){
 }
 
 function openTerminal(){
- const html=`<div class="terminal" id="term"><div>WebOS Terminal [Version 10.0]</div><div>「help」と入力するとコマンド一覧を表示します。</div><br><div id="termout"></div><div><span>webos&gt; </span><input id="termInput" autocomplete="off"></div></div>`;
- const id=makeWindow('ターミナル',html,'⌨️',{width:680,height:430});
- const input=document.querySelector(`#${id} #termInput`),out=document.querySelector(`#${id} #termout`);
- input.focus();
- input.onkeydown=e=>{if(e.key!=='Enter')return;const c=input.value.trim();input.value='';out.innerHTML+=`<div>webos&gt; ${escapeHtml(c)}</div>`;termCommand(c,out);setTimeout(()=>input.focus(),0)}
- return id
+
+  const html = `
+  <div class="terminal" id="term">
+
+    <div class="term-header">
+      <span>WebOS Terminal</span>
+      <span>10.0.26100</span>
+    </div>
+
+    <div id="termout" class="term-output"></div>
+
+    <div class="term-input-line">
+      <span id="termPrompt">C:\\WebOS&gt;</span>
+      <input
+        id="termInput"
+        autocomplete="off"
+        spellcheck="false"
+      >
+    </div>
+
+  </div>
+  `;
+
+  const id = makeWindow(
+    'ターミナル',
+    html,
+    '⌨️',
+    {
+      width: 720,
+      height: 450
+    }
+  );
+
+  const w =
+    document.querySelector(`#${id}`);
+
+  const input =
+    w.querySelector('#termInput');
+
+  const out =
+    w.querySelector('#termout');
+
+  const prompt =
+    w.querySelector('#termPrompt');
+
+  let currentPath = 'C:\\WebOS';
+
+  let history = [];
+  let historyIndex = -1;
+
+  function write(text = '', cls = ''){
+    const div = document.createElement('div');
+
+    if(cls){
+      div.className = cls;
+    }
+
+    div.innerHTML = escapeHtml(text);
+
+    out.appendChild(div);
+
+    out.scrollTop = out.scrollHeight;
+  }
+
+  function writeHTML(html){
+    out.insertAdjacentHTML(
+      'beforeend',
+      html
+    );
+
+    out.scrollTop =
+      out.scrollHeight;
+  }
+
+  function updatePrompt(){
+    prompt.textContent =
+      currentPath + '>';
+  }
+
+  function runCommand(command){
+
+    command = command.trim();
+
+    if(!command){
+      write('');
+      return;
+    }
+
+    history.push(command);
+
+    historyIndex =
+      history.length;
+
+    write(
+      currentPath + '>' + command,
+      'command'
+    );
+
+    input.value = '';
+
+    // 実行中表示
+    const loading =
+      document.createElement('div');
+
+    loading.className =
+      'terminal-running';
+
+    loading.textContent =
+      '処理中...';
+
+    out.appendChild(loading);
+
+    out.scrollTop =
+      out.scrollHeight;
+
+    // 本物っぽく少し待ってから実行
+    setTimeout(() => {
+
+      loading.remove();
+
+      termCommand(
+        command,
+        out,
+        {
+          getPath: () => currentPath,
+
+          setPath: path => {
+            currentPath = path;
+            updatePrompt();
+          },
+
+          write,
+
+          writeHTML
+        }
+      );
+
+      out.scrollTop =
+        out.scrollHeight;
+
+    }, 180);
+  }
+
+  input.addEventListener(
+    'keydown',
+    e => {
+
+      // Enter
+      if(e.key === 'Enter'){
+
+        runCommand(
+          input.value
+        );
+
+        return;
+      }
+
+      // ↑
+      if(e.key === 'ArrowUp'){
+
+        e.preventDefault();
+
+        if(!history.length)
+          return;
+
+        historyIndex =
+          Math.max(
+            0,
+            historyIndex - 1
+          );
+
+        input.value =
+          history[historyIndex] || '';
+
+        return;
+      }
+
+      // ↓
+      if(e.key === 'ArrowDown'){
+
+        e.preventDefault();
+
+        if(!history.length)
+          return;
+
+        historyIndex =
+          Math.min(
+            history.length,
+            historyIndex + 1
+          );
+
+        input.value =
+          history[historyIndex] || '';
+
+        return;
+      }
+
+    }
+  );
+
+  // ターミナルをクリックしたら入力欄へ
+  w.querySelector('.terminal')
+    .addEventListener(
+      'click',
+      () => input.focus()
+    );
+
+  // 起動メッセージ
+  write(
+    'Microsoft Windows [Version 2.1.5]'
+  );
+
+  write(
+    '(c) WebOS Corporation. All rights reserved.'
+  );
+
+  write('');
+
+  write(
+    'WebOS Terminal を起動しています...'
+  );
+
+  setTimeout(() => {
+
+    write(
+      'システムチェック中...'
+    );
+
+  }, 250);
+
+  setTimeout(() => {
+
+    write(
+      'ファイルシステムを確認しました。'
+    );
+
+  }, 500);
+
+  setTimeout(() => {
+
+    write(
+      'ターミナルの準備が完了しました。'
+    );
+
+    write('');
+
+    updatePrompt();
+    input.focus();
+
+  }, 750);
+
+  return id;
 }
-function termCommand(c,out){
- const [cmd,...args]=c.split(' ');
- if(cmd==='help')out.innerHTML+='<div>help, dir, open, cls, lock, date, echo, shutdown</div>';
- else if(cmd==='dir')Object.keys(files).forEach(x=>out.innerHTML+=`<div>${escapeHtml(x)}</div>`);
- else if(cmd==='open'&&args[0])openFile(args.join(' '));
- else if(cmd==='cls')out.innerHTML='';
- else if(cmd==='lock')lock();
- else if(cmd==='date')out.innerHTML+=`<div>${new Date().toLocaleString('ja-JP')}</div>`;
- else if(cmd==='echo')out.innerHTML+=`<div>${escapeHtml(args.join(' '))}</div>`;
- else if(cmd==='shutdown')shutdown();
- else if(c)out.innerHTML+='<div>コマンドが見つかりません。</div>'
+
+
+function termCommand(c, out, api){
+
+  const parts =
+    c.match(/"[^"]*"|'[^']*'|\S+/g)
+    || [];
+
+  const cmd =
+    (parts.shift() || '')
+      .toLowerCase();
+
+  const args =
+    parts.map(x =>
+      x.replace(/^["']|["']$/g, '')
+    );
+
+  const {
+    getPath,
+    setPath,
+    write,
+    writeHTML
+  } = api;
+
+
+  /* =========================
+     help
+  ========================= */
+
+  if(cmd === 'help'){
+
+    write(
+      '利用可能なコマンド:'
+    );
+
+    write('');
+
+    write(
+      'help       コマンド一覧'
+    );
+
+    write(
+      'dir        ファイル一覧'
+    );
+
+    write(
+      'cd         フォルダ移動'
+    );
+
+    write(
+      'pwd        現在の場所'
+    );
+
+    write(
+      'mkdir      フォルダ作成'
+    );
+
+    write(
+      'touch      ファイル作成'
+    );
+
+    write(
+      'cat        ファイル表示'
+    );
+
+    write(
+      'open       ファイルを開く'
+    );
+
+    write(
+      'rm         ファイル削除'
+    );
+
+    write(
+      'echo       テキスト表示'
+    );
+
+    write(
+      'cls        画面クリア'
+    );
+
+    write(
+      'clear      画面クリア'
+    );
+
+    write(
+      'date       日付・時刻'
+    );
+
+    write(
+      'whoami     ユーザー名'
+    );
+
+    write(
+      'ver        WebOSバージョン'
+    );
+
+    write(
+      'systeminfo システム情報'
+    );
+
+    write(
+      'lock       ロック'
+    );
+
+    write(
+      'shutdown   シャットダウン'
+    );
+
+    return;
+  }
+
+
+  /* =========================
+     dir
+  ========================= */
+
+  if(cmd === 'dir'){
+
+    write(
+      ' ドライブ C のボリューム'
+    );
+
+    write(
+      ' ボリューム シリアル番号: WEBOS-10'
+    );
+
+    write('');
+
+    const path =
+      getPath()
+        .replace(/^C:\\WebOS\\?/, '')
+        .replace(/\\/g, '/');
+
+    const prefix =
+      path ? path + '/' : '';
+
+    const items =
+      Object.keys(files)
+        .filter(x => {
+
+          const normalized =
+            x.replace(/\\/g, '/');
+
+          if(!normalized.startsWith(prefix))
+            return false;
+
+          const rest =
+            normalized.slice(
+              prefix.length
+            );
+
+          return rest &&
+            !rest.includes('/');
+        });
+
+    if(!items.length){
+
+      write(
+        'ファイルがありません。'
+      );
+
+    }else{
+
+      items.forEach(name => {
+
+        const item =
+          files[name];
+
+        if(item?.type === 'folder'){
+
+          write(
+            '<DIR>     ' + name
+          );
+
+        }else{
+
+          write(
+            '          ' + name
+          );
+
+        }
+
+      });
+
+    }
+
+    write('');
+
+    write(
+      `${items.length} 個の項目`
+    );
+
+    return;
+  }
+
+
+  /* =========================
+     pwd
+  ========================= */
+
+  if(cmd === 'pwd'){
+
+    write(
+      getPath()
+    );
+
+    return;
+  }
+
+
+  /* =========================
+     cd
+  ========================= */
+
+  if(cmd === 'cd'){
+
+    if(!args[0]){
+
+      write(
+        getPath()
+      );
+
+      return;
+    }
+
+    let target =
+      args.join(' ');
+
+    if(target === '..'){
+
+      const parts =
+        getPath().split('\\');
+
+      if(parts.length > 2)
+        parts.pop();
+
+      setPath(
+        parts.join('\\')
+      );
+
+      return;
+    }
+
+    if(target === '\\'){
+
+      setPath(
+        'C:\\WebOS'
+      );
+
+      return;
+    }
+
+    target =
+      target
+        .replace(/^C:\\WebOS\\?/i, '')
+        .replace(/^\/+/, '')
+        .replace(/\\/g, '/');
+
+    const folder =
+      target
+        ? target
+        : '';
+
+    const exists =
+      Object.keys(files)
+        .some(x =>
+          x.replace(/\\/g, '/') === folder &&
+          files[x]?.type === 'folder'
+        );
+
+    if(!exists){
+
+      write(
+        `システムは指定されたパスを見つけられません。`
+      );
+
+      return;
+    }
+
+    setPath(
+      'C:\\WebOS\\' +
+      folder.replace(/\//g, '\\')
+    );
+
+    return;
+  }
+
+
+  /* =========================
+     echo
+  ========================= */
+
+  if(cmd === 'echo'){
+
+    write(
+      args.join(' ')
+    );
+
+    return;
+  }
+
+
+  /* =========================
+     date
+  ========================= */
+
+  if(cmd === 'date'){
+
+    write(
+      new Date()
+        .toLocaleString('ja-JP')
+    );
+
+    return;
+  }
+
+
+  /* =========================
+     whoami
+  ========================= */
+
+  if(cmd === 'whoami'){
+
+    write(
+      config.username ||
+      'WebOS\\User'
+    );
+
+    return;
+  }
+
+
+  /* =========================
+     ver
+  ========================= */
+
+  if(cmd === 'ver'){
+
+    write(
+      'WebOS [Version 2.1.5]'
+    );
+
+    return;
+  }
+
+
+  /* =========================
+     systeminfo
+  ========================= */
+
+  if(cmd === 'systeminfo'){
+
+    write(
+      'ホスト名: WEBOS-PC'
+    );
+
+    write(
+      'OS名: WebOS 10'
+    );
+
+    write(
+      'OSバージョン: 10.0.26100'
+    );
+
+    write(
+      'システムの種類: Web Browser'
+    );
+
+    write(
+      'プロセッサ: WebOS Virtual CPU'
+    );
+
+    write(
+      'メモリ: Browser Managed'
+    );
+
+    write(
+      'ブラウザ: ' +
+      navigator.userAgent.split(') ')[0] + ')'
+    );
+
+    return;
+  }
+
+
+  /* =========================
+     cls / clear
+  ========================= */
+
+  if(
+    cmd === 'cls' ||
+    cmd === 'clear'
+  ){
+
+    out.innerHTML = '';
+
+    return;
+  }
+
+
+  /* =========================
+     mkdir
+  ========================= */
+
+  if(cmd === 'mkdir'){
+
+    if(!args[0]){
+
+      write(
+        '構文: mkdir <フォルダ名>'
+      );
+
+      return;
+    }
+
+    const name =
+      args.join(' ');
+
+    const current =
+      getPath()
+        .replace(/^C:\\WebOS\\?/i, '')
+        .replace(/\\/g, '/');
+
+    const path =
+      current
+        ? current + '/' + name
+        : name;
+
+    if(files[path]){
+
+      write(
+        '既に存在します。'
+      );
+
+      return;
+    }
+
+    files[path] = {
+      type: 'folder'
+    };
+
+    saveFiles();
+
+    write(
+      `フォルダを作成しました: ${name}`
+    );
+
+    return;
+  }
+
+
+  /* =========================
+     touch
+  ========================= */
+
+  if(cmd === 'touch'){
+
+    if(!args[0]){
+
+      write(
+        '構文: touch <ファイル名>'
+      );
+
+      return;
+    }
+
+    const name =
+      args.join(' ');
+
+    const current =
+      getPath()
+        .replace(/^C:\\WebOS\\?/i, '')
+        .replace(/\\/g, '/');
+
+    const path =
+      current
+        ? current + '/' + name
+        : name;
+
+    if(files[path]){
+
+      write(
+        'ファイルは既に存在します。'
+      );
+
+      return;
+    }
+
+    files[path] = {
+      type: 'file',
+      content: ''
+    };
+
+    saveFiles();
+
+    write(
+      `ファイルを作成しました: ${name}`
+    );
+
+    return;
+  }
+
+
+  /* =========================
+     cat
+  ========================= */
+
+  if(cmd === 'cat'){
+
+    if(!args[0]){
+
+      write(
+        '構文: cat <ファイル名>'
+      );
+
+      return;
+    }
+
+    const name =
+      args.join(' ');
+
+    const current =
+      getPath()
+        .replace(/^C:\\WebOS\\?/i, '')
+        .replace(/\\/g, '/');
+
+    const path =
+      current
+        ? current + '/' + name
+        : name;
+
+    if(!files[path]){
+
+      write(
+        'ファイルが見つかりません。'
+      );
+
+      return;
+    }
+
+    if(files[path].type === 'folder'){
+
+      write(
+        '指定されたパスはファイルではありません。'
+      );
+
+      return;
+    }
+
+    const content =
+      files[path].content || '';
+
+    content
+      .split('\n')
+      .forEach(line =>
+        write(line)
+      );
+
+    return;
+  }
+
+
+  /* =========================
+     open
+  ========================= */
+
+  if(cmd === 'open'){
+
+    if(!args[0]){
+
+      write(
+        '構文: open <ファイル名>'
+      );
+
+      return;
+    }
+
+    const name =
+      args.join(' ');
+
+    write(
+      `ファイルを開いています: ${name}`
+    );
+
+    setTimeout(() => {
+
+      openFile(name);
+
+    }, 250);
+
+    return;
+  }
+
+
+  /* =========================
+     rm
+  ========================= */
+
+  if(cmd === 'rm'){
+
+    if(!args[0]){
+
+      write(
+        '構文: rm <ファイル名>'
+      );
+
+      return;
+    }
+
+    const name =
+      args.join(' ');
+
+    if(!files[name]){
+
+      write(
+        'ファイルが見つかりません。'
+      );
+
+      return;
+    }
+
+    delete files[name];
+
+    saveFiles();
+
+    write(
+      `削除しました: ${name}`
+    );
+
+    return;
+  }
+
+
+  /* =========================
+     lock
+  ========================= */
+
+  if(cmd === 'lock'){
+
+    write(
+      'WebOSをロックしています...'
+    );
+
+    setTimeout(
+      () => lock(),
+      300
+    );
+
+    return;
+  }
+
+
+  /* =========================
+     shutdown
+  ========================= */
+
+  if(cmd === 'shutdown'){
+
+    write(
+      'システムをシャットダウンしています...'
+    );
+
+    setTimeout(
+      () => shutdown(),
+      500
+    );
+
+    return;
+  }
+
+
+  /* =========================
+     unknown
+  ========================= */
+
+  write(
+    `'${cmd}' は、内部コマンドまたは外部コマンドとして認識されていません。`
+  );
 }
 
 
