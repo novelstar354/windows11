@@ -259,55 +259,407 @@ background-size:110px 110px,170px 170px}
   height:100%;
   display:flex;
   flex-direction:column;
-  background:#fff;
+  background:#f7f7f7;
+  color:#222;
+  position:relative;
+  overflow:hidden;
 }
 
-.browser-toolbar{
-  height:48px;
+
+/* ================================
+   タブ
+================================ */
+
+.browser-tabs{
+  height:38px;
+  display:flex;
+  align-items:flex-end;
+  gap:4px;
+  padding:4px 8px 0;
+  background:#202020;
+}
+
+.browser-tab{
+  height:34px;
+  min-width:210px;
+  max-width:300px;
   display:flex;
   align-items:center;
-  gap:5px;
-  padding:6px;
-  background:#f3f3f3;
-  border-bottom:1px solid #ccc;
+  gap:8px;
+  padding:0 10px;
+  box-sizing:border-box;
+  background:#303030;
+  color:#ddd;
+  border-radius:8px 8px 0 0;
+  font-size:13px;
 }
 
-.browser-toolbar button{
-  height:34px;
-  min-width:36px;
-  padding:0 10px;
-  background:#fff;
-  border:1px solid #ccc;
+.browser-tab.active{
+  background:#f5f5f5;
+  color:#222;
+}
+
+.browser-tab-icon{
+  font-size:14px;
+}
+
+.browser-tab-title{
+  flex:1;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+
+.browser-tab-close{
+  border:0;
+  background:transparent;
+  color:inherit;
+  font-size:17px;
+  cursor:pointer;
+  border-radius:4px;
+}
+
+.browser-tab-close:hover{
+  background:rgba(128,128,128,.2);
+}
+
+.browser-new-tab{
+  width:32px;
+  height:30px;
+  margin-bottom:2px;
+  border:0;
+  background:transparent;
+  color:#ddd;
+  font-size:20px;
   cursor:pointer;
 }
 
-.browser-toolbar button:hover{
+.browser-new-tab:hover{
+  background:#333;
+}
+
+
+/* ================================
+   ツールバー
+================================ */
+
+.browser-toolbar{
+  height:52px;
+  display:flex;
+  align-items:center;
+  gap:6px;
+  padding:7px 9px;
+  box-sizing:border-box;
+  background:#f5f5f5;
+  border-bottom:1px solid #d5d5d5;
+}
+
+.browser-nav{
+  width:36px;
+  height:36px;
+  border:0;
+  border-radius:50%;
+  background:transparent;
+  color:#333;
+  font-size:20px;
+  cursor:pointer;
+}
+
+.browser-nav:hover{
   background:#e5e5e5;
 }
 
-.browser-toolbar input{
+.browser-address-wrap{
   flex:1;
-  height:34px;
-  padding:0 12px;
-  border:1px solid #aaa;
+  height:38px;
+  display:flex;
+  align-items:center;
+  background:#fff;
+  border:1px solid #c8c8c8;
+  border-radius:20px;
+  padding:0 8px;
+  box-sizing:border-box;
+  box-shadow:inset 0 1px 2px rgba(0,0,0,.05);
+}
+
+.browser-address-wrap:focus-within{
+  border-color:#4285f4;
+  box-shadow:0 0 0 2px rgba(66,133,244,.12);
+}
+
+.browser-site-icon{
+  width:28px;
+  text-align:center;
+  font-size:14px;
+}
+
+.browser-address{
+  flex:1;
+  height:32px;
+  border:0;
   outline:none;
+  background:transparent;
+  font-size:14px;
+  color:#222;
+  min-width:0;
 }
 
-.browser-toolbar input:focus{
-  border-color:#1683d8;
+.browser-star{
+  width:30px;
+  height:30px;
+  border:0;
+  background:transparent;
+  font-size:19px;
+  color:#666;
+  cursor:pointer;
 }
 
-.browser-status{
-  height:24px;
-  padding:4px 10px;
-  background:#fafafa;
-  border-bottom:1px solid #ddd;
-  color:#777;
-  font-size:11px;
+.browser-star:hover{
+  color:#222;
+}
+
+.browser-menu{
+  width:36px;
+  height:36px;
+  border:0;
+  background:transparent;
+  font-size:23px;
+  cursor:pointer;
+  border-radius:50%;
+}
+
+.browser-menu:hover{
+  background:#e5e5e5;
+}
+
+
+/* ================================
+   読み込みバー
+================================ */
+
+.browser-loading{
+  height:2px;
+  overflow:hidden;
+  background:transparent;
+}
+
+.browser-loading-bar{
+  width:0;
+  height:100%;
+  background:#4285f4;
+}
+
+.webbrowser.loading
+.browser-loading-bar{
+  width:100%;
+  animation:
+    browserLoading 1.2s
+    ease-in-out infinite;
+}
+
+@keyframes browserLoading{
+
+  0%{
+    transform:translateX(-100%);
+  }
+
+  100%{
+    transform:translateX(100%);
+  }
+
+}
+
+
+/* ================================
+   ページ
+================================ */
+
+.browser-page{
+  position:relative;
+  flex:1;
+  min-height:0;
+  background:white;
 }
 
 .browser-frame{
+  display:none;
+  width:100%;
+  height:100%;
+  border:0;
+  background:#fff;
+}
+
+
+/* ================================
+   ホーム
+================================ */
+
+.browser-home{
+  width:100%;
+  height:100%;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  box-sizing:border-box;
+  background:
+    radial-gradient(
+      circle at top,
+      #eef5ff 0,
+      #fff 45%,
+      #f7f7f7 100%
+    );
+}
+
+.browser-logo{
+  font-size:64px;
+  margin-bottom:8px;
+}
+
+.browser-home h1{
+  margin:0 0 25px;
+  font-size:28px;
+  font-weight:400;
+  color:#333;
+}
+
+.browser-home-search{
+  width:min(620px,80%);
+  height:50px;
+  display:flex;
+  align-items:center;
+  gap:10px;
+  padding:0 16px;
+  box-sizing:border-box;
+  background:white;
+  border:1px solid #d0d0d0;
+  border-radius:26px;
+  box-shadow:
+    0 3px 14px rgba(0,0,0,.08);
+}
+
+.browser-home-search span{
+  font-size:18px;
+}
+
+.browser-home-search input{
   flex:1;
+  height:42px;
+  border:0;
+  outline:0;
+  font-size:15px;
+  background:transparent;
+}
+
+.browser-shortcuts{
+  display:flex;
+  gap:20px;
+  margin-top:30px;
+}
+
+.browser-shortcuts button{
+  width:76px;
+  height:78px;
+  border:0;
+  background:transparent;
+  border-radius:8px;
+  cursor:pointer;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:7px;
+}
+
+.browser-shortcuts button:hover{
+  background:rgba(0,0,0,.06);
+}
+
+.browser-shortcuts button span{
+  width:40px;
+  height:40px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  border-radius:50%;
+  background:#eee;
+  font-size:19px;
+}
+
+.browser-shortcuts small{
+  color:#555;
+}
+
+.browser-home-info{
+  margin-top:35px;
+  color:#999;
+  font-size:12px;
+}
+
+
+/* ================================
+   ステータス
+================================ */
+
+.browser-status{
+  height:23px;
+  padding:4px 10px;
+  box-sizing:border-box;
+  background:#f5f5f5;
+  border-top:1px solid #ddd;
+  color:#777;
+  font-size:11px;
+  overflow:hidden;
+  white-space:nowrap;
+  text-overflow:ellipsis;
+}
+
+
+/* ================================
+   メニュー
+================================ */
+
+.browser-popup-menu{
+  position:absolute;
+  right:10px;
+  top:94px;
+  width:220px;
+  padding:6px;
+  display:none;
+  flex-direction:column;
+  background:white;
+  border:1px solid #d0d0d0;
+  border-radius:8px;
+  box-shadow:
+    0 10px 30px rgba(0,0,0,.2);
+  z-index:100;
+}
+
+.browser-popup-menu.show{
+  display:flex;
+}
+
+.browser-popup-menu button{
+  width:100%;
+  height:38px;
+  text-align:left;
+  padding:0 12px;
+  border:0;
+  background:transparent;
+  border-radius:5px;
+  cursor:pointer;
+  color:#222;
+}
+
+.browser-popup-menu button:hover{
+  background:#f0f0f0;
+}
+
+.browser-popup-menu hr{
+  width:100%;
+  border:0;
+  border-top:1px solid #eee;
+  margin:5px 0;
 }
 /* ==========================================================
    スタートメニュー アニメーション
@@ -5820,320 +6172,685 @@ function openBrowser(){
   const html = `
   <div class="webbrowser">
 
+    <!-- タブ -->
+    <div class="browser-tabs">
+      <div class="browser-tab active">
+        <span class="browser-tab-icon">🌐</span>
+        <span class="browser-tab-title">新しいタブ</span>
+        <button class="browser-tab-close">×</button>
+      </div>
+      <button class="browser-new-tab">＋</button>
+    </div>
+
+    <!-- ナビゲーションバー -->
     <div class="browser-toolbar">
 
-      <button onclick="browserBack()">←</button>
-      <button onclick="browserForward()">→</button>
-      <button onclick="browserReload()">↻</button>
-      <button onclick="browserHome()">🏠</button>
+      <button
+        class="browser-nav"
+        title="戻る"
+        onclick="browserBack(this)"
+      >←</button>
 
-      <input
-        id="browserUrl"
-        value="webos://home"
-        placeholder="URLまたは検索ワードを入力"
-        onkeydown="if(event.key==='Enter') browserGo()"
-      >
+      <button
+        class="browser-nav"
+        title="進む"
+        onclick="browserForward(this)"
+      >→</button>
 
-      <button onclick="browserGo()">移動</button>
+      <button
+        class="browser-nav"
+        title="再読み込み"
+        onclick="browserReload(this)"
+      >↻</button>
+
+      <button
+        class="browser-nav"
+        title="ホーム"
+        onclick="browserHome(this)"
+      >⌂</button>
+
+      <div class="browser-address-wrap">
+
+        <span class="browser-site-icon">🌐</span>
+
+        <input
+          class="browser-address"
+          value="webos://home"
+          placeholder="URL または検索語句を入力"
+          autocomplete="off"
+          spellcheck="false"
+          onkeydown="
+            if(event.key === 'Enter'){
+              event.preventDefault();
+              browserGo(this);
+            }
+          "
+        >
+
+        <button
+          class="browser-star"
+          title="お気に入り"
+          onclick="browserBookmark(this)"
+        >☆</button>
+
+      </div>
+
+      <button
+        class="browser-menu"
+        title="メニュー"
+        onclick="browserMenu(this)"
+      >⋮</button>
 
     </div>
 
-    <div class="browser-status" id="browserStatus">
-      WebOS ブラウザ
+    <!-- 読み込み表示 -->
+    <div class="browser-loading">
+      <div class="browser-loading-bar"></div>
     </div>
 
-    <iframe
-      id="browserFrame"
-      src="about:blank"
-      style="
-        width:100%;
-        height:100%;
-        border:0;
-        background:white;
-      "
-    ></iframe>
+    <!-- ページ -->
+    <div class="browser-page">
+
+      <div class="browser-home">
+
+        <div class="browser-logo">
+          🌐
+        </div>
+
+        <h1>WebOS Browser</h1>
+
+        <div class="browser-home-search">
+
+          <span>🔍</span>
+
+          <input
+            placeholder="Webを検索、またはURLを入力"
+            onkeydown="
+              if(event.key === 'Enter'){
+                event.preventDefault();
+
+                const address =
+                  this.closest('.webbrowser')
+                    .querySelector('.browser-address');
+
+                address.value = this.value;
+
+                browserGo(address);
+              }
+            "
+          >
+
+        </div>
+
+        <div class="browser-shortcuts">
+
+          <button onclick="browserShortcut(this,'https://www.google.com')">
+            <span>G</span>
+            <small>Google</small>
+          </button>
+
+          <button onclick="browserShortcut(this,'https://www.bing.com')">
+            <span>ⓑ</span>
+            <small>Bing</small>
+          </button>
+
+          <button onclick="browserShortcut(this,'https://www.wikipedia.org')">
+            <span>W</span>
+            <small>Wikipedia</small>
+          </button>
+
+          <button onclick="browserShortcut(this,'https://github.com')">
+            <span>◉</span>
+            <small>GitHub</small>
+          </button>
+
+        </div>
+
+        <div class="browser-home-info">
+          WebOS Browser
+        </div>
+
+      </div>
+
+      <iframe
+        class="browser-frame"
+        src="about:blank"
+        loading="eager"
+        allow="fullscreen"
+        referrerpolicy="no-referrer-when-downgrade"
+      ></iframe>
+
+    </div>
+
+    <!-- ステータス -->
+    <div class="browser-status">
+      <span class="browser-status-text">準備完了</span>
+    </div>
+
+    <!-- メニュー -->
+    <div class="browser-popup-menu">
+
+      <button onclick="browserNewWindow(this)">
+        🪟 新しいウィンドウ
+      </button>
+
+      <button onclick="browserBookmark(this)">
+        ☆ お気に入りに追加
+      </button>
+
+      <button onclick="browserHome(this)">
+        🏠 ホーム
+      </button>
+
+      <hr>
+
+      <button onclick="browserCopyUrl(this)">
+        🔗 URLをコピー
+      </button>
+
+    </div>
 
   </div>
   `;
 
   const id = makeWindow(
-    'WebOS ブラウザ',
+    'WebOS Browser',
     html,
     '🌐',
     {
-      width:900,
-      height:600
+      width: 1000,
+      height: 650
     }
   );
 
+  const w =
+    document.getElementById(id);
+
+  const browser =
+    w.querySelector('.webbrowser');
+
+  browser.dataset.history =
+    JSON.stringify([
+      'webos://home'
+    ]);
+
+  browser.dataset.historyIndex =
+    '0';
+
+  browserHome(
+    browser.querySelector('.browser-nav')
+  );
+
   setTimeout(() => {
-    browserHome(id);
-  }, 50);
+
+    const address =
+      browser.querySelector('.browser-address');
+
+    if(address){
+      address.focus();
+      address.select();
+    }
+
+  }, 100);
 
   return id;
 }
-const browserHistory = [];
-const browserFuture = [];
 
-function getBrowser(){
 
-  const windows =
-    [...document.querySelectorAll('.window')];
+/* =========================================
+   ブラウザ取得
+========================================= */
 
-  return windows.find(
-    w => w.querySelector('#browserFrame')
+function getBrowserFromElement(el){
+
+  if(!el) return null;
+
+  const browser =
+    el.closest('.webbrowser');
+
+  return browser || null;
+}
+
+
+/* =========================================
+   URL正規化
+========================================= */
+
+function normalizeBrowserUrl(value){
+
+  value =
+    String(value || '').trim();
+
+  if(!value){
+    return '';
+  }
+
+  if(value === 'webos://home'){
+    return value;
+  }
+
+  if(/^https?:\/\//i.test(value)){
+    return value;
+  }
+
+  if(
+    /^(localhost|127\.0\.0\.1)(:\d+)?(\/.*)?$/i
+      .test(value)
+  ){
+    return 'http://' + value;
+  }
+
+  /*
+    ドメインっぽい入力
+  */
+  if(
+    /^[a-z0-9.-]+\.[a-z]{2,}(\/.*)?$/i
+      .test(value)
+  ){
+    return 'https://' + value;
+  }
+
+  /*
+    その他は検索
+  */
+  return (
+    'https://www.google.com/search?q=' +
+    encodeURIComponent(value)
   );
 }
 
 
-function browserHome(){
+/* =========================================
+   ページ移動
+========================================= */
 
-  const w = getBrowser();
+function browserGo(el){
 
-  if(!w) return;
+  const browser =
+    getBrowserFromElement(el);
+
+  if(!browser) return;
+
+  const address =
+    browser.querySelector('.browser-address');
 
   const frame =
-    w.querySelector('#browserFrame');
-
-  const url =
-    w.querySelector('#browserUrl');
+    browser.querySelector('.browser-frame');
 
   const status =
-    w.querySelector('#browserStatus');
+    browser.querySelector('.browser-status-text');
 
-  url.value = 'webos://home';
+  if(!address || !frame) return;
+
+  const raw =
+    address.value.trim();
+
+  if(!raw) return;
+
+  const url =
+    normalizeBrowserUrl(raw);
+
+  if(!url) return;
+
+  address.value = url;
+
+  /*
+    WebOSホーム
+  */
+  if(url === 'webos://home'){
+
+    browserHome(el);
+
+    return;
+  }
+
+  /*
+    履歴
+  */
+  let history;
+
+  try{
+
+    history =
+      JSON.parse(
+        browser.dataset.history || '[]'
+      );
+
+  }catch{
+
+    history = [];
+
+  }
+
+  let index =
+    Number(browser.dataset.historyIndex || 0);
+
+  /*
+    現在位置より先を削除
+  */
+  history =
+    history.slice(0, index + 1);
+
+  /*
+    同じURLの連続登録を防止
+  */
+  if(history[history.length - 1] !== url){
+
+    history.push(url);
+
+  }
+
+  index =
+    history.length - 1;
+
+  browser.dataset.history =
+    JSON.stringify(history);
+
+  browser.dataset.historyIndex =
+    String(index);
+
+  /*
+    表示
+  */
+  const home =
+    browser.querySelector('.browser-home');
+
+  if(home){
+    home.style.display = 'none';
+  }
+
+  frame.style.display =
+    'block';
+
+  status.textContent =
+    '読み込み中…';
+
+  browser.classList.add(
+    'loading'
+  );
+
+  frame.src = url;
+
+  /*
+    読み込み完了
+  */
+  frame.onload = () => {
+
+    browser.classList.remove(
+      'loading'
+    );
+
+    status.textContent =
+      url;
+
+    browserUpdateTab(
+      browser,
+      url
+    );
+
+  };
+
+}
+
+
+/* =========================================
+   戻る
+========================================= */
+
+function browserBack(el){
+
+  const browser =
+    getBrowserFromElement(el);
+
+  if(!browser) return;
+
+  let history;
+
+  try{
+
+    history =
+      JSON.parse(
+        browser.dataset.history || '[]'
+      );
+
+  }catch{
+
+    history = [];
+
+  }
+
+  let index =
+    Number(browser.dataset.historyIndex || 0);
+
+  if(index <= 0) return;
+
+  index--;
+
+  browser.dataset.historyIndex =
+    String(index);
+
+  const url =
+    history[index];
+
+  if(!url) return;
+
+  if(url === 'webos://home'){
+
+    browserHome(el);
+
+    return;
+  }
+
+  const address =
+    browser.querySelector('.browser-address');
+
+  const frame =
+    browser.querySelector('.browser-frame');
+
+  const status =
+    browser.querySelector('.browser-status-text');
+
+  address.value =
+    url;
+
+  status.textContent =
+    '読み込み中…';
+
+  frame.style.display =
+    'block';
+
+  const home =
+    browser.querySelector('.browser-home');
+
+  if(home){
+    home.style.display =
+      'none';
+  }
+
+  frame.src =
+    url;
+
+}
+
+
+/* =========================================
+   進む
+========================================= */
+
+function browserForward(el){
+
+  const browser =
+    getBrowserFromElement(el);
+
+  if(!browser) return;
+
+  let history;
+
+  try{
+
+    history =
+      JSON.parse(
+        browser.dataset.history || '[]'
+      );
+
+  }catch{
+
+    history = [];
+
+  }
+
+  let index =
+    Number(browser.dataset.historyIndex || 0);
+
+  if(index >= history.length - 1){
+    return;
+  }
+
+  index++;
+
+  browser.dataset.historyIndex =
+    String(index);
+
+  const url =
+    history[index];
+
+  if(!url) return;
+
+  if(url === 'webos://home'){
+
+    browserHome(el);
+
+    return;
+  }
+
+  const address =
+    browser.querySelector('.browser-address');
+
+  const frame =
+    browser.querySelector('.browser-frame');
+
+  const status =
+    browser.querySelector('.browser-status-text');
+
+  address.value =
+    url;
+
+  status.textContent =
+    '読み込み中…';
+
+  frame.style.display =
+    'block';
+
+  const home =
+    browser.querySelector('.browser-home');
+
+  if(home){
+    home.style.display =
+      'none';
+  }
+
+  frame.src =
+    url;
+
+}
+
+
+/* =========================================
+   ホーム
+========================================= */
+
+function browserHome(el){
+
+  const browser =
+    getBrowserFromElement(el);
+
+  if(!browser) return;
+
+  const address =
+    browser.querySelector('.browser-address');
+
+  const frame =
+    browser.querySelector('.browser-frame');
+
+  const status =
+    browser.querySelector('.browser-status-text');
+
+  const home =
+    browser.querySelector('.browser-home');
+
+  if(!address || !frame || !home){
+    return;
+  }
+
+  address.value =
+    'webos://home';
 
   status.textContent =
     'WebOS ホーム';
 
-  frame.srcdoc = `
-  <!doctype html>
-  <html>
-  <head>
-    <meta charset="utf-8">
-    <style>
-      body{
-        margin:0;
-        padding:50px;
-        font-family:Segoe UI,Arial,sans-serif;
-        background:#f5f7fa;
-        color:#222;
-      }
+  frame.src =
+    'about:blank';
 
-      h1{
-        font-weight:400;
-      }
+  frame.style.display =
+    'none';
 
-      .search{
-        width:100%;
-        max-width:600px;
-        padding:14px;
-        border:1px solid #bbb;
-        border-radius:4px;
-        font-size:16px;
-      }
+  home.style.display =
+    'flex';
 
-      button{
-        margin-top:10px;
-        padding:10px 18px;
-        border:0;
-        background:#1683d8;
-        color:white;
-        cursor:pointer;
-      }
+  browser.dataset.history =
+    JSON.stringify([
+      'webos://home'
+    ]);
 
-      .card{
-        margin-top:30px;
-        padding:20px;
-        background:white;
-        border:1px solid #ddd;
-      }
-    </style>
-  </head>
+  browser.dataset.historyIndex =
+    '0';
 
-  <body>
-
-    <h1>🌐 WebOS ブラウザ</h1>
-
-    <p>
-      WebOS 10 のブラウザへようこそ。
-    </p>
-
-    <div class="card">
-
-      <h2>検索</h2>
-
-      <p>
-        上のアドレスバーにURLまたは検索ワードを入力してください。
-      </p>
-
-      <p>
-        例：
-      </p>
-
-      <ul>
-        <li>https://novelstar354.github.io/program</li>
-        <li>WebOS</li>
-        <li>JavaScript</li>
-      </ul>
-
-    </div>
-
-  </body>
-  </html>
-  `;
+  browserUpdateTab(
+    browser,
+    '新しいタブ'
+  );
 
 }
 
 
-function browserGo(){
+/* =========================================
+   更新
+========================================= */
 
-  const w = getBrowser();
+function browserReload(el){
 
-  if(!w) return;
+  const browser =
+    getBrowserFromElement(el);
 
-  const input =
-    w.querySelector('#browserUrl');
+  if(!browser) return;
 
   const frame =
-    w.querySelector('#browserFrame');
+    browser.querySelector('.browser-frame');
 
-  const status =
-    w.querySelector('#browserStatus');
+  if(!frame) return;
 
-  let value =
-    input.value.trim();
+  const address =
+    browser.querySelector('.browser-address');
 
-  if(!value) return;
-
-
-  // WebOSホーム
-  if(value === 'webos://home'){
-
-    browserHome();
-    return;
-  }
-
-
-  // URL
-  if(/^https?:\/\//i.test(value)){
-
-    status.textContent =
-      '読み込み中: ' + value;
-
-    browserHistory.push(value);
-    browserFuture.length = 0;
-
-    frame.src = value;
-
-    return;
-  }
-
-
-  // localhost
   if(
-    /^localhost(:\d+)?(\/.*)?$/i.test(value)
+    !address ||
+    address.value === 'webos://home'
   ){
 
-    value = 'http://' + value;
-
-    input.value = value;
-
-    status.textContent =
-      '読み込み中: ' + value;
-
-    frame.src = value;
-
-    browserHistory.push(value);
-    browserFuture.length = 0;
+    browserHome(el);
 
     return;
-  }
-
-
-  // 検索
-  const search =
-    'https://www.google.com/search?q=' +
-    encodeURIComponent(value);
-
-  input.value = search;
-
-  status.textContent =
-    '検索: ' + value;
-
-  frame.src = search;
-
-  browserHistory.push(search);
-  browserFuture.length = 0;
-}
-
-
-function browserBack(){
-
-  const w = getBrowser();
-
-  if(!w) return;
-
-  const frame =
-    w.querySelector('#browserFrame');
-
-  try{
-
-    frame.contentWindow.history.back();
-
-  }catch{
-
-    if(browserHistory.length > 1){
-
-      browserHistory.pop();
-
-      const previous =
-        browserHistory[browserHistory.length - 1];
-
-      frame.src = previous;
-
-    }
 
   }
-}
 
+  browser.classList.add(
+    'loading'
+  );
 
-function browserForward(){
-
-  const w = getBrowser();
-
-  if(!w) return;
-
-  const frame =
-    w.querySelector('#browserFrame');
-
-  try{
-
-    frame.contentWindow.history.forward();
-
-  }catch{
-
-    if(browserFuture.length){
-
-      const next =
-        browserFuture.pop();
-
-      frame.src = next;
-
-    }
-
-  }
-}
-
-
-function browserReload(){
-
-  const w = getBrowser();
-
-  if(!w) return;
-
-  const frame =
-    w.querySelector('#browserFrame');
+  browser.querySelector(
+    '.browser-status-text'
+  ).textContent =
+    '再読み込み中…';
 
   try{
 
@@ -6141,12 +6858,223 @@ function browserReload(){
 
   }catch{
 
-    frame.src = frame.src;
+    frame.src =
+      frame.src;
 
   }
 
 }
 
+
+/* =========================================
+   ショートカット
+========================================= */
+
+function browserShortcut(el,url){
+
+  const browser =
+    getBrowserFromElement(el);
+
+  if(!browser) return;
+
+  const address =
+    browser.querySelector(
+      '.browser-address'
+    );
+
+  address.value =
+    url;
+
+  browserGo(address);
+
+}
+
+
+/* =========================================
+   タブタイトル更新
+========================================= */
+
+function browserUpdateTab(
+  browser,
+  title
+){
+
+  const tab =
+    browser.querySelector(
+      '.browser-tab-title'
+    );
+
+  if(tab){
+
+    tab.textContent =
+      title;
+
+  }
+
+}
+
+
+/* =========================================
+   お気に入り
+========================================= */
+
+function browserBookmark(el){
+
+  const browser =
+    getBrowserFromElement(el);
+
+  if(!browser) return;
+
+  const address =
+    browser.querySelector(
+      '.browser-address'
+    );
+
+  if(!address) return;
+
+  const value =
+    address.value;
+
+  if(
+    !value ||
+    value === 'webos://home'
+  ){
+    return;
+  }
+
+  try{
+
+    const bookmarks =
+      JSON.parse(
+        localStorage.getItem(
+          'webos_browser_bookmarks'
+        ) || '[]'
+      );
+
+    if(!bookmarks.includes(value)){
+
+      bookmarks.push(value);
+
+      localStorage.setItem(
+        'webos_browser_bookmarks',
+        JSON.stringify(bookmarks)
+      );
+
+    }
+
+  }catch{}
+
+  showToast(
+    '☆ お気に入りに追加しました'
+  );
+
+}
+
+
+/* =========================================
+   メニュー
+========================================= */
+
+function browserMenu(el){
+
+  const browser =
+    getBrowserFromElement(el);
+
+  if(!browser) return;
+
+  const menu =
+    browser.querySelector(
+      '.browser-popup-menu'
+    );
+
+  if(!menu) return;
+
+  menu.classList.toggle(
+    'show'
+  );
+
+}
+
+
+/* =========================================
+   URLコピー
+========================================= */
+
+function browserCopyUrl(el){
+
+  const browser =
+    getBrowserFromElement(el);
+
+  if(!browser) return;
+
+  const address =
+    browser.querySelector(
+      '.browser-address'
+    );
+
+  if(!address) return;
+
+  navigator.clipboard
+    ?.writeText(address.value)
+    .then(() => {
+
+      showToast(
+        'URLをコピーしました'
+      );
+
+    })
+    .catch(() => {});
+
+  const menu =
+    browser.querySelector(
+      '.browser-popup-menu'
+    );
+
+  if(menu){
+    menu.classList.remove(
+      'show'
+    );
+  }
+
+}
+
+
+/* =========================================
+   新しいウィンドウ
+========================================= */
+
+function browserNewWindow(el){
+
+  browserMenu(el);
+
+  setTimeout(() => {
+    openBrowser();
+  }, 50);
+
+}
+document.addEventListener('mousedown', function(e){
+
+  const menus =
+    document.querySelectorAll('.browser-popup-menu.show');
+
+  menus.forEach(menu => {
+
+    // 設定メニュー自身をクリックした場合は閉じない
+    if(menu.contains(e.target)){
+      return;
+    }
+
+    // ⋮ ボタンをクリックした場合も閉じない
+    if(e.target.closest('.browser-menu')){
+      return;
+    }
+
+    // それ以外をクリックしたら閉じる
+    menu.classList.remove('show');
+
+  });
+
+});
 function openSettings(){
 
   const html = `
