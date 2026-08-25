@@ -1868,6 +1868,9 @@ function recoverWithSpecialPassword(){
     return;
   }
 
+  // ★ 復元前のPINを保存
+  const previousPin = config.pin;
+
   // PINを初期PINに戻す
   config.pin = '1234';
 
@@ -1878,12 +1881,15 @@ function recoverWithSpecialPassword(){
   // PIN入力欄を空にする
   document.getElementById('pin').value = '';
 
-  // 回復したPINを表示
+  // ★ 復元前・復元後のPINを両方表示
   alert(
     'パスワードを回復しました。\n\n' +
-    '回復後のPIN: 1234'
+    '復元前のPIN: ' + previousPin + '\n' +
+    '復元後のPIN: 1234'
   );
-  pin = "1234"
+
+  pin = "1234";
+
   // PIN入力欄にフォーカス
   document.getElementById('pin').focus();
 }
