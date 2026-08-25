@@ -2713,11 +2713,26 @@ document.addEventListener('mousedown', function(e){
   const quickBtn =
     document.getElementById('quickBtn');
 
+  const powerMenu =
+    document.getElementById('powerMenu');
+
+
+  /*
+    電源メニュー
+  */
+  if(
+    powerMenu &&
+    powerMenu.classList.contains('show') &&
+    !powerMenu.contains(e.target) &&
+    !e.target.closest('#startMenu .start-left button')
+  ){
+    closePowerMenu();
+  }
+
 
   /*
     スタートメニュー
   */
-
   if(
     startMenu &&
     startMenu.classList.contains('show') &&
@@ -2727,22 +2742,21 @@ document.addEventListener('mousedown', function(e){
 
     startMenu.classList.remove('show');
 
+    // スタートを閉じたら電源メニューも閉じる
+    closePowerMenu();
   }
 
 
   /*
     クイック設定
   */
-
   if(
     quickPanel &&
     quickPanel.classList.contains('show') &&
     !quickPanel.contains(e.target) &&
     !quickBtn.contains(e.target)
   ){
-
     quickPanel.classList.remove('show');
-
   }
 
 });
