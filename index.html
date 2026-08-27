@@ -3932,8 +3932,6 @@ function openExplorer(){
 <button onclick="renameSelectedFile()">✏️ Rename</button>
 <button onclick="deleteSelectedFile()">🗑️ Delete</button>
 <button onclick="newFolder()">📁 New Folder</button>
-<button onclick="putSelectedOnDesktop()">🖥️ ホーム画面に置く</button>
-<button onclick="removeSelectedFromDesktop()">↩️ ホーム画面から外す</button>
 <button onclick="goBackFolder()">⬅️ Back</button>
   <div id="explorerSelected" style="font-size:11px;color:#666;padding:8px">選択なし</div>
   </div><div class="files" id="fileGrid"></div></div>`;
@@ -4076,6 +4074,22 @@ function renderFiles(winId){
     d.onclick = () => {
       selectExplorerFile(item.path);
     };
+
+    // 右クリックでホーム画面へ置けるようにする
+    d.oncontextmenu = (e) => {
+      e.preventDefault();
+      selectExplorerFile(item.path);
+      putFileOnDesktop(item.path);
+      return false;
+    };
+
+    // ファイル/フォルダをデスクトップへドラッグできるようにする
+    d.draggable = true;
+    d.addEventListener('dragstart', (e) => {
+      e.dataTransfer.setData('text/webos-path', item.path);
+      e.dataTransfer.effectAllowed = 'copy';
+      selectExplorerFile(item.path);
+    });
 
     /*
       ダブルクリック
@@ -7826,6 +7840,24 @@ function renderDesktopItems(){
     el.addEventListener('dblclick',()=>{ if(!moved) openDesktopItem(item.path); moved=false; });
   });
 }
+// Explorerからファイル/フォルダをホーム画面へドロップ
+(function initDesktopFileDrop(){
+  const desktop = document.getElementById('desktop');
+  if(!desktop) return;
+  desktop.addEventListener('dragover', e => {
+    if(e.dataTransfer.types.includes('text/webos-path')){
+      e.preventDefault();
+      e.dataTransfer.dropEffect = 'copy';
+    }
+  });
+  desktop.addEventListener('drop', e => {
+    const path = e.dataTransfer.getData('text/webos-path');
+    if(!path) return;
+    e.preventDefault();
+    putFileOnDesktop(path);
+  });
+})();
+
 function updateDesktopItemPath(oldPath,newPath){
   oldPath=desktopItemKey(oldPath); newPath=desktopItemKey(newPath);
   let changed=false;
