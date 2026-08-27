@@ -98,8 +98,8 @@ background-size:110px 110px,170px 170px}
 .lock{position:fixed;inset:0;background:linear-gradient(135deg,#0b5ca8,#143c70);z-index:50000;display:flex;align-items:center;justify-content:center;transition:opacity .35s}
 .lock.hidden{opacity:0;pointer-events:none}
 .lockbox{text-align:center;width:320px}.lockbox .avatar{font-size:72px;margin-bottom:10px}.lockbox h1{font-weight:400;margin:5px}.lockbox p{margin:8px 0 18px;color:#dcecff}.lockbox input{width:240px;padding:11px;border:1px solid #ddd}.lockbox button{margin-top:10px;padding:10px 25px;background:#1683d8;color:#fff;cursor:pointer}.hint{font-size:11px;opacity:.7;margin-top:15px}
-.explorer{height:100%;display:flex;background:#fff}.side{width:190px;border-right:1px solid #ddd;padding:10px;background:#f7f7f7}.side div{padding:8px;cursor:pointer}.side div:hover,.side .sel{background:#e5f2ff}
-.side button{display:block;width:100%;margin:5px 0;padding:7px;text-align:left;background:#fff;border:1px solid #ccc;cursor:pointer}.side button:hover{background:#eaf5ff}.files{flex:1;padding:15px;display:flex;gap:14px;align-content:flex-start;flex-wrap:wrap}.fileitem{width:86px;height:90px;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;border:1px solid transparent}.fileitem:hover{background:#eef6ff;border-color:#c8def5}.fileitem .big{font-size:38px}.fileitem span{font-size:12px;text-align:center}
+.explorer{height:100%;display:flex;background:#fff;overflow:hidden;min-height:0}.side{width:190px;flex:0 0 190px;box-sizing:border-box;border-right:1px solid #ddd;padding:10px;background:#f7f7f7;overflow-y:auto;overflow-x:hidden;min-height:0}.side div{padding:8px;cursor:pointer}.side div:hover,.side .sel{background:#e5f2ff}
+.side button{display:block;width:100%;margin:5px 0;padding:7px;text-align:left;background:#fff;border:1px solid #ccc;cursor:pointer}.side button:hover{background:#eaf5ff}.files{flex:1;min-width:0;min-height:0;padding:15px;display:flex;gap:14px;align-content:flex-start;align-items:flex-start;flex-wrap:wrap;overflow-y:auto;overflow-x:hidden}.fileitem{width:86px;height:90px;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;border:1px solid transparent;flex:0 0 86px}.fileitem:hover{background:#eef6ff;border-color:#c8def5}.fileitem .big{font-size:38px}.fileitem span{font-size:12px;text-align:center}
 .notepad{height:100%;display:flex;flex-direction:column}.editorbar{height:42px;background:#f2f2f2;border-bottom:1px solid #ccc;display:flex;align-items:center;gap:4px;padding:5px}.editorbar button{padding:6px 12px;background:#fff;border:1px solid #ccc;cursor:pointer}.editorbar button:hover{background:#e5e5e5}.editor{flex:1;display:flex;min-height:0}.lines{width:42px;background:#f3f3f3;color:#888;text-align:right;padding:9px 7px;line-height:20px;font:14px/20px Consolas,monospace;overflow:hidden}.code{flex:1;border:0;outline:0;resize:none;padding:9px;font:14px/20px Consolas,monospace;color:#111;background:#fff;white-space:pre;overflow:auto}
 .terminal{height:100%;background:#0c0c0c;color:#eee;font:14px Consolas,monospace;padding:12px;overflow:auto}.terminal input{background:transparent;border:0;outline:0;color:#fff;width:80%;font:inherit}
 .settings{
@@ -2116,6 +2116,13 @@ background-size:110px 110px,170px 170px}
   text-shadow:0 0 3px rgba(245,196,0,.35);
 }
 
+
+/* =========================
+   ユーザー作成デスクトップ項目
+========================= */
+.desktop-user-item{z-index:40;}
+.desktop-user-item .ico{font-size:34px;}
+.desktop-user-item .desktop-shortcut-badge{position:absolute;left:8px;bottom:20px;font-size:11px;text-shadow:0 1px 2px #003;}
 </style>
 </head>
 <body>
@@ -2867,6 +2874,10 @@ function resetEverything(){
   // デスクトップアイコン位置
   localStorage.removeItem(
     'webos10_desktop_positions_v1'
+  );
+
+  localStorage.removeItem(
+    'webos10_desktop_items_v1'
   );
 
   // 初期状態へ
@@ -3921,6 +3932,8 @@ function openExplorer(){
 <button onclick="renameSelectedFile()">✏️ Rename</button>
 <button onclick="deleteSelectedFile()">🗑️ Delete</button>
 <button onclick="newFolder()">📁 New Folder</button>
+<button onclick="putSelectedOnDesktop()">🖥️ ホーム画面に置く</button>
+<button onclick="removeSelectedFromDesktop()">↩️ ホーム画面から外す</button>
 <button onclick="goBackFolder()">⬅️ Back</button>
   <div id="explorerSelected" style="font-size:11px;color:#666;padding:8px">選択なし</div>
   </div><div class="files" id="fileGrid"></div></div>`;
@@ -4502,6 +4515,7 @@ function renameSelectedFile(){
   }
 
   saveFiles();
+  updateDesktopItemPath(old, newPath);
 
   const ex =
     getExplorerWindow();
@@ -4580,6 +4594,7 @@ function deleteSelectedFile(){
   selectedExplorerFile = null;
 
   saveFiles();
+  clearDesktopItemsForPath(path);
 
   const ex =
     getExplorerWindow();
@@ -5124,9 +5139,8 @@ function termCommand(c, out, api){
     c.match(/"[^"]*"|'[^']*'|\S+/g)
     || [];
 
-  const cmd =
-    (parts.shift() || '')
-      .toLowerCase();
+  const rawCmd = parts.shift() || '';
+  const cmd = rawCmd.toLowerCase();
 
   const args =
     parts.map(x =>
@@ -5139,6 +5153,17 @@ function termCommand(c, out, api){
     write,
     writeHTML
   } = api;
+
+  /* =========================
+     ./ : ホーム画面に置く
+  ========================= */
+  if(rawCmd.startsWith('./')){
+    const shortcutPath=normalizePath(rawCmd.slice(2));
+    if(!shortcutPath){ write('使い方: ./<ファイルまたはフォルダのパス>'); return; }
+    if(!files[shortcutPath]){ write('システムは指定されたパスを見つけられません。'); return; }
+    putFileOnDesktop(shortcutPath);
+    return;
+  }
 
 
   /* =========================
@@ -5163,6 +5188,10 @@ function termCommand(c, out, api){
 
     write(
       'cd         フォルダ移動'
+    );
+
+    write(
+      './<パス>   ホーム画面に置く'
     );
 
     write(
@@ -6502,6 +6531,7 @@ function browserRenderCurrentTab(browser){
 
   browserRenderTabs(browser);
   browserUpdateNavButtons(browser);
+  updateBrowserBookmarkState(browser);
 }
 
 function browserUpdateNavButtons(browser){
@@ -6787,6 +6817,7 @@ function browserGo(el, forcedUrl=null, fromHistory=false){
     tab.title = '新しいタブ';
     browserRenderTabs(browser);
     browserUpdateNavButtons(browser);
+    updateBrowserBookmarkState(browser);
     return;
   }
 
@@ -6809,6 +6840,7 @@ function browserGo(el, forcedUrl=null, fromHistory=false){
 
   frame.src = url;
   browserUpdateNavButtons(browser);
+  updateBrowserBookmarkState(browser);
 }
 
 function browserSwitchTab(browser, tabId){
@@ -6966,82 +6998,146 @@ function browserUpdateTab(browser,title){
   }
 }
 
+function browserMigrateBookmarks(){
+  const currentKey = 'webos_browser_bookmarks';
+  const oldKey = 'webos10_browser_bookmarks';
+  try{
+    const current = JSON.parse(localStorage.getItem(currentKey) || '[]');
+    const old = JSON.parse(localStorage.getItem(oldKey) || '[]');
+    if(!Array.isArray(current) || !Array.isArray(old) || old.length === 0) return;
+
+    const merged = [...current];
+    old.forEach(item => {
+      const normalized = typeof item === 'string'
+        ? {url:item, title:item}
+        : item && item.url
+          ? {url:String(item.url), title:String(item.title || item.url)}
+          : null;
+      if(normalized && !merged.some(x => x && x.url === normalized.url)){
+        merged.push(normalized);
+      }
+    });
+    localStorage.setItem(currentKey, JSON.stringify(merged));
+  }catch{}
+}
+
+browserMigrateBookmarks();
+
+function browserGetBookmarks(){
+  const KEY = 'webos_browser_bookmarks';
+  try{
+    const value = JSON.parse(localStorage.getItem(KEY) || '[]');
+    if(!Array.isArray(value)) return [];
+
+    return value
+      .map(item => {
+        if(typeof item === 'string') return {url:item, title:item};
+        if(item && typeof item === 'object' && item.url){
+          return {
+            url:String(item.url),
+            title:String(item.title || item.url)
+          };
+        }
+        return null;
+      })
+      .filter(Boolean);
+  }catch{
+    return [];
+  }
+}
+
+function browserSaveBookmarks(bookmarks){
+  try{
+    localStorage.setItem(
+      'webos_browser_bookmarks',
+      JSON.stringify(bookmarks)
+    );
+  }catch{}
+}
+
+function browserIsBookmarked(url){
+  if(!url || url === 'webos://home') return false;
+  return browserGetBookmarks().some(item => item.url === url);
+}
+
+function browserUpdateBookmarkMenu(browser){
+  if(!browser) return;
+
+  const menu = browser.querySelector('.browser-popup-menu');
+  if(!menu) return;
+
+  const button = [...menu.querySelectorAll('button')]
+    .find(btn => btn.getAttribute('onclick')?.includes('browserBookmark'));
+
+  if(!button) return;
+
+  const address = browser.querySelector('.browser-address');
+  const url = normalizeBrowserUrl(address?.value || '');
+  const bookmarked = browserIsBookmarked(url);
+
+  button.textContent = bookmarked
+    ? '★ お気に入りから削除'
+    : '☆ お気に入りに追加';
+}
+
 function browserBookmark(el){
   const browser = getBrowserFromElement(el);
   if(!browser) return;
 
   const address = browser.querySelector('.browser-address');
   const star = browser.querySelector('.browser-star');
-  const url = normalizeBrowserUrl(address?.value || '');
+  const tab = browserGetActiveTab(browser);
+  const url = normalizeBrowserUrl(address?.value || tab?.url || '');
 
-  if(!url || url === 'webos://home') return;
-
-  let bookmarks = [];
-  try{
-    bookmarks = JSON.parse(
-      localStorage.getItem('webos10_browser_bookmarks') || '[]'
-    );
-  }catch{
-    bookmarks = [];
+  if(!url || url === 'webos://home'){
+    toast('ホームページはお気に入りに追加できません');
+    return;
   }
 
-  const index = bookmarks.findIndex(item =>
-    typeof item === 'string'
-      ? item === url
-      : item.url === url
-  );
+  const bookmarks = browserGetBookmarks();
+  const index = bookmarks.findIndex(item => item.url === url);
 
   if(index >= 0){
-    // お気に入りから削除
     bookmarks.splice(index, 1);
     toast('お気に入りから削除しました');
   }else{
-    // お気に入りに追加
-    bookmarks.push({
+    bookmarks.unshift({
       url,
-      title: browser.querySelector('.browser-tab-title')?.textContent || url
+      title: tab?.title && tab.title !== '新しいタブ'
+        ? tab.title
+        : url
     });
     toast('お気に入りに追加しました');
   }
 
-  localStorage.setItem(
-    'webos10_browser_bookmarks',
-    JSON.stringify(bookmarks)
-  );
-
+  browserSaveBookmarks(bookmarks);
   updateBrowserBookmarkState(browser);
-  browserRefreshBookmarkMenu?.(browser);
+  browserUpdateBookmarkMenu(browser);
+
+  const panel = browser.querySelector('.browser-browser-panel');
+  if(panel?.classList.contains('show') && panel.dataset.type === 'favorites'){
+    browserShowPanel(browser,'favorites');
+  }
 }
 
 function updateBrowserBookmarkState(browser){
+  if(!browser) return;
+
   const star = browser.querySelector('.browser-star');
-  if(!star) return;
-
   const address = browser.querySelector('.browser-address');
-  const url = normalizeBrowserUrl(address?.value || '');
+  if(!star || !address) return;
 
-  let bookmarks = [];
-  try{
-    bookmarks = JSON.parse(
-      localStorage.getItem('webos10_browser_bookmarks') || '[]'
-    );
-  }catch{
-    bookmarks = [];
-  }
-
-  const bookmarked = bookmarks.some(item =>
-    typeof item === 'string'
-      ? item === url
-      : item.url === url
-  );
+  const url = normalizeBrowserUrl(address.value || '');
+  const bookmarked = browserIsBookmarked(url);
 
   star.classList.toggle('bookmarked', bookmarked);
   star.textContent = bookmarked ? '★' : '☆';
   star.title = bookmarked
     ? 'お気に入りから削除'
     : 'お気に入りに追加';
-}
 
+  browserUpdateBookmarkMenu(browser);
+}
 function browserMenu(el){
   const browser = getBrowserFromElement(el);
   if(!browser) return;
@@ -7642,6 +7738,111 @@ window.OS = {
 };
 
 // =========================
+// デスクトップのファイル・フォルダショートカット
+// =========================
+const desktopItemsStorageKey = 'webos10_desktop_items_v1';
+let desktopItems = JSON.parse(localStorage.getItem(desktopItemsStorageKey) || '[]');
+
+function saveDesktopItems(){
+  localStorage.setItem(desktopItemsStorageKey, JSON.stringify(desktopItems));
+}
+function desktopItemKey(path){ return normalizePath(path); }
+function desktopItemIcon(path){
+  const item = files[path];
+  if(!item) return '📄';
+  return item.type === 'folder' ? '📁' : getFileIcon(path.split('/').pop());
+}
+function findFreeDesktopPosition(){
+  const used = new Set();
+  document.querySelectorAll('#desktopIcons .icon').forEach(el=>{
+    if(el.id==='trashIcon') return;
+    const x=Math.round(parseFloat(el.style.left||'0')/90);
+    const y=Math.round(parseFloat(el.style.top||'0')/94);
+    used.add(x+':'+y);
+  });
+  for(let row=0;row<20;row++){
+    for(let col=0;col<10;col++){
+      const x=190+col*90, y=12+row*94;
+      const key=Math.round(x/90)+':'+Math.round(y/94);
+      if(!used.has(key)) return {x,y};
+    }
+  }
+  return {x:190,y:12};
+}
+function putFileOnDesktop(path,silent=false){
+  path=desktopItemKey(path);
+  if(!path || !files[path]){ if(!silent) toast('ファイルまたはフォルダが見つかりません'); return false; }
+  if(desktopItems.some(x=>x.path===path)){ if(!silent) toast('すでにホーム画面にあります'); return false; }
+  const pos=findFreeDesktopPosition();
+  desktopItems.push({path,name:path.split('/').pop(),type:files[path].type,icon:desktopItemIcon(path),x:pos.x,y:pos.y});
+  saveDesktopItems();
+  renderDesktopItems();
+  if(!silent) toast(path.split('/').pop()+' をホーム画面に置きました');
+  return true;
+}
+function removeFileFromDesktop(path,silent=false){
+  path=desktopItemKey(path);
+  const before=desktopItems.length;
+  desktopItems=desktopItems.filter(x=>x.path!==path);
+  if(before===desktopItems.length){ if(!silent) toast('ホーム画面にありません'); return false; }
+  saveDesktopItems(); renderDesktopItems();
+  if(!silent) toast('ホーム画面から外しました');
+  return true;
+}
+function putSelectedOnDesktop(){
+  if(!selectedExplorerFile || !files[selectedExplorerFile]){ toast('ファイルまたはフォルダを選択してください'); return; }
+  putFileOnDesktop(selectedExplorerFile);
+}
+function removeSelectedFromDesktop(){
+  if(!selectedExplorerFile){ toast('ファイルまたはフォルダを選択してください'); return; }
+  removeFileFromDesktop(selectedExplorerFile);
+}
+function openDesktopItem(path){
+  path=desktopItemKey(path);
+  if(!files[path]){ toast('この項目は存在しません'); removeFileFromDesktop(path,true); return; }
+  if(files[path].type==='folder'){ currentFolder=path; selectedExplorerFile=null; openExplorer(); }
+  else openFile(path);
+}
+function renderDesktopItems(){
+  const icons=document.getElementById('desktopIcons');
+  if(!icons) return;
+  icons.querySelectorAll('.desktop-user-item').forEach(el=>el.remove());
+  desktopItems=desktopItems.filter(item=>files[item.path]);
+  saveDesktopItems();
+  desktopItems.forEach(item=>{
+    const el=document.createElement('div');
+    el.className='icon desktop-user-item';
+    el.dataset.desktopPath=item.path;
+    el.title=item.path;
+    el.style.left=(Number.isFinite(item.x)?item.x:190)+'px';
+    el.style.top=(Number.isFinite(item.y)?item.y:12)+'px';
+    el.innerHTML=`<div class="ico">${escapeHtml(item.icon||desktopItemIcon(item.path))}</div><span>${escapeHtml(item.name||item.path.split('/').pop())}</span><span class="desktop-shortcut-badge">↗</span>`;
+    let dragging=false,moved=false,dx=0,dy=0;
+    el.addEventListener('mousedown',e=>{ if(e.button!==0)return; dragging=true;moved=false;const r=el.getBoundingClientRect();dx=e.clientX-r.left;dy=e.clientY-r.top;e.preventDefault(); });
+    el._desktopMove=e=>{ if(!dragging)return; moved=true; item.x=Math.max(0,Math.min(innerWidth-90,e.clientX-dx)); item.y=Math.max(0,Math.min(innerHeight-100,e.clientY-dy)); el.style.left=item.x+'px';el.style.top=item.y+'px'; };
+    el._desktopUp=()=>{ if(!dragging)return; dragging=false;if(moved)saveDesktopItems(); };
+    document.addEventListener('mousemove',el._desktopMove);
+    document.addEventListener('mouseup',el._desktopUp);
+    el.addEventListener('dblclick',()=>{ if(!moved) openDesktopItem(item.path); moved=false; });
+  });
+}
+function updateDesktopItemPath(oldPath,newPath){
+  oldPath=desktopItemKey(oldPath); newPath=desktopItemKey(newPath);
+  let changed=false;
+  const prefix=oldPath+'/';
+  desktopItems.forEach(item=>{
+    if(item.path===oldPath){ item.path=newPath;item.name=newPath.split('/').pop();item.type=files[newPath]?.type||item.type;item.icon=desktopItemIcon(newPath);changed=true; }
+    else if(item.path.startsWith(prefix)){ const rel=item.path.slice(prefix.length);item.path=newPath+'/'+rel;item.name=item.path.split('/').pop();item.type=files[item.path]?.type||item.type;item.icon=desktopItemIcon(item.path);changed=true; }
+  });
+  if(changed){ saveDesktopItems();renderDesktopItems(); }
+}
+function clearDesktopItemsForPath(path){
+  path=desktopItemKey(path); const prefix=path+'/'; const before=desktopItems.length;
+  desktopItems=desktopItems.filter(item=>item.path!==path&&!item.path.startsWith(prefix));
+  if(before!==desktopItems.length){ saveDesktopItems();renderDesktopItems(); }
+}
+
+// =========================
 // デスクトップのゴミ箱
 // =========================
 const trashStorageKey = 'webos14_desktop_trash_v1';
@@ -7854,10 +8055,11 @@ function initDesktopIcons(){
 
 function applyIconPosition(el){
  const p=desktopPositions[el.dataset.app];
+ if(!p) return;
  el.style.left=p.x+'px';el.style.top=p.y+'px';
 }
 window.addEventListener('resize',()=>{
- document.querySelectorAll('.icon').forEach(applyIconPosition)
+ document.querySelectorAll('.icon[data-app]').forEach(applyIconPosition);
 });
 
 function updateClock(){
@@ -7869,6 +8071,7 @@ function updateClock(){
 }
 setInterval(updateClock,1000);updateClock();
 initDesktopIcons();
+renderDesktopItems();
 updateUsername();
 
 document.documentElement.style.setProperty(
@@ -7961,7 +8164,7 @@ document.addEventListener('keyup', function(e){
   settings:    {x: 90,  y: 200}
 };
 
-  document.querySelectorAll('#desktopIcons .icon').forEach(icon => {
+  document.querySelectorAll('#desktopIcons .icon[data-app]').forEach(icon => {
 
     const app = icon.dataset.app;
 
