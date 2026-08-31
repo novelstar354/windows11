@@ -4247,19 +4247,33 @@ function renderFiles(winId){
       document.createElement("div");
 
     pathBar.className = "current-path";
-
+const sidebarWidth =
+  explorer.querySelector('.side')?.getBoundingClientRect().width || 200;
+      
     pathBar.style.cssText =
-      "position:absolute;left:205px;right:15px;top:8px;" +
-      "height:30px;padding:6px 10px;" +
-      "background:#f5f5f5;border:1px solid #ddd;" +
-      "font-size:12px;color:#555;";
-
+  "position:absolute;" +
+  `left:${sidebarWidth + 10}px;` +
+  "right:15px;" +
+  "top:8px;" +
+  "height:30px;" +
+  "padding:6px 10px;" +
+  "box-sizing:border-box;" +
+  "background:#f5f5f5;" +
+  "border:1px solid #ddd;" +
+  "border-radius:5px;" +
+  "font-size:12px;" +
+  "color:#555;" +
+  "z-index:10;";
+      
     pathBar.textContent =
       "📍 ホーム" +
       (currentFolder ? " > " + currentFolder : "");
 
     explorer.parentElement.style.position = "relative";
     explorer.appendChild(pathBar);
+
+grid.style.paddingTop = '55px';
+grid.style.boxSizing = 'border-box';
   }
 
   /*
