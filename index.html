@@ -89,8 +89,20 @@ background-size:110px 110px,170px 170px}
 .start-main{flex:1;padding:18px}.start-main h2{font-weight:400;margin:0 0 14px}
 .app-tile{display:flex;align-items:center;gap:12px;padding:11px;border-radius:3px;cursor:pointer}
 .app-tile:hover{background:#3b3b3b}.app-tile b{font-size:25px;font-weight:400}
-.window{position:absolute;left:180px;top:100px;width:720px;height:480px;background:#f4f4f4;color:#111;border:1px solid #777;box-shadow:0 8px 30px #0008;display:flex;flex-direction:column;min-width:280px;min-height:180px;resize:both;overflow:hidden}
+.window{position:absolute;left:180px;top:100px;width:720px;height:480px;background:#f4f4f4;color:#111;border:1px solid #777;box-shadow:0 8px 30px #0008;display:flex;flex-direction:column;min-width:280px;min-height:180px;resize:none;overflow:hidden}
 .window.max{left:0!important;top:0!important;width:100%!important;height:calc(100% - 48px)!important;resize:none}
+/* ウィンドウのリサイズハンドル */
+.window-resize-handle{position:absolute;z-index:20;user-select:none;-webkit-user-select:none;}
+.window-resize-handle.n{top:-4px;left:8px;right:8px;height:8px;cursor:n-resize}
+.window-resize-handle.s{bottom:-4px;left:8px;right:8px;height:8px;cursor:s-resize}
+.window-resize-handle.e{right:-4px;top:8px;bottom:8px;width:8px;cursor:e-resize}
+.window-resize-handle.w{left:-4px;top:8px;bottom:8px;width:8px;cursor:w-resize}
+.window-resize-handle.ne{right:-4px;top:-4px;width:12px;height:12px;cursor:ne-resize}
+.window-resize-handle.nw{left:-4px;top:-4px;width:12px;height:12px;cursor:nw-resize}
+.window-resize-handle.se{right:-4px;bottom:-4px;width:14px;height:14px;cursor:se-resize}
+.window-resize-handle.sw{left:-4px;bottom:-4px;width:14px;height:14px;cursor:sw-resize}
+.window.max .window-resize-handle{display:none}
+
 .titlebar{height:38px;background:#fff;display:flex;align-items:center;user-select:none;border-bottom:1px solid #ddd;cursor:default}
 .titlebar .appmark{width:40px;text-align:center;font-size:20px}.titlebar .title{flex:1;font-size:13px}
 .controls{display:flex;height:100%}.controls button{width:46px;background:transparent;color:#333;cursor:pointer}.controls button:hover{background:#e5e5e5}.controls .close:hover{background:#e81123;color:#fff}
@@ -3399,10 +3411,19 @@ function makeWindow(title,html,icon='🪟',opts={}){
       <button onclick="maximizeWindow('${id}')">□</button>
       <button class="close" onclick="closeWindow('${id}')">×</button>
     </div>
-  </div><div class="content">${html}</div>`;
+  </div><div class="content">${html}</div>
+    <div class="window-resize-handle n" data-resize="n"></div>
+    <div class="window-resize-handle s" data-resize="s"></div>
+    <div class="window-resize-handle e" data-resize="e"></div>
+    <div class="window-resize-handle w" data-resize="w"></div>
+    <div class="window-resize-handle ne" data-resize="ne"></div>
+    <div class="window-resize-handle nw" data-resize="nw"></div>
+    <div class="window-resize-handle se" data-resize="se"></div>
+    <div class="window-resize-handle sw" data-resize="sw"></div>`;
   document.getElementById('windows').appendChild(w);
   windowsMap[id]={id,title,icon,w};
   makeDraggable(w,w.querySelector('.titlebar'));
+  makeResizable(w);
   w.addEventListener('mousedown',()=>focusWindow(id));
   addTask(id,title,icon);
   return id;
@@ -3979,6 +4000,72 @@ function makeDraggable(w,bar){
   document.addEventListener('mouseup',()=>drag=false);
   bar.addEventListener('dblclick',e=>{if(!e.target.closest('button'))maximizeWindow(w.id)})
 }
+function makeResizable(w){
+  const handles = w.querySelectorAll('.window-resize-handle');
+  handles.forEach(handle => {
+    handle.addEventListener('mousedown', e => {
+      if(e.button !== 0 || w.classList.contains('max')) return;
+      e.preventDefault();
+      e.stopPropagation();
+      focusWindow(w.id);
+
+      const dir = handle.dataset.resize;
+      const startX = e.clientX;
+      const startY = e.clientY;
+      const startLeft = w.offsetLeft;
+      const startTop = w.offsetTop;
+      const startWidth = w.offsetWidth;
+      const startHeight = w.offsetHeight;
+      const minWidth = 280;
+      const minHeight = 180;
+
+      document.body.style.cursor = getComputedStyle(handle).cursor;
+
+      function resizeMove(ev){
+        let left = startLeft;
+        let top = startTop;
+        let width = startWidth;
+        let height = startHeight;
+        const dx = ev.clientX - startX;
+        const dy = ev.clientY - startY;
+
+        if(dir.includes('e')) width = Math.max(minWidth, startWidth + dx);
+        if(dir.includes('s')) height = Math.max(minHeight, startHeight + dy);
+        if(dir.includes('w')){
+          width = Math.max(minWidth, startWidth - dx);
+          left = startLeft + (startWidth - width);
+        }
+        if(dir.includes('n')){
+          height = Math.max(minHeight, startHeight - dy);
+          top = startTop + (startHeight - height);
+        }
+
+        const maxBottom = innerHeight - 48;
+        if(left < 0){ width += left; left = 0; }
+        if(top < 0){ height += top; top = 0; }
+        if(left + width > innerWidth) width = innerWidth - left;
+        if(top + height > maxBottom) height = maxBottom - top;
+
+        width = Math.max(minWidth, width);
+        height = Math.max(minHeight, height);
+        w.style.left = left + 'px';
+        w.style.top = top + 'px';
+        w.style.width = width + 'px';
+        w.style.height = height + 'px';
+      }
+
+      function resizeEnd(){
+        document.removeEventListener('mousemove', resizeMove);
+        document.removeEventListener('mouseup', resizeEnd);
+        document.body.style.cursor = '';
+      }
+
+      document.addEventListener('mousemove', resizeMove);
+      document.addEventListener('mouseup', resizeEnd);
+    });
+  });
+}
+
 function escapeHtml(s){return String(s).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]))}
 
 function openApp(app){
