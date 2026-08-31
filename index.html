@@ -485,15 +485,28 @@ background-size:110px 110px,170px 170px}
 .browser-page{
   position:relative;
   flex:1;
+  min-width:0;
   min-height:0;
   background:white;
+  overflow:hidden;
 }
 
 .browser-frame{
   display:none;
+
+  position:absolute;
+  inset:0;
+
   width:100%;
   height:100%;
+
+  min-width:0;
+  min-height:0;
+
   border:0;
+  margin:0;
+  padding:0;
+
   background:#fff;
 }
 
@@ -8228,40 +8241,263 @@ function browserRenderLocalFile(browser, url){
 }
 
 function browserRenderCurrentTab(browser){
-  const tab = browserGetActiveTab(browser);
+
+  const tab =
+    browserGetActiveTab(browser);
+
   if(!browser || !tab) return;
-  const address = browser.querySelector('.browser-address');
-  const frame = browser.querySelector('.browser-frame');
-  const home = browser.querySelector('.browser-home');
-  const status = browser.querySelector('.browser-status-text');
-  if(!address || !frame || !home || !status) return;
-  address.value = tab.url;
+
+  const address =
+    browser.querySelector(
+      '.browser-address'
+    );
+
+  const frame =
+    browser.querySelector(
+      '.browser-frame'
+    );
+
+  const home =
+    browser.querySelector(
+      '.browser-home'
+    );
+
+  const status =
+    browser.querySelector(
+      '.browser-status-text'
+    );
+
+  if(
+    !address ||
+    !frame ||
+    !home ||
+    !status
+  ){
+    return;
+  }
+
+  address.value =
+    tab.url;
+
+
+  /* =========================
+     ホーム
+  ========================= */
 
   if(tab.url === 'webos://home'){
-    frame.srcdoc = '';
-    frame.src = 'about:blank';
-    frame.style.display = 'none';
-    home.style.display = 'flex';
-    status.textContent = 'WebOS ホーム';
-  }else if(tab.url.startsWith('webos://file/')){
-    let path='';
-    try{ path=decodeURIComponent(tab.url.slice('webos://file/'.length)); }catch(e){}
-    const item=files[path];
-    home.style.display='none';
-    frame.style.display='block';
-    frame.removeAttribute('src');
-    frame.srcdoc=(item && item.type==='file') ? (item.content||'') : '<h2>ファイルが見つかりません</h2><p>'+escapeHtml(path)+'</p>';
-    status.textContent=(item && item.type==='file') ? 'WebOS: '+path : 'ファイルが見つかりません';
-  }else{
-    home.style.display='none';
-    frame.style.display='block';
-    frame.srcdoc='';
-    frame.src=tab.url;
-    status.textContent=tab.url;
+
+    browser.classList.remove(
+      'loading'
+    );
+
+    frame.onload = null;
+    frame.onerror = null;
+
+    frame.removeAttribute(
+      'srcdoc'
+    );
+
+    frame.src =
+      'about:blank';
+
+    frame.style.display =
+      'none';
+
+    home.style.display =
+      'flex';
+
+    status.textContent =
+      'WebOS ホーム';
+
+    browserRenderTabs(browser);
+    browserUpdateNavButtons(browser);
+    updateBrowserBookmarkState(browser);
+
+    return;
   }
-  browserRenderTabs(browser);
-  browserUpdateNavButtons(browser);
-  updateBrowserBookmarkState(browser);
+
+
+  /* =========================
+     WebOS HTMLファイル
+  ========================= */
+
+  if(
+    tab.url.startsWith(
+      'webos://file/'
+    )
+  ){
+
+    let path = '';
+
+    try{
+
+      path =
+        decodeURIComponent(
+          tab.url.slice(
+            'webos://file/'.length
+          )
+        );
+
+    }catch(e){
+
+      status.textContent =
+        'ファイルURLが不正です';
+
+      return;
+    }
+
+    const item =
+      files[path];
+
+    home.style.display =
+      'none';
+
+    frame.style.display =
+      'block';
+
+    frame.onload = null;
+    frame.onerror = null;
+
+    frame.removeAttribute(
+      'src'
+    );
+
+    if(
+      item &&
+      item.type === 'file'
+    ){
+
+      browser.classList.remove(
+        'loading'
+      );
+
+      frame.srcdoc =
+        item.content || '';
+
+      status.textContent =
+        'WebOS: ' + path;
+
+      tab.title =
+        path.split('/').pop();
+
+    }else{
+
+      browser.classList.remove(
+        'loading'
+      );
+
+      frame.srcdoc = `
+        <!doctype html>
+        <html>
+        <head>
+          <meta charset="UTF-8">
+          <title>ファイルが見つかりません</title>
+        </head>
+
+        <body style="
+          font-family:sans-serif;
+          padding:30px;
+        ">
+
+          <h2>
+            ファイルが見つかりません
+          </h2>
+
+          <p>
+            ${escapeHtml(path)}
+          </p>
+
+        </body>
+        </html>
+      `;
+
+      status.textContent =
+        'ファイルが見つかりません';
+
+      tab.title =
+        'ファイルが見つかりません';
+    }
+
+    browserRenderTabs(browser);
+    browserUpdateNavButtons(browser);
+    updateBrowserBookmarkState(browser);
+
+    return;
+  }
+
+
+  /* =========================
+     外部Webサイト
+  ========================= */
+
+  home.style.display =
+    'none';
+
+  frame.style.display =
+    'block';
+
+  browser.classList.add(
+    'loading'
+  );
+
+  status.textContent =
+    '読み込み中…';
+
+  frame.onload = () => {
+
+    browser.classList.remove(
+      'loading'
+    );
+
+    status.textContent =
+      tab.url;
+
+    if(
+      !tab.title ||
+      tab.title === '新しいタブ'
+    ){
+
+      tab.title =
+        tab.url;
+    }
+
+    browserRenderTabs(browser);
+    browserUpdateNavButtons(browser);
+
+  };
+
+  frame.onerror = () => {
+
+    browser.classList.remove(
+      'loading'
+    );
+
+    status.textContent =
+      'ページを読み込めませんでした';
+
+  };
+
+
+  /*
+   * srcdocを完全に解除してから
+   * 外部URLを設定
+   */
+
+  frame.removeAttribute(
+    'srcdoc'
+  );
+
+  frame.src =
+    tab.url;
+
+
+  browserUpdateNavButtons(
+    browser
+  );
+
+  updateBrowserBookmarkState(
+    browser
+  );
 }
 
 function browserUpdateNavButtons(browser){
@@ -8511,56 +8747,58 @@ function normalizeBrowserUrl(value){
     encodeURIComponent(value);
 }
 
-function browserGo(el, forcedUrl=null, fromHistory=false){
-  const browser=getBrowserFromElement(el);
+function browserGo(el, forcedUrl = null, fromHistory = false){
+
+  const browser = getBrowserFromElement(el);
   if(!browser) return;
-  const address=browser.querySelector('.browser-address');
-  const frame=browser.querySelector('.browser-frame');
-  const home=browser.querySelector('.browser-home');
-  const status=browser.querySelector('.browser-status-text');
-  const tab=browserGetActiveTab(browser);
-  if(!address || !frame || !home || !status || !tab) return;
-  const raw=forcedUrl!==null ? String(forcedUrl) : address.value.trim();
+
+  const address =
+    browser.querySelector('.browser-address');
+
+  const frame =
+    browser.querySelector('.browser-frame');
+
+  const home =
+    browser.querySelector('.browser-home');
+
+  const status =
+    browser.querySelector('.browser-status-text');
+
+  const tab =
+    browserGetActiveTab(browser);
+
+  if(!address || !frame || !home || !status || !tab){
+    return;
+  }
+
+  const raw =
+    forcedUrl !== null
+      ? String(forcedUrl)
+      : address.value.trim();
+
   if(!raw) return;
-  const url=normalizeBrowserUrl(raw);
+
+  const url =
+    normalizeBrowserUrl(raw);
+
   if(!url) return;
-  address.value=url;
-  if(!fromHistory) browserRecordHistory(url,url,browser); else tab.url=url;
 
-  if(url==='webos://home'){
-    home.style.display='flex'; frame.style.display='none'; frame.srcdoc=''; frame.src='about:blank';
-    status.textContent='WebOS ホーム'; tab.title='新しいタブ';
-    browserRenderTabs(browser); browserUpdateNavButtons(browser); updateBrowserBookmarkState(browser); return;
+  address.value = url;
+
+  if(!fromHistory){
+
+    browserRecordHistory(
+      url,
+      url,
+      browser
+    );
+
+  }else{
+
+    tab.url = url;
   }
 
-  home.style.display='none'; frame.style.display='block';
-
-  if(url.startsWith('webos://file/')){
-    let path='';
-    try{ path=decodeURIComponent(url.slice('webos://file/'.length)); }catch(e){}
-    const item=files[path];
-    browser.classList.add('loading');
-    frame.removeAttribute('src');
-    frame.onload=()=>{
-      browser.classList.remove('loading');
-      status.textContent='WebOS: '+path;
-      if(!fromHistory) tab.title=path.split('/').pop();
-      browserRenderTabs(browser); browserUpdateNavButtons(browser);
-    };
-    if(item && item.type==='file'){
-      frame.srcdoc=item.content||'';
-      status.textContent='WebOS: '+path;
-    }else{
-      frame.srcdoc='<h2>ファイルが見つかりません</h2><p>'+escapeHtml(path)+'</p>';
-      browser.classList.remove('loading');
-      status.textContent='ファイルが見つかりません';
-    }
-    updateBrowserBookmarkState(browser); return;
-  }
-
-  frame.srcdoc=''; status.textContent='読み込み中…'; browser.classList.add('loading');
-  frame.onload=()=>{ browser.classList.remove('loading'); status.textContent=url; if(!fromHistory) tab.title=url; browserRenderTabs(browser); browserUpdateNavButtons(browser); };
-  frame.src=url; browserUpdateNavButtons(browser); updateBrowserBookmarkState(browser);
+  browserRenderCurrentTab(browser);
 }
 
 function browserSwitchTab(browser, tabId){
