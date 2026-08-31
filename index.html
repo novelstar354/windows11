@@ -4325,6 +4325,7 @@ console.log(hello("WebOS"));
 
   saveFiles();
 
+
   selectedExplorerFile = path;
   activeFile = path;
 
@@ -7707,17 +7708,30 @@ function openSettings(){
 
       <!-- データ -->
       <section>
+  <h3>💾 データ</h3>
 
-        <h3>💾 データ</h3>
+  <button
+    onclick="resetFiles()"
+    style="padding:7px 14px"
+  >
+    初期ファイルに戻す
+  </button>
 
-        <button
-          onclick="resetFiles()"
-          style="padding:7px 14px"
-        >
-          初期ファイルに戻す
-        </button>
-
-      </section>
+  <button
+    onclick="resetDesktopAndTrash()"
+    style="
+      padding:7px 14px;
+      margin-top:8px;
+      background:#e81123;
+      color:#fff;
+      border:0;
+      border-radius:4px;
+      cursor:pointer;
+    "
+  >
+    🗑️ ゴミ箱・ホーム画面をリセット
+  </button>
+</section>
 
 
       <!-- WebOS情報 -->
@@ -7791,6 +7805,43 @@ function changePin(){const v=document.getElementById('newPin')?.value;if(!v||v.l
 }
 function changeAccent(v){config.accent=v;saveConfig();document.documentElement.style.setProperty('--accent',v);toast('アクセント色を変更しました')}
 function resetFiles(){if(confirm('初期ファイルに戻しますか？')){localStorage.removeItem(STORE);location.reload()}}
+function resetDesktopAndTrash(){
+
+  const ok = confirm(
+    'ゴミ箱とホーム画面をリセットしますか？\n\n' +
+    '・ゴミ箱の中身をすべて削除\n' +
+    '・ホーム画面に置いたファイルをすべて解除\n' +
+    '・アプリの位置を初期位置に戻す\n' +
+    '・ファイル本体や設定は削除しません'
+  );
+
+  if(!ok) return;
+
+  // ゴミ箱を空にする
+  desktopTrash = [];
+
+  // ホーム画面に置いたファイル・フォルダを解除
+  desktopItems = [];
+
+  // アプリの位置をリセット
+  desktopPositions = {};
+
+  // 保存
+  saveDesktopTrash();
+  saveDesktopItems();
+  saveDesktopPositions();
+
+  // ホーム画面を再描画
+  renderDesktopItems();
+
+  // アプリの位置を初期位置に戻す
+  initDesktopIcons();
+
+  // ゴミ箱を再描画
+  renderTrash();
+
+  toast('ゴミ箱とホーム画面をリセットしました');
+}
 
 /* ==========================================================
    独自JavaScript API
@@ -7952,21 +8003,56 @@ function desktopItemIcon(path){
   return item.type === 'folder' ? '📁' : getFileIcon(path.split('/').pop());
 }
 function findFreeDesktopPosition(){
-  const used = new Set();
-  document.querySelectorAll('#desktopIcons .icon').forEach(el=>{
-    if(el.id==='trashIcon') return;
-    const x=Math.round(parseFloat(el.style.left||'0')/90);
-    const y=Math.round(parseFloat(el.style.top||'0')/94);
-    used.add(x+':'+y);
+  const icons = document.querySelectorAll(
+    '#desktopIcons .icon'
+  );
+
+  const positions = [];
+
+  icons.forEach(el => {
+    if(el.id === 'trashIcon') return;
+
+    const x = parseFloat(el.style.left);
+    const y = parseFloat(el.style.top);
+
+    if(Number.isFinite(x) && Number.isFinite(y)){
+      positions.push({x, y});
+    }
   });
-  for(let row=0;row<20;row++){
-    for(let col=0;col<10;col++){
-      const x=190+col*90, y=12+row*94;
-      const key=Math.round(x/90)+':'+Math.round(y/94);
-      if(!used.has(key)) return {x,y};
+
+  // 1列10個、最大20行
+  const colWidth = 90;
+  const rowHeight = 94;
+
+  const startX = 190;
+  const startY = 12;
+
+  for(let row = 0; row < 20; row++){
+    for(let col = 0; col < 10; col++){
+
+      const x = startX + col * colWidth;
+      const y = startY + row * rowHeight;
+
+      // 他のアイコンと重なっていないか確認
+      const occupied = positions.some(pos => {
+
+        const dx = Math.abs(pos.x - x);
+        const dy = Math.abs(pos.y - y);
+
+        return dx < 80 && dy < 85;
+      });
+
+      if(!occupied){
+        return {x, y};
+      }
     }
   }
-  return {x:190,y:12};
+
+  // 全部埋まっていた場合
+  return {
+    x: startX,
+    y: startY + 20 * rowHeight
+  };
 }
 function putFileOnDesktop(path,silent=false){
   path=desktopItemKey(path);
@@ -8003,26 +8089,158 @@ function openDesktopItem(path){
   else openFile(path);
 }
 function renderDesktopItems(){
-  const icons=document.getElementById('desktopIcons');
+  const icons = document.getElementById('desktopIcons');
+
   if(!icons) return;
-  icons.querySelectorAll('.desktop-user-item').forEach(el=>el.remove());
-  desktopItems=desktopItems.filter(item=>files[item.path]);
-  saveDesktopItems();
-  desktopItems.forEach(item=>{
-    const el=document.createElement('div');
-    el.className='icon desktop-user-item';
-    el.dataset.desktopPath=item.path;
-    el.title=item.path;
-    el.style.left=(Number.isFinite(item.x)?item.x:190)+'px';
-    el.style.top=(Number.isFinite(item.y)?item.y:12)+'px';
-    el.innerHTML=`<div class="ico">${escapeHtml(item.icon||desktopItemIcon(item.path))}</div><span>${escapeHtml(item.name||item.path.split('/').pop())}</span><span class="desktop-shortcut-badge">↗</span>`;
-    let dragging=false,moved=false,dx=0,dy=0;
-    el.addEventListener('mousedown',e=>{ if(e.button!==0)return; dragging=true;moved=false;const r=el.getBoundingClientRect();dx=e.clientX-r.left;dy=e.clientY-r.top;e.preventDefault(); });
-    el._desktopMove=e=>{ if(!dragging)return; moved=true; item.x=Math.max(0,Math.min(innerWidth-90,e.clientX-dx)); item.y=Math.max(0,Math.min(innerHeight-100,e.clientY-dy)); el.style.left=item.x+'px';el.style.top=item.y+'px'; };
-    el._desktopUp=()=>{ if(!dragging)return; dragging=false;if(moved)saveDesktopItems(); };
-    document.addEventListener('mousemove',el._desktopMove);
-    document.addEventListener('mouseup',el._desktopUp);
-    el.addEventListener('dblclick',()=>{ if(!moved) openDesktopItem(item.path); moved=false; });
+
+  // 以前のファイル・フォルダアイコンを削除
+  icons
+    .querySelectorAll('.desktop-user-item')
+    .forEach(el => el.remove());
+
+  desktopItems.forEach(item => {
+
+    if(!item || !item.path) return;
+    if(!files[item.path]) return;
+
+    const el = document.createElement('div');
+
+    el.className = 'icon desktop-user-item';
+    el.dataset.desktopPath = item.path;
+
+    el.style.position = 'absolute';
+    el.style.left =
+      (Number.isFinite(item.x) ? item.x : 190) + 'px';
+    el.style.top =
+      (Number.isFinite(item.y) ? item.y : 12) + 'px';
+
+    el.innerHTML = `
+      <div class="ico">
+        ${escapeHtml(item.icon || desktopItemIcon(item.path))}
+      </div>
+      <span>
+        ${escapeHtml(
+          item.name || item.path.split('/').pop()
+        )}
+      </span>
+    `;
+
+    /*
+     * =========================
+     * ダブルクリック
+     * =========================
+     */
+    el.addEventListener('dblclick', () => {
+      openDesktopItem(item.path);
+    });
+
+    /*
+     * =========================
+     * ドラッグ
+     * =========================
+     */
+    let dragging = false;
+    let moved = false;
+    let offsetX = 0;
+    let offsetY = 0;
+
+    el.addEventListener('mousedown', e => {
+
+      if(e.button !== 0) return;
+
+      const rect = el.getBoundingClientRect();
+
+      dragging = true;
+      moved = false;
+
+      offsetX = e.clientX - rect.left;
+      offsetY = e.clientY - rect.top;
+
+      el.style.zIndex = 1000;
+
+      e.preventDefault();
+      e.stopPropagation();
+    });
+
+    const onMouseMove = e => {
+
+      if(!dragging) return;
+
+      moved = true;
+
+      const newX = e.clientX - offsetX;
+      const newY = e.clientY - offsetY;
+
+      item.x = Math.max(0, newX);
+      item.y = Math.max(0, newY);
+
+      el.style.left = item.x + 'px';
+      el.style.top = item.y + 'px';
+
+      /*
+       * ゴミ箱の上に来たらハイライト
+       */
+      const trash = document.getElementById('trashIcon');
+
+      if(trash){
+
+        const r = trash.getBoundingClientRect();
+
+        const over =
+          e.clientX >= r.left &&
+          e.clientX <= r.right &&
+          e.clientY >= r.top &&
+          e.clientY <= r.bottom;
+
+        trash.classList.toggle('drag-over', over);
+      }
+    };
+
+    const onMouseUp = e => {
+
+      if(!dragging) return;
+
+      dragging = false;
+
+      el.style.zIndex = '';
+
+      /*
+       * ゴミ箱に入れる
+       */
+      const trash = document.getElementById('trashIcon');
+
+      if(trash){
+
+        const r = trash.getBoundingClientRect();
+
+        const over =
+          e.clientX >= r.left &&
+          e.clientX <= r.right &&
+          e.clientY >= r.top &&
+          e.clientY <= r.bottom;
+
+        trash.classList.remove('drag-over');
+
+        if(over){
+          moveDesktopIconToTrash(el);
+          return;
+        }
+      }
+
+      /*
+       * 移動した位置を保存
+       */
+      if(moved){
+        saveDesktopItems();
+      }
+
+      moved = false;
+    };
+
+    document.addEventListener('mousemove', onMouseMove);
+    document.addEventListener('mouseup', onMouseUp);
+
+    icons.appendChild(el);
   });
 }
 // Explorerからファイル/フォルダをホーム画面へドロップ
@@ -8068,11 +8286,35 @@ function saveDesktopTrash(){
   localStorage.setItem(trashStorageKey, JSON.stringify(desktopTrash));
 }
 function getDesktopIconMeta(el){
-  return {
-    app: el.dataset.app,
-    icon: el.querySelector('.ico')?.textContent || '📄',
-    name: el.querySelector('span:last-child')?.textContent || el.dataset.app || '項目'
-  };
+
+  // ファイル・フォルダ
+  if(el.dataset.desktopPath){
+
+    const path = normalizePath(el.dataset.desktopPath);
+    const file = files[path];
+
+    return {
+      kind: 'file',
+      path: path,
+      icon: file ? desktopItemIcon(path) : '📄',
+      name: path.split('/').pop(),
+      type: file?.type || 'file'
+    };
+  }
+
+  // アプリ
+  if(el.dataset.app){
+
+    return {
+      kind: 'app',
+      app: el.dataset.app,
+      icon: el.querySelector('.ico')?.textContent || '📄',
+      name: el.querySelector('span')?.textContent ||
+            el.dataset.app
+    };
+  }
+
+  return null;
 }
 function openTrash(){
   const d=document.getElementById('trashDialog');
@@ -8101,62 +8343,229 @@ function renderTrash(){
 }
 function restoreDesktopIcon(index){
   const item = desktopTrash[index];
+
   if(!item) return;
 
-  const icons = document.getElementById('desktopIcons');
-  if(!icons) return;
+  /*
+   * =========================
+   * アプリを復元
+   * =========================
+   */
+  if(item.kind === 'app' || item.app){
 
-  const el = document.createElement('div');
+    const app = item.app;
 
-  el.className = 'icon';
-  el.dataset.app = item.app;
+    // すでにホーム画面にある場合
+    if(document.querySelector(
+      `#desktopIcons .icon[data-app="${CSS.escape(app)}"]`
+    )){
+      desktopTrash.splice(index, 1);
+      saveDesktopTrash();
+      renderTrash();
 
-  el.ondblclick = () => openApp(item.app);
+      toast(item.name + ' はすでにホーム画面にあります');
+      return;
+    }
 
-  el.innerHTML = `
-    <div class="ico">${escapeHtml(item.icon)}</div>
-    <span>${escapeHtml(item.name)}</span>
-  `;
+    const icons = document.getElementById('desktopIcons');
 
-  icons.appendChild(el);
+    if(!icons) return;
+
+    const el = document.createElement('div');
+
+    el.className = 'icon';
+    el.dataset.app = app;
+
+    el.innerHTML = `
+      <div class="ico">${escapeHtml(item.icon || '📄')}</div>
+      <span>${escapeHtml(item.name || app)}</span>
+    `;
+
+    el.ondblclick = () => openApp(app);
+
+    icons.appendChild(el);
+
+    // 保存済み位置を削除して初期位置へ
+    delete desktopPositions[app];
+    saveDesktopPositions();
+
+    // ドラッグ機能を初期化
+    initOneDesktopIcon(el);
+
+    // ゴミ箱から削除
+    desktopTrash.splice(index, 1);
+    saveDesktopTrash();
+
+    renderTrash();
+
+    toast(item.name + ' を復元しました');
+
+    return;
+  }
+
 
   /*
-   * 復元したアプリの保存済み座標を削除
-   * → initOneDesktopIcon() がデフォルト位置を設定する
+   * =========================
+   * ファイル・フォルダを復元
+   * =========================
    */
-  delete desktopPositions[item.app];
+  if(item.kind === 'file'){
+
+    const path = normalizePath(item.path);
+
+    // 元ファイルが存在しない
+    if(!files[path]){
+      desktopTrash.splice(index, 1);
+      saveDesktopTrash();
+      renderTrash();
+
+      toast('元のファイルが存在しません');
+      return;
+    }
+
+    // 同じファイルを二重にホーム画面へ置かない
+    if(desktopItems.some(x => x.path === path)){
+      desktopTrash.splice(index, 1);
+      saveDesktopTrash();
+      renderTrash();
+
+      toast('すでにホーム画面にあります');
+      return;
+    }
+
+    /*
+     * フォルダの場合も「フォルダ自身」だけを登録。
+     * 中身は登録しない。
+     */
+    const pos = findFreeDesktopPosition();
+
+    desktopItems.push({
+      path: path,
+      name: path.split('/').pop(),
+      type: files[path].type,
+      icon: desktopItemIcon(path),
+      x: pos.x,
+      y: pos.y
+    });
+
+    saveDesktopItems();
+
+    desktopTrash.splice(index, 1);
+    saveDesktopTrash();
+
+    renderDesktopItems();
+    renderTrash();
+
+    toast(
+      path.split('/').pop() +
+      ' をホーム画面に復元しました'
+    );
+
+    return;
+  }
 
   /*
-   * 新しい位置を保存
+   * 古い形式のデータにも対応
    */
-  saveDesktopPositions();
+  if(item.path){
+
+    const path = normalizePath(item.path);
+
+    if(!files[path]){
+      desktopTrash.splice(index, 1);
+      saveDesktopTrash();
+      renderTrash();
+
+      toast('元のファイルが存在しません');
+      return;
+    }
+
+    if(!desktopItems.some(x => x.path === path)){
+
+      const pos = findFreeDesktopPosition();
+
+      desktopItems.push({
+        path: path,
+        name: path.split('/').pop(),
+        type: files[path].type,
+        icon: desktopItemIcon(path),
+        x: pos.x,
+        y: pos.y
+      });
+
+      saveDesktopItems();
+    }
+
+    desktopTrash.splice(index, 1);
+    saveDesktopTrash();
+
+    renderDesktopItems();
+    renderTrash();
+
+    toast(path.split('/').pop() + ' を復元しました');
+  }
+}
+function moveDesktopIconToTrash(el){
+  if(!el || el.dataset.trash === 'true') return;
+
+  const item = getDesktopIconMeta(el);
+
+  if(!item) return;
+
+  // 重複防止
+  const exists = desktopTrash.some(x => {
+
+    if(item.kind === 'app'){
+      return x.kind === 'app' && x.app === item.app;
+    }
+
+    if(item.kind === 'file'){
+      return x.kind === 'file' && x.path === item.path;
+    }
+
+    return false;
+  });
+
+  if(!exists){
+    desktopTrash.push(item);
+  }
 
   /*
-   * ゴミ箱から削除
+   * アプリ
    */
-  desktopTrash.splice(index, 1);
+  if(item.kind === 'app'){
+
+    delete desktopPositions[item.app];
+
+    saveDesktopPositions();
+
+    el.remove();
+  }
+
+  /*
+   * ファイル・フォルダ
+   */
+  else if(item.kind === 'file'){
+
+    desktopItems = desktopItems.filter(
+      x => x.path !== item.path
+    );
+
+    saveDesktopItems();
+
+    el.remove();
+  }
+
   saveDesktopTrash();
 
-  /*
-   * デフォルト位置で初期化
-   */
-  initOneDesktopIcon(el);
+  document
+    .getElementById('trashIcon')
+    ?.classList.remove('drag-over');
 
   renderTrash();
 
-  toast(item.name + ' を復元しました');
+  toast(item.name + ' をゴミ箱に入れました');
 }
-function moveDesktopIconToTrash(el){
-  if(!el || el.dataset.trash==='true')return;
-  const item=getDesktopIconMeta(el);
-  const existing=desktopTrash.find(x=>x.app===item.app && x.name===item.name);
-  if(!existing)desktopTrash.push(item);
-  saveDesktopTrash();
-  el.remove();
-  const trash=document.getElementById('trashIcon');
-  trash?.classList.remove('drag-over');
-}
-
 const desktopPositionsKey='webos10_desktop_positions_v1';
 let desktopPositions=JSON.parse(localStorage.getItem(desktopPositionsKey)||'null')||{};
 function saveDesktopPositions(){localStorage.setItem(desktopPositionsKey,JSON.stringify(desktopPositions))}
