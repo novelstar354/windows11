@@ -4222,152 +4222,625 @@ function getCurrentFolderItems(){
 
 function renderFiles(winId){
 
-  const grid =
-    document.querySelector(`#${winId} #fileGrid`);
+  const win = document.getElementById(winId);
+
+  if(!win) return;
+
+  const grid = win.querySelector('#fileGrid');
 
   if(!grid) return;
 
-  grid.innerHTML = "";
+  /*
+   * =========================
+   * 現在のフォルダ
+   * =========================
+   */
+
+  const folder =
+    normalizePath(currentFolder || '');
 
   /*
-    現在位置表示
-  */
+   * =========================
+   * ファイル一覧
+   * =========================
+   */
 
-  const explorer =
-    document.querySelector(`#${winId} .files`);
+  grid.innerHTML = '';
 
-  if(explorer){
+  grid.style.position = 'relative';
+  grid.style.paddingTop = '55px';
+  grid.style.boxSizing = 'border-box';
 
-    const oldPath =
-      explorer.querySelector(".current-path");
 
-    if(oldPath) oldPath.remove();
+  /*
+   * =========================
+   * パスバー
+   * =========================
+   */
 
-    const pathBar =
-      document.createElement("div");
+  const oldPathBar =
+    grid.querySelector('.explorer-pathbar');
 
-    pathBar.className = "current-path";
-const sidebarWidth =
-  explorer.querySelector('.side')?.getBoundingClientRect().width || 200;
-      
-    pathBar.style.cssText =
-  "position:absolute;" +
-  `left:${sidebarWidth + 10}px;` +
-  "right:15px;" +
-  "top:8px;" +
-  "height:30px;" +
-  "padding:6px 10px;" +
-  "box-sizing:border-box;" +
-  "background:#f5f5f5;" +
-  "border:1px solid #ddd;" +
-  "border-radius:5px;" +
-  "font-size:12px;" +
-  "color:#555;" +
-  "z-index:10;";
-      
-    pathBar.textContent =
-      "📍 ホーム" +
-      (currentFolder ? " > " + currentFolder : "");
-
-    explorer.parentElement.style.position = "relative";
-    explorer.appendChild(pathBar);
-
-grid.style.paddingTop = '55px';
-grid.style.boxSizing = 'border-box';
+  if(oldPathBar){
+    oldPathBar.remove();
   }
 
+  const pathBar =
+    document.createElement('div');
+
+  pathBar.className =
+    'explorer-pathbar';
+
+  pathBar.style.cssText = `
+  position:absolute;
+  left:30px;
+  right:30px;
+  top:8px;
+  height:32px;
+
+  padding:3px 6px;
+  box-sizing:border-box;
+
+  display:flex;
+  align-items:center;
+
+  background:#f5f5f5;
+  border:1px solid #ddd;
+  border-radius:5px;
+
+  font-size:12px;
+  color:#555;
+
+  z-index:10;
+
+  overflow:hidden;
+  white-space:nowrap;
+`;
+
+
   /*
-    ファイル一覧
-  */
+   * =========================
+   * ホーム
+   * =========================
+   */
 
-  const items = getCurrentFolderItems();
+  const homeBtn =
+    document.createElement('button');
 
-  items.forEach(item => {
+  homeBtn.textContent =
+    '📍 ホーム';
 
-    const d =
-      document.createElement("div");
+  homeBtn.style.cssText = `
+    border:0;
+    background:transparent;
+    padding:4px 7px;
+    cursor:pointer;
+    font-size:12px;
+    color:#333;
+    border-radius:4px;
+    flex-shrink:0;
+  `;
 
-    d.className = "fileitem";
+  homeBtn.onmouseenter = () => {
+    homeBtn.style.background =
+      'rgba(0,0,0,.08)';
+  };
 
-    d.dataset.name = item.path;
+  homeBtn.onmouseleave = () => {
+    homeBtn.style.background =
+      'transparent';
+  };
 
-    const isFolder =
-      item.data.type === "folder";
+  homeBtn.onclick = () => {
 
-    const ico =
-      isFolder
-        ? "📁"
-        : getFileIcon(item.name);
+    currentFolder = '';
 
-    d.innerHTML = `
-      <div class="big">${ico}</div>
-      <span>${escapeHtml(item.name)}</span>
+    selectedExplorerFile = null;
+
+    renderFiles(winId);
+
+    if(
+      typeof renderExplorerFolderTree ===
+      'function'
+    ){
+      renderExplorerFolderTree();
+    }
+  };
+
+  pathBar.appendChild(homeBtn);
+
+
+  /*
+   * =========================
+   * パスバーのフォルダ
+   * =========================
+   */
+
+  const parts =
+    folder
+      ? folder
+          .split('/')
+          .filter(Boolean)
+      : [];
+
+  let accumulated = '';
+
+  parts.forEach((part, index) => {
+
+    /*
+     * 区切り
+     */
+
+    const separator =
+      document.createElement('span');
+
+    separator.textContent = ' › ';
+
+    separator.style.cssText = `
+      color:#888;
+      flex-shrink:0;
     `;
 
+    pathBar.appendChild(separator);
+
+
     /*
-      クリック
-    */
+     * フォルダパス
+     */
 
-    d.onclick = () => {
-      selectExplorerFile(item.path);
+    accumulated +=
+      (accumulated ? '/' : '') + part;
+
+    const folderPath =
+      accumulated;
+
+
+    /*
+     * フォルダボタン
+     */
+
+    const folderBtn =
+      document.createElement('button');
+
+    folderBtn.textContent =
+      '📁 ' + part;
+
+    folderBtn.title =
+      folderPath;
+
+    folderBtn.style.cssText = `
+      border:0;
+      background:transparent;
+      padding:4px 7px;
+      cursor:pointer;
+      font-size:12px;
+      color:#333;
+      border-radius:4px;
+      flex-shrink:0;
+    `;
+
+    folderBtn.onmouseenter = () => {
+      folderBtn.style.background =
+        'rgba(0,0,0,.08)';
     };
 
-    // 右クリックでホーム画面へ置けるようにする
-    d.oncontextmenu = (e) => {
-      e.preventDefault();
-      selectExplorerFile(item.path);
-      putFileOnDesktop(item.path);
-      return false;
+    folderBtn.onmouseleave = () => {
+      folderBtn.style.background =
+        'transparent';
     };
 
-    // ファイル/フォルダをデスクトップへドラッグできるようにする
-    d.draggable = true;
-    d.addEventListener('dragstart', (e) => {
-      e.dataTransfer.setData('text/webos-path', item.path);
-      e.dataTransfer.effectAllowed = 'copy';
-      selectExplorerFile(item.path);
+    folderBtn.onclick = () => {
+
+      currentFolder =
+        folderPath;
+
+      selectedExplorerFile =
+        null;
+
+      renderFiles(winId);
+
+      if(
+        typeof renderExplorerFolderTree ===
+        'function'
+      ){
+        renderExplorerFolderTree();
+      }
+    };
+
+    pathBar.appendChild(folderBtn);
+  });
+
+
+  /*
+   * =========================
+   * パスバー追加
+   * =========================
+   */
+
+  grid.appendChild(pathBar);
+
+
+  /*
+   * =========================
+   * 現在のフォルダ直下だけ取得
+   * =========================
+   */
+
+  const prefix =
+    folder
+      ? folder + '/'
+      : '';
+
+  const entries = [];
+
+  Object.keys(files).forEach(path => {
+
+    const normalized =
+      normalizePath(path);
+
+    /*
+     * 現在のフォルダの中だけ
+     */
+
+    if(!normalized.startsWith(prefix)){
+      return;
+    }
+
+    const relative =
+      normalized.slice(prefix.length);
+
+    if(!relative){
+      return;
+    }
+
+    /*
+     * サブフォルダ以下は表示しない
+     */
+
+    if(relative.includes('/')){
+      return;
+    }
+
+    entries.push({
+      path: normalized,
+      data: files[path]
     });
+  });
+
+
+  /*
+   * =========================
+   * 並び順
+   * フォルダ → ファイル
+   * =========================
+   */
+
+  entries.sort((a,b) => {
+
+    const af =
+      a.data?.type === 'folder';
+
+    const bf =
+      b.data?.type === 'folder';
+
+    if(af && !bf) return -1;
+
+    if(!af && bf) return 1;
+
+    return a.path.localeCompare(
+      b.path,
+      'ja'
+    );
+  });
+
+
+  /*
+   * =========================
+   * ファイル表示
+   * =========================
+   */
+
+  entries.forEach(entry => {
+
+    const path =
+      entry.path;
+
+    const data =
+      entry.data || {};
+
+    const name =
+      path.split('/').pop();
+
+    const isFolder =
+      data.type === 'folder';
+
 
     /*
-      ダブルクリック
-    */
+     * アイコン
+     */
 
-    d.ondblclick = () => {
+    let icon = '📄';
+
+    if(isFolder){
+      icon = '📁';
+    }else{
+      icon =
+        desktopItemIcon(path);
+    }
+
+
+    /*
+     * アイテム
+     */
+
+    const item =
+      document.createElement('div');
+
+    item.className =
+      'explorer-file-item';
+
+    item.dataset.path =
+      path;
+
+    item.style.cssText = `
+      width:90px;
+      min-height:82px;
+      margin:8px;
+      padding:8px;
+
+      box-sizing:border-box;
+
+      display:inline-flex;
+      flex-direction:column;
+      align-items:center;
+      justify-content:flex-start;
+
+      border:1px solid transparent;
+      border-radius:6px;
+
+      cursor:pointer;
+      user-select:none;
+      -webkit-user-select:none;
+    `;
+
+
+    /*
+     * アイコン
+     */
+
+    const iconEl =
+      document.createElement('div');
+
+    iconEl.style.cssText = `
+      width:42px;
+      height:42px;
+
+      display:flex;
+      align-items:center;
+      justify-content:center;
+
+      font-size:32px;
+
+      margin-bottom:5px;
+    `;
+
+    iconEl.textContent =
+      icon;
+
+    item.appendChild(iconEl);
+
+
+    /*
+     * ファイル名
+     */
+
+    const nameEl =
+      document.createElement('div');
+
+    nameEl.textContent =
+      name;
+
+    nameEl.title =
+      path;
+
+    nameEl.style.cssText = `
+      width:100%;
+
+      overflow:hidden;
+      text-overflow:ellipsis;
+      white-space:nowrap;
+
+      text-align:center;
+
+      font-size:12px;
+      color:#222;
+    `;
+
+    item.appendChild(nameEl);
+
+
+    /*
+     * =========================
+     * クリック
+     * =========================
+     */
+
+    item.onclick = e => {
+
+      e.stopPropagation();
+
+      /*
+       * 以前の選択を解除
+       */
+
+      grid
+        .querySelectorAll(
+          '.explorer-file-item'
+        )
+        .forEach(el => {
+
+          el.style.background =
+            'transparent';
+
+          el.style.borderColor =
+            'transparent';
+
+        });
+
+
+      /*
+       * 選択
+       */
+
+      item.style.background =
+        'rgba(0,120,215,.12)';
+
+      item.style.borderColor =
+        'rgba(0,120,215,.35)';
+
+      selectedExplorerFile =
+        path;
+
+      const selected =
+        win.querySelector(
+          '#explorerSelected'
+        );
+
+      if(selected){
+        selected.textContent =
+          path;
+      }
+    };
+
+
+    /*
+     * =========================
+     * ダブルクリック
+     * =========================
+     */
+
+    item.ondblclick = e => {
+
+      e.stopPropagation();
+
+      /*
+       * フォルダ
+       */
 
       if(isFolder){
 
-        // フォルダへ移動
-        currentFolder = item.path;
+        currentFolder =
+          path;
 
-        selectedExplorerFile = null;
+        selectedExplorerFile =
+          null;
 
         renderFiles(winId);
 
-      }else{
+        if(
+          typeof renderExplorerFolderTree ===
+          'function'
+        ){
+          renderExplorerFolderTree();
+        }
 
-        openFile(item.path);
-
+        return;
       }
 
+
+      /*
+       * ファイル
+       */
+
+      if(
+        typeof openFileByPath ===
+        'function'
+      ){
+
+        openFileByPath(path);
+
+      }else if(
+        typeof openFile ===
+        'function'
+      ){
+
+        openFile(path);
+
+      }else{
+
+        console.warn(
+          'ファイルを開く関数が見つかりません:',
+          path
+        );
+      }
     };
 
-    grid.appendChild(d);
+
+    /*
+     * =========================
+     * ホバー
+     * =========================
+     */
+
+    item.onmouseenter = () => {
+
+      if(
+        selectedExplorerFile !== path
+      ){
+
+        item.style.background =
+          'rgba(0,0,0,.05)';
+      }
+    };
+
+    item.onmouseleave = () => {
+
+      if(
+        selectedExplorerFile !== path
+      ){
+
+        item.style.background =
+          'transparent';
+      }
+    };
+
+
+    /*
+     * =========================
+     * 表示
+     * =========================
+     */
+
+    grid.appendChild(item);
   });
 
-  /*
-    空フォルダ
-  */
 
-  if(items.length === 0){
+  /*
+   * =========================
+   * 空フォルダ
+   * =========================
+   */
+
+  if(entries.length === 0){
 
     const empty =
-      document.createElement("div");
+      document.createElement('div');
 
-    empty.style.cssText =
-      "width:100%;padding:40px;text-align:center;color:#888;";
+    empty.style.cssText = `
+      position:absolute;
+      left:220px;
+      right:20px;
+      top:70px;
+
+      text-align:center;
+
+      color:#888;
+      font-size:13px;
+      padding:30px;
+    `;
 
     empty.textContent =
-      "このフォルダは空です";
+      'このフォルダーは空です';
 
     grid.appendChild(empty);
   }
