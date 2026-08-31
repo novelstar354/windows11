@@ -8836,31 +8836,79 @@ function browserNewTab(elOrBrowser){
   },30);
 }
 
-function browserCloseTab(browserOrEl, tabId=null){
-  const browser = browserOrEl?.classList?.contains('webbrowser')
-    ? browserOrEl
-    : getBrowserFromElement(browserOrEl);
+function browserCloseTab(el, tabId){
 
+  const browser = getBrowserFromElement(el);
   if(!browser) return;
 
-  const state = browserGetState(browser);
+  const state = browser._browserState;
   if(!state) return;
 
-  const id = tabId || browserGetActiveTab(browser)?.id;
-  const index = state.tabs.findIndex(t => t.id === id);
-  if(index < 0) return;
+  /*
+   * 最後のタブなら
+   * ブラウザウィンドウ自体を閉じる
+   */
+  if(state.tabs.length <= 1){
 
-  state.tabs.splice(index,1);
+    const win =
+      browser.closest('.window');
 
-  if(state.tabs.length === 0){
-    browserCreateTab(browser);
-  }else if(state.activeTabId === id){
-    const next = state.tabs[Math.max(0,index-1)] || state.tabs[0];
-    state.activeTabId = next.id;
+    if(win){
+
+      const winId =
+        win.id;
+
+      if(typeof closeWindow === 'function'){
+
+        closeWindow(winId);
+
+      }else{
+
+        win.remove();
+      }
+    }
+
+    return;
   }
 
-  browserClosePanel(browser);
+  /*
+   * 通常のタブ閉じる処理
+   */
+
+  const index =
+    state.tabs.findIndex(
+      tab => tab.id === String(tabId)
+    );
+
+  if(index === -1) return;
+
+  state.tabs.splice(
+    index,
+    1
+  );
+
+  /*
+   * 閉じたタブが現在のタブなら
+   * 前のタブへ移動
+   */
+  if(
+    state.activeTabId ===
+    String(tabId)
+  ){
+
+    const newIndex =
+      Math.max(
+        0,
+        index - 1
+      );
+
+    state.activeTabId =
+      state.tabs[newIndex].id;
+  }
+
+  browserRenderTabs(browser);
   browserRenderCurrentTab(browser);
+  browserUpdateNavButtons(browser);
 }
 
 function browserBack(el){
