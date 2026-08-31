@@ -4248,7 +4248,7 @@ function newFile(){
   const name =
     prompt(
       "新しいファイル名",
-      "new.js"
+      "index.html"
     );
 
   if(!name) return;
@@ -4267,7 +4267,39 @@ function newFile(){
 
   let content = "";
 
-  if(name.toLowerCase().endsWith(".js")){
+  if(name.toLowerCase().endsWith(".html")){
+
+    content =
+`<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>My WebOS App</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 30px;
+      background: #f5f5f5;
+      color: #222;
+    }
+    button {
+      padding: 10px 16px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <h1>Hello WebOS!</h1>
+  <p>テキストエディターで作ったHTMLです。</p>
+  <button onclick="alert('HTMLが実行されています！')">
+    クリック
+  </button>
+</body>
+</html>
+`;
+
+  }else if(name.toLowerCase().endsWith(".js")){
 
     content =
 `// WebOS 10 JavaScript
@@ -4314,8 +4346,10 @@ console.log(hello("WebOS"));
 
 
 /* =========================
-   新しいフォルダ
+     新しいフォルダ
 ========================= */
+
+
 
 function newFolder(){
 
@@ -4699,9 +4733,21 @@ function openEditor(name){
       保存
     </button>
 
-    <button onclick="editorRunJS('${encodeURIComponent(name)}')">
+    ${
+      name.toLowerCase().endsWith(".html")
+        ? `<button onclick="editorRunHTML('${encodeURIComponent(name)}')">
+      ▶ ブラウザで実行
+    </button>`
+        : ""
+    }
+
+    ${
+      name.toLowerCase().endsWith(".js")
+        ? `<button onclick="editorRunJS('${encodeURIComponent(name)}')">
       ▶ JSを実行
-    </button>
+    </button>`
+        : ""
+    }
 
     <button onclick="editorNew()">
       新規
@@ -4824,6 +4870,74 @@ function editorSave(enc){
   saveFiles();
 
   toast("保存しました");
+}
+
+
+/* =========================
+   HTMLをブラウザで実行
+========================= */
+
+function editorRunHTML(enc){
+
+  const name =
+    decodeURIComponent(enc);
+
+  if(!name.toLowerCase().endsWith(".html")){
+    toast("HTMLファイルではありません");
+    return;
+  }
+
+  const w =
+    [...document.querySelectorAll(".window")]
+      .find(x =>
+        x.querySelector("#code") &&
+        x.querySelector("#editorName")?.textContent.trim() === name
+      );
+
+  if(!w){
+    toast("エディターが見つかりません");
+    return;
+  }
+
+  const code =
+    w.querySelector("#code").value;
+
+  if(!files[name]){
+    toast("ファイルが存在しません");
+    return;
+  }
+
+  // 実行前に現在の内容を保存
+  files[name] = {
+    type: "file",
+    content: code
+  };
+  saveFiles();
+
+  // ブラウザを起動し、WebOS内のHTMLファイルとして開く
+  const browserId = openBrowser();
+  const browserWindow =
+    document.getElementById(browserId);
+  const browser =
+    browserWindow?.querySelector(".webbrowser");
+
+  if(!browser){
+    toast("ブラウザを起動できませんでした");
+    return;
+  }
+
+  const localUrl =
+    "webos://file/" +
+    encodeURIComponent(name);
+
+  const address =
+    browser.querySelector(".browser-address");
+
+  if(address){
+    address.value = localUrl;
+  }
+
+  browserGo(address || browser, localUrl);
 }
 
 
@@ -6518,31 +6632,104 @@ function browserRenderTabs(browser){
   tabsEl.appendChild(newBtn);
 }
 
+function browserGetLocalFilePath(url){
+  if(!/^webos:\/\/file\//i.test(String(url || ""))){
+    return null;
+  }
+
+  try{
+    return decodeURIComponent(
+      String(url).replace(/^webos:\/\/file\//i, "")
+    );
+  }catch{
+    return null;
+  }
+}
+
+function browserRenderLocalFile(browser, url){
+  const frame = browser?.querySelector(".browser-frame");
+  const home = browser?.querySelector(".browser-home");
+  const status = browser?.querySelector(".browser-status-text");
+  const tab = browserGetActiveTab(browser);
+
+  if(!browser || !frame || !home || !status || !tab) return false;
+
+  const path = browserGetLocalFilePath(url);
+
+  if(!path || !files[path] || files[path].type !== "file"){
+    home.style.display = "flex";
+    frame.style.display = "none";
+    frame.removeAttribute("srcdoc");
+    frame.src = "about:blank";
+    status.textContent = "HTMLファイルが見つかりません";
+    tab.title = "ファイルが見つかりません";
+    return true;
+  }
+
+  const fileName = path.split("/").pop();
+
+  if(!fileName.toLowerCase().endsWith(".html")){
+    home.style.display = "flex";
+    frame.style.display = "none";
+    frame.removeAttribute("srcdoc");
+    frame.src = "about:blank";
+    status.textContent = "HTMLファイルではありません";
+    tab.title = fileName;
+    return true;
+  }
+
+  home.style.display = "none";
+  frame.style.display = "block";
+  status.textContent = "読み込み中…";
+  browser.classList.add("loading");
+
+  frame.onload = () => {
+    browser.classList.remove("loading");
+    status.textContent = "WebOS: " + path;
+    tab.title = fileName;
+    browserRenderTabs(browser);
+    browserUpdateNavButtons(browser);
+  };
+
+  // 仮想ファイルシステムのHTMLをiframeで実行
+  frame.removeAttribute("src");
+  frame.srcdoc = files[path].content;
+
+  return true;
+}
+
 function browserRenderCurrentTab(browser){
   const tab = browserGetActiveTab(browser);
   if(!browser || !tab) return;
-
   const address = browser.querySelector('.browser-address');
   const frame = browser.querySelector('.browser-frame');
   const home = browser.querySelector('.browser-home');
   const status = browser.querySelector('.browser-status-text');
-
   if(!address || !frame || !home || !status) return;
-
   address.value = tab.url;
 
   if(tab.url === 'webos://home'){
+    frame.srcdoc = '';
     frame.src = 'about:blank';
     frame.style.display = 'none';
     home.style.display = 'flex';
     status.textContent = 'WebOS ホーム';
+  }else if(tab.url.startsWith('webos://file/')){
+    let path='';
+    try{ path=decodeURIComponent(tab.url.slice('webos://file/'.length)); }catch(e){}
+    const item=files[path];
+    home.style.display='none';
+    frame.style.display='block';
+    frame.removeAttribute('src');
+    frame.srcdoc=(item && item.type==='file') ? (item.content||'') : '<h2>ファイルが見つかりません</h2><p>'+escapeHtml(path)+'</p>';
+    status.textContent=(item && item.type==='file') ? 'WebOS: '+path : 'ファイルが見つかりません';
   }else{
-    home.style.display = 'none';
-    frame.style.display = 'block';
-    status.textContent = tab.url;
-    frame.src = tab.url;
+    home.style.display='none';
+    frame.style.display='block';
+    frame.srcdoc='';
+    frame.src=tab.url;
+    status.textContent=tab.url;
   }
-
   browserRenderTabs(browser);
   browserUpdateNavButtons(browser);
   updateBrowserBookmarkState(browser);
@@ -6780,6 +6967,7 @@ function normalizeBrowserUrl(value){
 
   if(!value) return '';
   if(value === 'webos://home') return value;
+  if(/^webos:\/\/file\//i.test(value)) return value;
   if(/^https?:\/\//i.test(value)) return value;
 
   if(/^(localhost|127\.0\.0\.1)(:\d+)?(\/.*)?$/i.test(value)){
@@ -6795,66 +6983,55 @@ function normalizeBrowserUrl(value){
 }
 
 function browserGo(el, forcedUrl=null, fromHistory=false){
-  const browser = getBrowserFromElement(el);
+  const browser=getBrowserFromElement(el);
   if(!browser) return;
-
-  const address = browser.querySelector('.browser-address');
-  const frame = browser.querySelector('.browser-frame');
-  const home = browser.querySelector('.browser-home');
-  const status = browser.querySelector('.browser-status-text');
-  const tab = browserGetActiveTab(browser);
-
+  const address=browser.querySelector('.browser-address');
+  const frame=browser.querySelector('.browser-frame');
+  const home=browser.querySelector('.browser-home');
+  const status=browser.querySelector('.browser-status-text');
+  const tab=browserGetActiveTab(browser);
   if(!address || !frame || !home || !status || !tab) return;
-
-  const raw = forcedUrl !== null
-    ? String(forcedUrl)
-    : address.value.trim();
-
+  const raw=forcedUrl!==null ? String(forcedUrl) : address.value.trim();
   if(!raw) return;
-
-  const url = normalizeBrowserUrl(raw);
+  const url=normalizeBrowserUrl(raw);
   if(!url) return;
+  address.value=url;
+  if(!fromHistory) browserRecordHistory(url,url,browser); else tab.url=url;
 
-  address.value = url;
-
-  if(!fromHistory){
-    browserRecordHistory(url, url, browser);
-  }else{
-    tab.url = url;
+  if(url==='webos://home'){
+    home.style.display='flex'; frame.style.display='none'; frame.srcdoc=''; frame.src='about:blank';
+    status.textContent='WebOS ホーム'; tab.title='新しいタブ';
+    browserRenderTabs(browser); browserUpdateNavButtons(browser); updateBrowserBookmarkState(browser); return;
   }
 
-  if(url === 'webos://home'){
-    home.style.display = 'flex';
-    frame.style.display = 'none';
-    frame.src = 'about:blank';
-    status.textContent = 'WebOS ホーム';
-    tab.title = '新しいタブ';
-    browserRenderTabs(browser);
-    browserUpdateNavButtons(browser);
-    updateBrowserBookmarkState(browser);
-    return;
-  }
+  home.style.display='none'; frame.style.display='block';
 
-  home.style.display = 'none';
-  frame.style.display = 'block';
-  status.textContent = '読み込み中…';
-  browser.classList.add('loading');
-
-  frame.onload = () => {
-    browser.classList.remove('loading');
-    status.textContent = url;
-
-    if(!fromHistory){
-      tab.title = url;
+  if(url.startsWith('webos://file/')){
+    let path='';
+    try{ path=decodeURIComponent(url.slice('webos://file/'.length)); }catch(e){}
+    const item=files[path];
+    browser.classList.add('loading');
+    frame.removeAttribute('src');
+    frame.onload=()=>{
+      browser.classList.remove('loading');
+      status.textContent='WebOS: '+path;
+      if(!fromHistory) tab.title=path.split('/').pop();
+      browserRenderTabs(browser); browserUpdateNavButtons(browser);
+    };
+    if(item && item.type==='file'){
+      frame.srcdoc=item.content||'';
+      status.textContent='WebOS: '+path;
+    }else{
+      frame.srcdoc='<h2>ファイルが見つかりません</h2><p>'+escapeHtml(path)+'</p>';
+      browser.classList.remove('loading');
+      status.textContent='ファイルが見つかりません';
     }
+    updateBrowserBookmarkState(browser); return;
+  }
 
-    browserRenderTabs(browser);
-    browserUpdateNavButtons(browser);
-  };
-
-  frame.src = url;
-  browserUpdateNavButtons(browser);
-  updateBrowserBookmarkState(browser);
+  frame.srcdoc=''; status.textContent='読み込み中…'; browser.classList.add('loading');
+  frame.onload=()=>{ browser.classList.remove('loading'); status.textContent=url; if(!fromHistory) tab.title=url; browserRenderTabs(browser); browserUpdateNavButtons(browser); };
+  frame.src=url; browserUpdateNavButtons(browser); updateBrowserBookmarkState(browser);
 }
 
 function browserSwitchTab(browser, tabId){
@@ -6975,10 +7152,17 @@ function browserReload(el){
 
   const frame = browser.querySelector('.browser-frame');
   const address = browser.querySelector('.browser-address');
-  if(!frame || !address) return;
+  const tab = browserGetActiveTab(browser);
+
+  if(!frame || !address || !tab) return;
 
   if(address.value === 'webos://home'){
     browserHome(el);
+    return;
+  }
+
+  if(browserGetLocalFilePath(tab.url)){
+    browserRenderLocalFile(browser, tab.url);
     return;
   }
 
@@ -6992,6 +7176,7 @@ function browserReload(el){
     frame.src = frame.src;
   }
 }
+
 
 function browserShortcut(el,url){
   const browser = getBrowserFromElement(el);
