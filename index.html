@@ -102,6 +102,14 @@ background-size:110px 110px,170px 170px}
 .side button{display:block;width:100%;margin:5px 0;padding:7px;text-align:left;background:#fff;border:1px solid #ccc;cursor:pointer}.side button:hover{background:#eaf5ff}.files{flex:1;min-width:0;min-height:0;padding:15px;display:flex;gap:14px;align-content:flex-start;align-items:flex-start;flex-wrap:wrap;overflow-y:auto;overflow-x:hidden}.fileitem{width:86px;height:90px;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;border:1px solid transparent;flex:0 0 86px}.fileitem:hover{background:#eef6ff;border-color:#c8def5}.fileitem .big{font-size:38px}.fileitem span{font-size:12px;text-align:center}
 .notepad{height:100%;display:flex;flex-direction:column}.editorbar{height:42px;background:#f2f2f2;border-bottom:1px solid #ccc;display:flex;align-items:center;gap:4px;padding:5px}.editorbar button{padding:6px 12px;background:#fff;border:1px solid #ccc;cursor:pointer}.editorbar button:hover{background:#e5e5e5}.editor{flex:1;display:flex;min-height:0}.lines{width:42px;background:#f3f3f3;color:#888;text-align:right;padding:9px 7px;line-height:20px;font:14px/20px Consolas,monospace;overflow:hidden}.code{flex:1;border:0;outline:0;resize:none;padding:9px;font:14px/20px Consolas,monospace;color:#111;background:#fff;white-space:pre;overflow:auto}
 .terminal{height:100%;background:#0c0c0c;color:#eee;font:14px Consolas,monospace;padding:12px;overflow:auto}.terminal input{background:transparent;border:0;outline:0;color:#fff;width:80%;font:inherit}
+/* ターミナル内だけ文字選択を許可 */
+.terminal,
+.terminal *,
+.terminal-window,
+.terminal-window * {
+  user-select: auto;
+  -webkit-user-select: auto;
+}
 .settings{
   padding:24px;
   background:#f5f5f5;
@@ -5601,6 +5609,15 @@ function termCommand(c, out, api){
     write(
       'shutdown   システムをシャットダウン'
     );
+    write('apps       アプリ一覧');
+write('run        アプリを起動');
+write('home       ホームフォルダへ移動');
+write('desktop    ホーム画面を表示');
+write('tree       フォルダ構造を表示');
+write('copy       ファイルをコピー');
+write('move       ファイルを移動');
+write('rename     ファイル名を変更');
+write('restoration 設定復元コードを生成');
 
     return;
   }
@@ -6125,7 +6142,587 @@ function termCommand(c, out, api){
 
     return;
   }
+/* =========================
+   apps : アプリ一覧
+========================= */
+if(cmd === 'apps'){
 
+  const appList = [
+    ['explorer',   '📁 ファイル エクスプローラー'],
+    ['editor',     '📝 テキスト エディター'],
+    ['terminal',   '⌨️ ターミナル'],
+    ['calculator', '🧮 電卓'],
+    ['browser',    '🌐 ブラウザ'],
+    ['taskmgr',    '📊 タスク マネージャー'],
+    ['settings',   '⚙️ 設定']
+  ];
+
+  write('利用可能なアプリ:');
+  write('');
+
+  appList.forEach(([id, name]) => {
+    write(`${id.padEnd(12)} ${name}`);
+  });
+
+  write('');
+  write('使い方: run <アプリID>');
+
+  return;
+}
+
+
+/* =========================
+   run : アプリ起動
+========================= */
+if(cmd === 'run'){
+
+  const app = args[0];
+
+  if(!app){
+    write('使い方: run <アプリID>');
+    write('例: run explorer');
+    return;
+  }
+
+  const aliases = {
+    taskmanager: 'taskmgr',
+    taskmanger:  'taskmgr',
+    calc:        'calculator'
+  };
+
+  const appId = aliases[app.toLowerCase()] || app.toLowerCase();
+
+  const availableApps = [
+    'explorer',
+    'editor',
+    'terminal',
+    'calculator',
+    'browser',
+    'taskmgr',
+    'settings'
+  ];
+
+  if(!availableApps.includes(appId)){
+    write(`アプリ '${app}' が見つかりません。`);
+    write('apps で利用可能なアプリを確認できます。');
+    return;
+  }
+
+  if(typeof OS !== 'undefined' &&
+     typeof OS.openApp === 'function'){
+
+    OS.openApp(appId);
+    write(`${appId} を起動しました。`);
+
+  }else if(typeof openApp === 'function'){
+
+    openApp(appId);
+    write(`${appId} を起動しました。`);
+
+  }else{
+
+    write('アプリ起動機能が見つかりません。');
+
+  }
+
+  return;
+}
+
+
+/* =========================
+   home : ホームフォルダへ
+========================= */
+if(cmd === 'home'){
+
+  setPath('C:\\WebOS');
+
+  write('C:\\WebOS');
+
+  return;
+}
+
+
+/* =========================
+   desktop : ホーム画面
+========================= */
+if(cmd === 'desktop'){
+
+  // ターミナルを最小化できる場合
+  const termWindow =
+    document.querySelector(
+      '.window.active, .window[data-app="terminal"]'
+    );
+
+  if(termWindow && typeof minimizeWindow === 'function'){
+    try{
+      minimizeWindow(termWindow.id);
+    }catch(e){}
+  }
+
+  write('ホーム画面を表示しました。');
+
+  return;
+}
+
+
+/* =========================
+   tree : フォルダ構造
+========================= */
+if(cmd === 'tree'){
+
+  const currentPath = getPath()
+    .replace(/^C:\\WebOS\\?/, '')
+    .replace(/\\/g, '/')
+    .replace(/^\/+|\/+$/g, '');
+
+  const prefix =
+    currentPath ? currentPath + '/' : '';
+
+  write('.');
+  
+  const paths = Object.keys(files)
+    .filter(path => {
+      const normalized = normalizePath(path);
+
+      return !prefix ||
+             normalized.startsWith(prefix);
+    })
+    .sort((a, b) => a.localeCompare(b, 'ja'));
+
+  if(!paths.length){
+    write('└── (空)');
+    return;
+  }
+
+  paths.forEach((path, index) => {
+
+    const normalized = normalizePath(path);
+
+    let relative = normalized;
+
+    if(prefix && normalized.startsWith(prefix)){
+      relative = normalized.slice(prefix.length);
+    }
+
+    if(!relative) return;
+
+    const depth =
+      relative.split('/').length - 1;
+
+    const name =
+      relative.split('/').pop();
+
+    const indent =
+      '│   '.repeat(depth);
+
+    const isLast =
+      index === paths.length - 1;
+
+    const branch =
+      isLast ? '└── ' : '├── ';
+
+    const icon =
+      files[path]?.type === 'folder'
+        ? '📁 '
+        : '📄 ';
+
+    write(indent + branch + icon + name);
+  });
+
+  return;
+}
+
+
+/* =========================
+   copy : ファイルコピー
+   copy 元 先
+========================= */
+if(cmd === 'copy'){
+
+  if(args.length < 2){
+    write('使い方: copy <元> <コピー先>');
+    write('例: copy hello.txt backup.txt');
+    return;
+  }
+
+  const source = normalizePath(args[0]);
+  const destination = normalizePath(args[1]);
+
+  if(!files[source]){
+    write('コピー元のファイルが見つかりません。');
+    return;
+  }
+
+  if(files[source].type === 'folder'){
+    write('フォルダのコピーには現在対応していません。');
+    return;
+  }
+
+  if(files[destination]){
+    write('コピー先に同じ名前のファイルがあります。');
+    return;
+  }
+
+  files[destination] = {
+    ...files[source],
+    content: files[source].content || ''
+  };
+
+  if(typeof saveFiles === 'function'){
+    saveFiles();
+  }else{
+    localStorage.setItem(
+      'webos10_files_v2',
+      JSON.stringify(files)
+    );
+  }
+
+  write(`${source} を ${destination} にコピーしました。`);
+
+  if(typeof renderExplorerFolderTree === 'function'){
+    renderExplorerFolderTree();
+  }
+
+  return;
+}
+
+
+/* =========================
+   move : ファイル移動
+   move 元 先
+========================= */
+if(cmd === 'move'){
+
+  if(args.length < 2){
+    write('使い方: move <元> <移動先>');
+    write('例: move hello.txt test/hello.txt');
+    return;
+  }
+
+  const source = normalizePath(args[0]);
+  const destination = normalizePath(args[1]);
+
+  if(!files[source]){
+    write('移動元が見つかりません。');
+    return;
+  }
+
+  if(files[destination]){
+    write('移動先に同じ名前の項目があります。');
+    return;
+  }
+
+  const sourceItem = files[source];
+
+  // 元をコピー
+  files[destination] = sourceItem;
+
+  // 元を削除
+  delete files[source];
+
+  // フォルダなら中身のパスも移動
+  if(sourceItem.type === 'folder'){
+
+    const children = Object.keys(files)
+      .filter(path =>
+        path.startsWith(source + '/')
+      );
+
+    children.forEach(oldPath => {
+
+      const newPath =
+        destination +
+        oldPath.slice(source.length);
+
+      files[newPath] = files[oldPath];
+      delete files[oldPath];
+
+    });
+  }
+
+  // ホーム画面のショートカットのパスも更新
+  if(typeof desktopItems !== 'undefined'){
+
+    desktopItems.forEach(item => {
+
+      if(item.path === source){
+
+        item.path = destination;
+        item.name =
+          destination.split('/').pop();
+
+      }else if(
+        sourceItem.type === 'folder' &&
+        item.path.startsWith(source + '/')
+      ){
+
+        item.path =
+          destination +
+          item.path.slice(source.length);
+
+      }
+
+    });
+
+    if(typeof saveDesktopItems === 'function'){
+      saveDesktopItems();
+    }
+  }
+
+  if(typeof saveFiles === 'function'){
+    saveFiles();
+  }else{
+    localStorage.setItem(
+      'webos10_files_v2',
+      JSON.stringify(files)
+    );
+  }
+
+  if(typeof renderDesktopItems === 'function'){
+    renderDesktopItems();
+  }
+
+  if(typeof renderExplorerFolderTree === 'function'){
+    renderExplorerFolderTree();
+  }
+
+  write(`${source} を ${destination} に移動しました。`);
+
+  return;
+}
+
+
+/* =========================
+   rename : 名前変更
+   rename 元 新しい名前
+========================= */
+if(cmd === 'rename'){
+
+  if(args.length < 2){
+    write('使い方: rename <元> <新しい名前>');
+    write('例: rename hello.txt hello2.txt');
+    return;
+  }
+
+  const source = normalizePath(args[0]);
+  const newName = args[1];
+
+  if(!files[source]){
+    write('ファイルまたはフォルダが見つかりません。');
+    return;
+  }
+
+  if(!newName ||
+     newName.includes('/') ||
+     newName.includes('\\')){
+
+    write('新しい名前が正しくありません。');
+    return;
+  }
+
+  const parent =
+    source.includes('/')
+      ? source.substring(
+          0,
+          source.lastIndexOf('/')
+        )
+      : '';
+
+  const destination =
+    parent
+      ? parent + '/' + newName
+      : newName;
+
+  if(files[destination]){
+    write('同じ名前の項目がすでに存在します。');
+    return;
+  }
+
+  const sourceItem = files[source];
+
+  files[destination] = sourceItem;
+  delete files[source];
+
+  // フォルダの場合、中身も名前変更
+  if(sourceItem.type === 'folder'){
+
+    const children = Object.keys(files)
+      .filter(path =>
+        path.startsWith(source + '/')
+      );
+
+    children.forEach(oldPath => {
+
+      const newPath =
+        destination +
+        oldPath.slice(source.length);
+
+      files[newPath] = files[oldPath];
+      delete files[oldPath];
+
+    });
+  }
+
+  // ホーム画面ショートカットも更新
+  if(typeof desktopItems !== 'undefined'){
+
+    desktopItems.forEach(item => {
+
+      if(item.path === source){
+
+        item.path = destination;
+        item.name = newName;
+
+      }else if(
+        sourceItem.type === 'folder' &&
+        item.path.startsWith(source + '/')
+      ){
+
+        item.path =
+          destination +
+          item.path.slice(source.length);
+
+      }
+
+    });
+
+    if(typeof saveDesktopItems === 'function'){
+      saveDesktopItems();
+    }
+  }
+
+  if(typeof saveFiles === 'function'){
+    saveFiles();
+  }else{
+    localStorage.setItem(
+      'webos10_files_v2',
+      JSON.stringify(files)
+    );
+  }
+
+  if(typeof renderDesktopItems === 'function'){
+    renderDesktopItems();
+  }
+
+  if(typeof renderExplorerFolderTree === 'function'){
+    renderExplorerFolderTree();
+  }
+
+  write(`${source} の名前を ${destination} に変更しました。`);
+
+  return;
+}
+
+
+/* =========================
+   restoration
+   設定復元コードを生成・コピー
+========================= */
+if(cmd === 'restoration'){
+
+  const backup = {
+    config: JSON.parse(
+      localStorage.getItem('webos10_config_v1') || 'null'
+    ),
+
+    desktopPositions: JSON.parse(
+      localStorage.getItem(
+        'webos10_desktop_positions_v1'
+      ) || '{}'
+    ),
+
+    desktopItems: JSON.parse(
+      localStorage.getItem(
+        'webos10_desktop_items_v1'
+      ) || '[]'
+    ),
+
+    desktopTrash: JSON.parse(
+      localStorage.getItem(
+        'webos10_desktop_trash_v1'
+      ) || '[]'
+    )
+  };
+
+  /*
+   * 復元コードを生成
+   */
+  const restorationCode =
+`// WebOS Restoration Code
+const webosRestorationData = ${JSON.stringify(
+  backup,
+  null,
+  2
+)};
+
+localStorage.setItem(
+  'webos10_config_v1',
+  JSON.stringify(webosRestorationData.config)
+);
+
+localStorage.setItem(
+  'webos10_desktop_positions_v1',
+  JSON.stringify(webosRestorationData.desktopPositions)
+);
+
+localStorage.setItem(
+  'webos10_desktop_items_v1',
+  JSON.stringify(webosRestorationData.desktopItems)
+);
+
+localStorage.setItem(
+  'webos10_desktop_trash_v1',
+  JSON.stringify(webosRestorationData.desktopTrash)
+);
+
+location.reload();`;
+
+  /*
+   * ターミナルに表示
+   */
+  write('');
+  write('========================================');
+  write('       WebOS 復元コード');
+  write('========================================');
+  write('');
+  write(restorationCode);
+  write('');
+  write('========================================');
+
+  /*
+   * 自動コピー
+   */
+  if(
+    navigator.clipboard &&
+    navigator.clipboard.writeText
+  ){
+
+    navigator.clipboard
+      .writeText(restorationCode)
+      .then(() => {
+
+        write('');
+        write('✓ 復元コードをクリップボードにコピーしました。');
+
+      })
+      .catch(() => {
+
+        write('');
+        write('⚠ 自動コピーに失敗しました。');
+        write('表示されたコードを手動でコピーしてください。');
+
+      });
+
+  }else{
+
+    write('');
+    write('⚠ この環境では自動コピーできません。');
+    write('表示されたコードを手動でコピーしてください。');
+
+  }
+
+  return;
+}
 
   /* =========================
      lock
@@ -7946,6 +8543,35 @@ function openSettings(){
   >
     🗑️ ゴミ箱・ホーム画面をリセット
   </button>
+  <div style="margin-top:12px;">
+  <div style="font-size:13px;margin-bottom:5px;">
+    🔄 設定復元コード
+  </div>
+
+  <textarea
+    id="restorationCodeInput"
+    placeholder="ここに設定復元コードを貼り付けてください"
+    style="
+      width:100%;
+      height:120px;
+      box-sizing:border-box;
+      resize:vertical;
+      padding:8px;
+      font-family:monospace;
+      font-size:12px;
+    "
+  ></textarea>
+
+  <button
+    onclick="restoreFromCode()"
+    style="
+      padding:7px 14px;
+      margin-top:6px;
+    "
+  >
+    🔄 復元する
+  </button>
+</div>
 </section>
 
 
@@ -7977,6 +8603,104 @@ function openSettings(){
       height:650
     }
   );
+}
+function restoreFromCode(){
+
+  const input =
+    document.getElementById('restorationCodeInput');
+
+  if(!input){
+    toast('復元コード入力欄が見つかりません');
+    return;
+  }
+
+  const code = input.value.trim();
+
+  if(!code){
+    toast('復元コードを入力してください');
+    return;
+  }
+
+  try{
+
+    /*
+     * restoration コマンドで生成された
+     * webosRestorationData を取り出す
+     */
+    const match = code.match(
+      /const\s+webosRestorationData\s*=\s*([\s\S]*?);\s*(?:localStorage|$)/
+    );
+
+    if(!match){
+      throw new Error(
+        '復元コードの形式が正しくありません'
+      );
+    }
+
+    const data =
+      JSON.parse(match[1]);
+
+    if(!data || typeof data !== 'object'){
+      throw new Error(
+        '復元データがありません'
+      );
+    }
+
+    /*
+     * 設定
+     */
+    if(data.config !== undefined){
+      localStorage.setItem(
+        'webos10_config_v1',
+        JSON.stringify(data.config)
+      );
+    }
+
+    /*
+     * アプリの位置
+     */
+    if(data.desktopPositions !== undefined){
+      localStorage.setItem(
+        'webos10_desktop_positions_v1',
+        JSON.stringify(data.desktopPositions)
+      );
+    }
+
+    /*
+     * ホーム画面のファイル
+     */
+    if(data.desktopItems !== undefined){
+      localStorage.setItem(
+        'webos10_desktop_items_v1',
+        JSON.stringify(data.desktopItems)
+      );
+    }
+
+    /*
+     * ゴミ箱
+     */
+    if(data.desktopTrash !== undefined){
+      localStorage.setItem(
+        'webos10_desktop_trash_v1',
+        JSON.stringify(data.desktopTrash)
+      );
+    }
+
+    toast('設定を復元しました');
+
+    setTimeout(() => {
+      location.reload();
+    }, 700);
+
+  }catch(err){
+
+    console.error(err);
+
+    toast(
+      '復元に失敗しました: ' +
+      err.message
+    );
+  }
 }
 function settingsToggleQuick(btn,name){
 
