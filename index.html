@@ -3924,19 +3924,194 @@ function openApp(app){
 }
 
 function openExplorer(){
- const html=`<div class="explorer"><div class="side">
-  <div class="sel" onclick="goHomeFolder()">🏠 ホーム</div><div>💻 PC</div><div>📄 ドキュメント</div><div>⬇️ ダウンロード</div>
-  <hr>
-  <button onclick="newFile()">＋ New File</button>
-<button onclick="openFileDialog()">📂 Open File</button>
-<button onclick="renameSelectedFile()">✏️ Rename</button>
-<button onclick="deleteSelectedFile()">🗑️ Delete</button>
-<button onclick="newFolder()">📁 New Folder</button>
-<button onclick="goBackFolder()">⬅️ Back</button>
-  <div id="explorerSelected" style="font-size:11px;color:#666;padding:8px">選択なし</div>
-  </div><div class="files" id="fileGrid"></div></div>`;
- const id=makeWindow('ファイル エクスプローラー',html,'📁',{width:760,height:500});
- renderFiles(id);return id;
+
+  const html = `
+    <div class="explorer">
+
+      <div class="side">
+
+        <div
+          class="sel"
+          onclick="goHomeFolder()"
+        >
+          🏠 ホーム
+        </div>
+
+        <div>
+          💻 PC
+        </div>
+
+        <hr>
+
+        <div
+          style="
+            font-size:12px;
+            font-weight:bold;
+            padding:6px 8px;
+            color:#555;
+          "
+        >
+          📁 フォルダー
+        </div>
+
+        <div id="explorerFolderTree"></div>
+
+        <hr>
+
+        <button onclick="newFile()">
+          ＋ New File
+        </button>
+
+        <button onclick="openFileDialog()">
+          📂 Open File
+        </button>
+
+        <button onclick="renameSelectedFile()">
+          ✏️ Rename
+        </button>
+
+        <button onclick="deleteSelectedFile()">
+          🗑️ Delete
+        </button>
+
+        <button onclick="newFolder()">
+          📁 New Folder
+        </button>
+
+        <button onclick="goBackFolder()">
+          ⬅️ Back
+        </button>
+
+        <div
+          id="explorerSelected"
+          style="
+            font-size:11px;
+            color:#666;
+            padding:8px;
+          "
+        >
+          選択なし
+        </div>
+
+      </div>
+
+      <div
+        class="files"
+        id="fileGrid"
+      ></div>
+
+    </div>
+  `;
+
+  const id = makeWindow(
+    'ファイル エクスプローラー',
+    html,
+    '📁',
+    {
+      width:850,
+      height:600
+    }
+  );
+
+  renderExplorerFolderTree();
+  renderFiles(id);
+
+  return id;
+}
+function renderExplorerFolderTree(){
+
+  const tree =
+    document.getElementById(
+      'explorerFolderTree'
+    );
+
+  if(!tree) return;
+
+  tree.innerHTML = '';
+
+  // フォルダだけ取得
+  const folders =
+    Object.keys(files)
+      .filter(path =>
+        files[path] &&
+        files[path].type === 'folder'
+      )
+      .sort((a,b) =>
+        a.localeCompare(b, 'ja')
+      );
+
+  if(!folders.length){
+
+    tree.innerHTML = `
+      <div
+        style="
+          padding:6px 10px;
+          color:#888;
+          font-size:12px;
+        "
+      >
+        フォルダーがありません
+      </div>
+    `;
+
+    return;
+  }
+
+  folders.forEach(path => {
+
+    const name =
+      path.split('/').pop();
+
+    const item =
+      document.createElement('div');
+
+    item.className =
+      'explorer-folder-item';
+
+    item.dataset.path = path;
+
+    item.style.cssText = `
+      padding:7px 10px;
+      cursor:pointer;
+      font-size:13px;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+      border-radius:4px;
+    `;
+
+    item.innerHTML =
+      `📁 ${escapeHtml(name)}`;
+
+    item.title = path;
+
+    item.onclick = () => {
+
+      currentFolder = path;
+      selectedExplorerFile = null;
+
+      const ex =
+        getExplorerWindow();
+
+      if(ex){
+        renderFiles(ex.id);
+      }
+
+      // 選択状態を更新
+      document
+        .querySelectorAll(
+          '.explorer-folder-item'
+        )
+        .forEach(el => {
+          el.style.background = '';
+        });
+
+      item.style.background =
+        'rgba(0,120,215,.15)';
+    };
+
+    tree.appendChild(item);
+  });
 }
 let selectedExplorerFile = null;
 
@@ -4337,10 +4512,10 @@ console.log(hello("WebOS"));
     getExplorerWindow();
 
   if(ex){
+  renderFiles(ex.id);
+}
 
-    renderFiles(ex.id);
-
-  }
+renderExplorerFolderTree();
 
   openFile(path);
 }
