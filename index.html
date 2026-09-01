@@ -2653,6 +2653,7 @@ body:not(.webos-dark) #quickPanel .quick-panel-btn.active + .quick-setting-arrow
 
 /* 閉じるボタン：カーソルを合わせると赤くする */
 .controls .close:hover{background:#e81123 !important;color:#fff !important;}
+
 </style>
 
 <style id="quick-arrow-color-fix">
@@ -2862,6 +2863,69 @@ html:not(.webos-dark) #startMenu .start-left button:hover, body:not(.webos-dark)
 .titlebar .controls button.close:active{
   background:#c50f1f !important;
   color:#fff !important;
+}
+/* =========================================
+   入力欄：ライトモード固定・枠を強制表示
+   ========================================= */
+
+input,
+textarea,
+select,
+input[type="text"],
+input[type="search"],
+input[type="number"],
+input[type="password"],
+input[type="email"],
+input[type="url"] {
+  background-color: #ffffff !important;
+  color: #111111 !important;
+
+  border: 1px solid #707070 !important;
+  border-radius: 4px !important;
+
+  box-shadow:
+    0 0 0 1px #707070 !important;
+
+  opacity: 1 !important;
+  outline: none !important;
+}
+
+/* フォーカス時 */
+input:focus,
+textarea:focus,
+select:focus {
+  background-color: #ffffff !important;
+  color: #111111 !important;
+
+  border: 1px solid #0067c0 !important;
+
+  box-shadow:
+    0 0 0 1px #0067c0 !important;
+
+  outline: none !important;
+}
+
+/* プレースホルダー */
+input::placeholder,
+textarea::placeholder {
+  color: #666666 !important;
+  opacity: 1 !important;
+}
+
+/* ダークモードでも強制的に白 */
+.dark input,
+.dark textarea,
+.dark select,
+.dark input[type="text"],
+.dark input[type="search"],
+.dark input[type="number"],
+.dark input[type="password"],
+.dark input[type="email"],
+.dark input[type="url"] {
+  background-color: #ffffff !important;
+  color: #111111 !important;
+  border: 1px solid #707070 !important;
+  box-shadow: 0 0 0 1px #707070 !important;
 }
 </style>
 </head>
