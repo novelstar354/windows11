@@ -8575,8 +8575,7 @@ function renderWifiDetail(){
       <div class="quick-network-main"><b>${quickState.wifi ? 'Wi-Fi をオフにする' : 'Wi-Fi をオンにする'}</b><small>クイック設定から変更</small></div>
     </button>
 
-    <div class="quick-detail-note">※ これはWebOS内の仮想ネットワーク設定です。実際の端末のWi-Fi接続は変更しません。</div>
-  `;
+    `;
 }
 
 function connectQuickWifi(name){
@@ -8639,7 +8638,7 @@ function renderBluetoothDetail(){
       <div class="quick-network-main"><b>${isOn ? 'Bluetooth をオフにする' : 'Bluetooth をオンにする'}</b><small>クイック設定から変更</small></div>
     </button>
 
-    <div class="quick-detail-note">※ これはWebOS内の仮想Bluetooth設定です。実際のBluetooth機器には接続しません。</div>
+    
   `;
 }
 
@@ -11017,9 +11016,7 @@ function renderSettingsWifiDetail(root){
       <div class="settings-network-empty">Wi-Fi はオフです</div>
     `}
 
-    <div class="settings-network-note">
-      WebOS内の仮想Wi-Fi設定です。実際の端末のWi-Fiは変更しません。
-    </div>
+    
   `;
 }
 
@@ -11054,9 +11051,7 @@ function renderSettingsBluetoothDetail(root){
       <div class="settings-network-empty">Bluetooth はオフです</div>
     `}
 
-    <div class="settings-network-note">
-      WebOS内の仮想Bluetooth設定です。実際のBluetooth機器には接続しません。
-    </div>
+    
   `;
 }
 function changePin(){const v=document.getElementById('newPin')?.value;if(!v||v.length<4)return toast('4文字以上にしてください');config.pin=v;saveConfig();toast('PINを変更しました')}
