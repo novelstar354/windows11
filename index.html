@@ -2927,6 +2927,66 @@ textarea::placeholder {
   border: 1px solid #707070 !important;
   box-shadow: 0 0 0 1px #707070 !important;
 }
+/* =========================================
+   ブラウザの入力欄だけ枠を非表示
+   ========================================= */
+
+.browser input,
+.browser textarea,
+.browser select,
+.browser-page input,
+.browser-page textarea,
+.browser-page select,
+.browser-frame input,
+.browser-frame textarea,
+.browser-frame select {
+  border: none !important;
+  box-shadow: none !important;
+  outline: none !important;
+}
+
+/* ブラウザのアドレスバーも枠なし */
+.browser-address,
+.browser-url,
+.browser input[type="text"],
+.browser input[type="search"] {
+  border: none !important;
+  box-shadow: none !important;
+}
+/* =========================================
+   音量・明るさスライダーは枠なし
+   ========================================= */
+
+input[type="range"] {
+  border: none !important;
+  outline: none !important;
+  box-shadow: none !important;
+  background: transparent !important;
+}
+
+/* スライダー本体 */
+input[type="range"]:focus {
+  border: none !important;
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+/* WebKit系 */
+input[type="range"]::-webkit-slider-runnable-track {
+  border: none !important;
+  box-shadow: none !important;
+}
+
+/* Firefox */
+input[type="range"]::-moz-range-track {
+  border: none !important;
+  box-shadow: none !important;
+}
+
+input[type="range"]::-moz-range-progress {
+  border: none !important;
+  box-shadow: none !important;
+}
 </style>
 </head>
 <body>
