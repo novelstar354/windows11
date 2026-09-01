@@ -10974,16 +10974,45 @@ function openSettingsNetworkDetail(type, button){
   const root = button?.closest('.settings');
   if(!root) return;
 
-  const detail = root.querySelector(`[data-settings-network-detail="${type}"]`);
+  const detail = root.querySelector(
+    `[data-settings-network-detail="${type}"]`
+  );
+
   if(!detail) return;
 
+  // もう片方のパネルを閉じる
+  const otherType = type === 'wifi'
+    ? 'bluetooth'
+    : 'wifi';
+
+  const otherDetail = root.querySelector(
+    `[data-settings-network-detail="${otherType}"]`
+  );
+
+  if(otherDetail){
+    otherDetail.classList.remove('show');
+    otherDetail.innerHTML = '';
+  }
+
+  // 同じパネルをもう一度押したら閉じる
+  if(detail.classList.contains('show')){
+    detail.classList.remove('show');
+    detail.innerHTML = '';
+    return;
+  }
+
+  // Wi-Fi
   if(type === 'wifi'){
     if(quickState.air){
       toast('機内モードがオンです');
       return;
     }
+
     renderSettingsWifiDetail(root);
-  }else{
+  }
+
+  // Bluetooth
+  else{
     renderSettingsBluetoothDetail(root);
   }
 
@@ -12088,3 +12117,4 @@ document.addEventListener('keyup', function(e){
 </body>
 </html>
 <script>applyQuickDarkMode();</script>
+
