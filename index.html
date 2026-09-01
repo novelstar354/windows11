@@ -1086,19 +1086,19 @@ background-size:110px 110px,170px 170px}
 }
 .quick-setting-wrap .quick-panel-btn{
   width:100%;
-  padding-right:48px !important;
+  padding-right:40px !important;
 }
 .quick-setting-arrow{
   position:absolute !important;
   right:7px !important;
   top:50% !important;
   transform:translateY(-50%) !important;
-  width:34px !important;
-  min-width:34px !important;
-  max-width:34px !important;
-  height:34px !important;
-  min-height:34px !important;
-  max-height:34px !important;
+  width:22px !important;
+  min-width:22px !important;
+  max-width:22px !important;
+  height:22px !important;
+  min-height:22px !important;
+  max-height:22px !important;
   padding:0 !important;
   margin:0 !important;
   box-sizing:border-box !important;
@@ -2629,7 +2629,7 @@ body:not(.webos-dark) #quickPanel .quick-panel-btn.active + .quick-setting-arrow
 /* クイック設定の→ボタンを周囲のタイルと同じ色にする */
 #quickPanel .quick-panel-btn.has-detail {
   position: relative !important;
-  padding-right: 50px !important;
+  padding-right: 42px !important;
 }
 #quickPanel .quick-panel-btn.has-detail::after {
   display: none !important;
@@ -2641,12 +2641,12 @@ body:not(.webos-dark) #quickPanel .quick-panel-btn.active + .quick-setting-arrow
   right: 8px !important;
   top: 50% !important;
   transform: translateY(-50%) !important;
-  width: 34px !important;
-  height: 34px !important;
-  min-width: 34px !important;
-  max-width: 34px !important;
-  min-height: 34px !important;
-  max-height: 34px !important;
+  width: 22px !important;
+  height: 22px !important;
+  min-width: 22px !important;
+  max-width: 22px !important;
+  min-height: 22px !important;
+  max-height: 22px !important;
   margin: 0 !important;
   padding: 0 !important;
   box-sizing: border-box !important;
@@ -2730,6 +2730,85 @@ html.webos-dark .trash-box,
 html.webos-dark .trash-head,
 html.webos-dark .trash-item{background:#1f1f1f !important;color:#eee !important;border-color:#444 !important}
 html.webos-dark .trash-head button{color:#eee !important}
+</style>
+
+<style id="white-input-window-edge-fix">
+/* 入力欄とウィンドウの端は、テーマに関係なく白 */
+.window {
+  border-color:#fff !important;
+}
+input,
+textarea,
+select {
+  background:#fff !important;
+  border-color:#fff !important;
+  color:#202020 !important;
+}
+html.webos-dark .window,
+body.webos-dark .window {
+  border-color:#fff !important;
+}
+html.webos-dark input,
+html.webos-dark textarea,
+html.webos-dark select {
+  background:#fff !important;
+  border-color:#fff !important;
+  color:#202020 !important;
+}
+html:not(.webos-dark) .window,
+body:not(.webos-dark) .window {
+  border-color:#fff !important;
+}
+html:not(.webos-dark) input,
+html:not(.webos-dark) textarea,
+html:not(.webos-dark) select {
+  background:#fff !important;
+  border-color:#fff !important;
+  color:#202020 !important;
+}
+</style>
+<style id="theme-scope-fix">
+/* テーマ範囲を限定：ダークモードでも黒くするのはタスクバー・クイック設定・スタートだけ */
+html.webos-dark, body.webos-dark{background:#0879c9 !important;color:#111 !important;}
+html.webos-dark #desktop, body.webos-dark #desktop{background:linear-gradient(135deg,#0879c9,#1268b5 55%,#07518f) !important;}
+
+/* ダークモードでも通常ウィンドウはライト表示 */
+html.webos-dark .window, body.webos-dark .window{background:#f4f4f4 !important;color:#111 !important;border-color:#fff !important;}
+html.webos-dark .titlebar, body.webos-dark .titlebar{background:#fff !important;color:#333 !important;border-bottom-color:#ddd !important;}
+html.webos-dark .titlebar .title, body.webos-dark .titlebar .title{color:#333 !important;}
+html.webos-dark .controls button, body.webos-dark .controls button{color:#333 !important;}
+html.webos-dark .controls button:hover, body.webos-dark .controls button:hover{background:#e5e5e5 !important;color:#333 !important;}
+
+/* 設定・ファイル・エディタ等もライト表示 */
+html.webos-dark .settings, body.webos-dark .settings{background:#fff !important;color:#202020 !important;}
+html.webos-dark .settings h2, html.webos-dark .settings h3, html.webos-dark .settings label{color:#202020 !important;}
+html.webos-dark .settings section, body.webos-dark .settings section{background:#fff !important;color:#202020 !important;border-color:#d5d5d5 !important;}
+html.webos-dark .settings button:not(.settings-quick-arrow), body.webos-dark .settings button:not(.settings-quick-arrow){background:#f5f5f5 !important;color:#202020 !important;border-color:#d5d5d5 !important;}
+html.webos-dark .explorer, body.webos-dark .explorer{background:#fff !important;color:#202020 !important;}
+html.webos-dark .side, body.webos-dark .side{background:#f7f7f7 !important;border-color:#ddd !important;}
+html.webos-dark .side div, html.webos-dark .side button, body.webos-dark .side div, body.webos-dark .side button{color:#202020 !important;background:#fff !important;border-color:#ddd !important;}
+html.webos-dark .files, body.webos-dark .files{background:#fff !important;}
+html.webos-dark .fileitem, body.webos-dark .fileitem{color:#202020 !important;}
+html.webos-dark .notepad, body.webos-dark .notepad{background:#fff !important;color:#202020 !important;}
+html.webos-dark .editorbar, body.webos-dark .editorbar{background:#f5f5f5 !important;border-color:#ddd !important;}
+html.webos-dark .editorbar button, body.webos-dark .editorbar button{background:#fff !important;color:#202020 !important;border-color:#ddd !important;}
+html.webos-dark .code, body.webos-dark .code{background:#fff !important;color:#202020 !important;}
+html.webos-dark .lines, body.webos-dark .lines{background:#f5f5f5 !important;color:#777 !important;}
+html.webos-dark .trash-box, html.webos-dark .trash-head, html.webos-dark .trash-item, body.webos-dark .trash-box, body.webos-dark .trash-head, body.webos-dark .trash-item{background:#fff !important;color:#202020 !important;border-color:#d5d5d5 !important;}
+html.webos-dark .trash-head button, body.webos-dark .trash-head button{color:#202020 !important;}
+
+/* 入力欄は常に白 */
+html.webos-dark input, html.webos-dark textarea, html.webos-dark select, body.webos-dark input, body.webos-dark textarea, body.webos-dark select{background:#fff !important;color:#202020 !important;border-color:#fff !important;}
+
+/* スタート：ダークは暗く、ライトは白 */
+html.webos-dark #startMenu{background:rgba(30,30,30,.98) !important;color:#fff !important;}
+html.webos-dark #startMenu .start-left{background:#242424 !important;}
+html.webos-dark #startMenu .start-left button, html.webos-dark #startMenu .app-tile{color:#ddd !important;}
+html.webos-dark #startMenu .start-left button:hover, html.webos-dark #startMenu .app-tile:hover{background:#3b3b3b !important;}
+html:not(.webos-dark) #startMenu, body:not(.webos-dark) #startMenu{background:#fff !important;color:#202020 !important;border:1px solid #ddd !important;}
+html:not(.webos-dark) #startMenu .start-left, body:not(.webos-dark) #startMenu .start-left{background:#f1f1f1 !important;}
+html:not(.webos-dark) #startMenu .start-left button, body:not(.webos-dark) #startMenu .start-left button, html:not(.webos-dark) #startMenu .app-tile, body:not(.webos-dark) #startMenu .app-tile{color:#202020 !important;}
+html:not(.webos-dark) #startMenu .start-left button:hover, body:not(.webos-dark) #startMenu .start-left button:hover, html:not(.webos-dark) #startMenu .app-tile:hover, body:not(.webos-dark) #startMenu .app-tile:hover{background:#e5e5e5 !important;}
 </style>
 </head>
 <body>
@@ -2853,10 +2932,10 @@ html.webos-dark .trash-head button{color:#eee !important}
     <span id="quickBatteryInfo">🔋 100%</span>
   </div>
 
-  <!--<div class="quick-actions">
+  <div class="quick-actions">
     <button onclick="quickLock()">🔒 ロック</button>
     <button onclick="openApp('settings');closeQuickSettings()">⚙️ 設定</button>
-  </div>-->
+  </div>
 </div>
   <div id="startMenu">
 
