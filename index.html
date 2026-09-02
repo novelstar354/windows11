@@ -2654,6 +2654,20 @@ body:not(.webos-dark) #quickPanel .quick-panel-btn.active + .quick-setting-arrow
 /* 閉じるボタン：カーソルを合わせると赤くする */
 .controls .close:hover{background:#e81123 !important;color:#fff !important;}
 
+
+/* 仮想デスクトップ一覧 */
+#desktopPicker{position:fixed;left:12px;bottom:62px;display:none;gap:10px;padding:12px;border:1px solid rgba(255,255,255,.16);border-radius:12px;background:rgba(32,32,32,.94);box-shadow:0 12px 35px rgba(0,0,0,.35);z-index:99999}
+#desktopPicker.show{display:flex}
+#desktopPickerBtn{border:none !important;outline:none !important;box-shadow:none !important;background:transparent !important;color:inherit !important;padding:0 12px !important;margin:0 !important;border-radius:0 !important;}
+#desktopPickerBtn:hover{border:none !important;outline:none !important;box-shadow:none !important;background:rgba(255,255,255,.08) !important;}
+.desktop-preview{width:190px;padding:8px;border:1px solid rgba(255,255,255,.16);border-radius:10px;background:rgba(255,255,255,.06);cursor:pointer;text-align:left;color:inherit}
+.desktop-preview:hover{background:rgba(255,255,255,.12);border-color:rgba(255,255,255,.28)}
+.desktop-preview.active{outline:2px solid #4da3ff}
+.desktop-preview-screen{height:105px;border-radius:7px;background:linear-gradient(135deg,#243b55,#141e30);position:relative;overflow:hidden;margin-bottom:7px}
+.desktop-preview-screen.empty{background:linear-gradient(135deg,#1f2937,#111827)}
+.desktop-preview-screen:after{content:'';position:absolute;left:0;right:0;bottom:0;height:9px;background:rgba(0,0,0,.38)}
+.desktop-preview-title{font-size:13px;font-weight:600}
+.desktop-preview-sub{font-size:11px;opacity:.65;margin-top:2px}
 </style>
 
 <style id="quick-arrow-color-fix">
@@ -2993,14 +3007,14 @@ input[type="range"]::-moz-range-progress {
 <div id="desktop">
   <div class="wallpaper"></div>
   <div id="desktopIcons">
-    <div id="trashIcon" class="icon" data-trash="true" title="ゴミ箱" onclick="openTrash()"><div class="ico">🗑️</div><span>ゴミ箱</span></div>
-    <div class="icon" data-app="explorer" ondblclick="openApp('explorer')"><div class="ico">📁</div><span>ファイル</span></div>
-    <div class="icon" data-app="editor" ondblclick="openApp('editor')"><div class="ico">📝</div><span>テキスト エディター</span></div>
-    <div class="icon" data-app="terminal" ondblclick="openApp('terminal')"><div class="ico">⌨️</div><span>ターミナル</span></div>
-    <div class="icon" data-app="calculator" ondblclick="openApp('calculator')"><div class="ico">🧮</div><span>電卓</span></div>
-    <div class="icon" data-app="browser" ondblclick="openApp('browser')"><div class="ico">🌐</div><span>ブラウザ</span></div>
-    <div class="icon" data-app="taskmgr" ondblclick="openApp('taskmgr')"><div class="ico">📊</div><span>タスク マネージャー</span></div>
-    <div class="icon" data-app="settings" ondblclick="openApp('settings')"><div class="ico">⚙️</div><span>設定</span></div>
+    <div id="trashIcon" class="icon" data-trash="true" data-desktop="1" title="ゴミ箱" onclick="openTrash()"><div class="ico">🗑️</div><span>ゴミ箱</span></div>
+    <div class="icon" data-app="explorer" data-desktop="1" ondblclick="openApp('explorer')"><div class="ico">📁</div><span>ファイル</span></div>
+    <div class="icon" data-app="editor" data-desktop="1" ondblclick="openApp('editor')"><div class="ico">📝</div><span>テキスト エディター</span></div>
+    <div class="icon" data-app="terminal" data-desktop="1" ondblclick="openApp('terminal')"><div class="ico">⌨️</div><span>ターミナル</span></div>
+    <div class="icon" data-app="calculator" data-desktop="1" ondblclick="openApp('calculator')"><div class="ico">🧮</div><span>電卓</span></div>
+    <div class="icon" data-app="browser" data-desktop="1" ondblclick="openApp('browser')"><div class="ico">🌐</div><span>ブラウザ</span></div>
+    <div class="icon" data-app="taskmgr" data-desktop="1" ondblclick="openApp('taskmgr')"><div class="ico">📊</div><span>タスク マネージャー</span></div>
+    <div class="icon" data-app="settings" data-desktop="1" ondblclick="openApp('settings')"><div class="ico">⚙️</div><span>設定</span></div>
   </div>
 
   <div id="trashDialog" class="trash-dialog" onclick="if(event.target===this)closeTrash()">
@@ -3197,6 +3211,19 @@ input[type="range"]::-moz-range-progress {
 <div>
   <div id="taskbar">
     <button id="startBtn" onclick="toggleStart()">⊞</button>
+    <button id="desktopPickerBtn" onclick="toggleDesktopPicker(event)" title="デスクトップ">⧉</button>
+    <div id="desktopPicker" aria-label="デスクトップの切り替え">
+      <button class="desktop-preview" data-desktop-preview="1" onclick="switchDesktop(1);closeDesktopPicker()">
+        <div class="desktop-preview-screen"></div>
+        <div class="desktop-preview-title">デスク1</div>
+        <div class="desktop-preview-sub">現在のデスクトップ</div>
+      </button>
+      <button class="desktop-preview" data-desktop-preview="2" onclick="switchDesktop(2);closeDesktopPicker()">
+        <div class="desktop-preview-screen empty"></div>
+        <div class="desktop-preview-title">デスク2</div>
+        <div class="desktop-preview-sub">新しいデスクトップ</div>
+      </button>
+    </div>
     <div id="taskApps"></div>
       <button id="quickBtn" onclick="openQuickSettings()" title="クイック設定">⚡</button>
     <div id="tray"><span id="net">🌐</span><span>🔊</span><span id="clock"></span></div>
@@ -4167,11 +4194,121 @@ document.addEventListener('mousedown', function(e){
   }
 
 });
+document.addEventListener('click', function(e){const p=document.getElementById('desktopPicker'),b=document.getElementById('desktopPickerBtn');if(p&&p.classList.contains('show')&&!p.contains(e.target)&&!b?.contains(e.target))p.classList.remove('show');});
+/* ==========================================================
+   仮想デスクトップ（デスク1 / デスク2）
+   ========================================================== */
+const DESKTOP_STORE = 'webos10_current_desktop_v1';
+let currentDesktop = Math.max(1, Math.min(2, Number(localStorage.getItem(DESKTOP_STORE)) || 1));
+
+function desktopNumber(value){
+  return value === 2 || String(value) === '2' ? 2 : 1;
+}
+
+// 現在のデスクトップに対応するゴミ箱を取得
+function getCurrentDesktopTrash(){
+  const desktop = desktopNumber(currentDesktop);
+  return document.querySelector(`#desktopIcons [data-trash=\"true\"][data-desktop=\"${desktop}\"]`);
+}
+
+// デスク2は「アプリ＋ゴミ箱」だけを初期配置する
+function ensureDesktop2BaseIcons(){
+  const icons = document.getElementById('desktopIcons');
+  if(!icons) return;
+
+  const baseApps = [
+    ['explorer','📁','ファイル'],
+    ['editor','📝','テキスト エディター'],
+    ['terminal','⌨️','ターミナル'],
+    ['calculator','🧮','電卓'],
+    ['browser','🌐','ブラウザ'],
+    ['taskmgr','📊','タスク マネージャー'],
+    ['settings','⚙️','設定']
+  ];
+
+  // すでにあるデスク2のアプリはそのまま使う
+  baseApps.forEach(([app,ico,name]) => {
+    if(icons.querySelector(`.icon[data-app=\"${app}\"][data-desktop=\"2\"]`)) return;
+    const el = document.createElement('div');
+    el.className = 'icon';
+    el.dataset.app = app;
+    el.dataset.desktop = '2';
+    el.ondblclick = () => openApp(app);
+    el.innerHTML = `<div class=\"ico\">${ico}</div><span>${name}</span>`;
+    icons.appendChild(el);
+  });
+
+  // デスク2専用ゴミ箱を作る（IDは重複させない）
+  if(!icons.querySelector('.icon[data-trash=\"true\"][data-desktop=\"2\"]')){
+    const trash = document.createElement('div');
+    trash.className = 'icon';
+    trash.dataset.trash = 'true';
+    trash.dataset.desktop = '2';
+    trash.title = 'ゴミ箱';
+    trash.onclick = openTrash;
+    trash.innerHTML = '<div class=\"ico\">🗑️</div><span>ゴミ箱</span>';
+    icons.appendChild(trash);
+  }
+}
+function updateDesktopSwitcher(){
+  document.querySelectorAll('[data-desktop-preview]').forEach(btn => {
+    const d = desktopNumber(btn.dataset.desktopPreview);
+    btn.classList.toggle('active', d === currentDesktop);
+    const sub = btn.querySelector('.desktop-preview-sub');
+    if(sub) sub.textContent = d === currentDesktop ? '現在のデスクトップ' : (d === 2 ? '新しいデスクトップ' : 'デスクトップ');
+  });
+}
+function toggleDesktopPicker(e){
+  e?.stopPropagation();
+  const p=document.getElementById('desktopPicker');
+  if(!p) return;
+  p.classList.toggle('show');
+  updateDesktopSwitcher();
+}
+function closeDesktopPicker(){
+  document.getElementById('desktopPicker')?.classList.remove('show');
+}
+function applyVirtualDesktopVisibility(){
+  Object.values(windowsMap).forEach(o => {
+    if(!o || !o.w) return;
+    o.w.style.display =
+      desktopNumber(o.desktop) === currentDesktop && !o.minimized ? 'flex' : 'none';
+  });
+  document.querySelectorAll('#desktopIcons .icon[data-app], #desktopIcons .desktop-user-item, #desktopIcons [data-trash="true"]')
+    .forEach(el => {
+      el.style.display =
+        desktopNumber(el.dataset.desktop) === currentDesktop ? 'flex' : 'none';
+    });
+  document.querySelectorAll('#taskApps .task-group').forEach(group => {
+    group.style.display =
+      desktopNumber(group.dataset.desktop) === currentDesktop ? 'flex' : 'none';
+  });
+  updateDesktopSwitcher();
+}
+function switchDesktop(desktop){
+  desktop = desktopNumber(desktop);
+  if(desktop === currentDesktop){ updateDesktopSwitcher(); return; }
+  document.getElementById('startMenu')?.classList.remove('show');
+  document.getElementById('quickPanel')?.classList.remove('show');
+  currentDesktop = desktop;
+  localStorage.setItem(DESKTOP_STORE, String(currentDesktop));
+  applyVirtualDesktopVisibility();
+  document.querySelectorAll('.task').forEach(t => t.classList.remove('active'));
+  const visibleWindows = Object.values(windowsMap)
+    .filter(o => o && desktopNumber(o.desktop) === currentDesktop && !o.minimized)
+    .sort((a,b) => Number(a.w.style.zIndex || 0) - Number(b.w.style.zIndex || 0));
+  if(visibleWindows.length) focusWindow(visibleWindows[visibleWindows.length - 1].id);
+}
+function desktopPositionKey(app, desktop){
+  return String(desktopNumber(desktop)) + ':' + app;
+}
+
 function makeWindow(title,html,icon='🪟',opts={}){
   const id='w'+(++winId);
   const w=document.createElement('div');
   w.className='window';
   w.id=id;
+  w.dataset.desktop=String(currentDesktop);
   w.style.zIndex=++z;
   if(opts.x!=null)w.style.left=opts.x+'px';
   if(opts.y!=null)w.style.top=opts.y+'px';
@@ -4194,7 +4331,7 @@ function makeWindow(title,html,icon='🪟',opts={}){
     <div class="window-resize-handle se" data-resize="se"></div>
     <div class="window-resize-handle sw" data-resize="sw"></div>`;
   document.getElementById('windows').appendChild(w);
-  windowsMap[id]={id,title,icon,w};
+  windowsMap[id]={id,title,icon,w,desktop:currentDesktop,minimized:false};
   makeDraggable(w,w.querySelector('.titlebar'));
   makeResizable(w);
   w.addEventListener('mousedown',()=>focusWindow(id));
@@ -4233,7 +4370,8 @@ function focusWindow(id){
   const group =
     [...document.querySelectorAll('.task-group')]
       .find(g =>
-        g.dataset.app === appKey
+        g.dataset.app === appKey &&
+        desktopNumber(g.dataset.desktop) === desktopNumber(o.desktop)
       );
 
   if(group){
@@ -4273,27 +4411,29 @@ function closeWindow(id){
 
   const appKey =
     getTaskAppKey(o.title);
+  const desktop = desktopNumber(o.desktop);
 
   o.w.remove();
 
   delete windowsMap[id];
 
-  updateTaskGroup(appKey);
+  updateTaskGroup(appKey, desktop);
 
   /*
-   * そのアプリのウィンドウが
+   * そのデスクトップのそのアプリのウィンドウが
    * もう存在しないならタスクも削除
    */
 
   const remaining =
-    getAppWindowIds(appKey);
+    getAppWindowIds(appKey, desktop);
 
   if(remaining.length === 0){
 
     const group =
       [...document.querySelectorAll('.task-group')]
         .find(g =>
-          g.dataset.app === appKey
+          g.dataset.app === appKey &&
+          desktopNumber(g.dataset.desktop) === desktop
         );
 
     if(group){
@@ -4309,6 +4449,7 @@ function minimizeWindow(id){
 
   if(!o) return;
 
+  o.minimized = true;
   o.w.style.display =
     'none';
 
@@ -4319,9 +4460,16 @@ function minimizeWindow(id){
   const appKey =
     getTaskAppKey(o.title);
 
-  updateTaskGroup(appKey);
+  updateTaskGroup(appKey, desktopNumber(o.desktop));
 }
-function restoreWindow(id){const o=windowsMap[id];if(!o)return;o.w.style.display='flex';focusWindow(id)}
+function restoreWindow(id){
+  const o=windowsMap[id];
+  if(!o)return;
+  if(desktopNumber(o.desktop) !== currentDesktop) switchDesktop(o.desktop);
+  o.minimized=false;
+  o.w.style.display='flex';
+  focusWindow(id);
+}
 function maximizeWindow(id){windowsMap[id]?.w.classList.toggle('max');focusWindow(id)}
 function addTask(id,title,icon){
 
@@ -4338,14 +4486,18 @@ function addTask(id,title,icon){
    */
 
   let appKey = getTaskAppKey(title);
+  const desktop = desktopNumber(windowsMap[id]?.desktop || currentDesktop);
 
   /*
-   * 同じアプリ用のグループを探す
+   * 同じアプリ・同じデスクトップ用のグループを探す
    */
 
   let group =
     [...taskApps.querySelectorAll('.task-group')]
-      .find(g => g.dataset.app === appKey);
+      .find(g =>
+        g.dataset.app === appKey &&
+        desktopNumber(g.dataset.desktop) === desktop
+      );
 
   /*
    * なければ新規作成
@@ -4361,6 +4513,8 @@ function addTask(id,title,icon){
 
   group.dataset.app =
     appKey;
+  group.dataset.desktop =
+    String(desktop);
 
   group.innerHTML = `
     <button
@@ -4472,10 +4626,10 @@ function addTask(id,title,icon){
 
   group.dataset.windows =
     JSON.stringify(
-      getAppWindowIds(appKey)
+      getAppWindowIds(appKey, desktop)
     );
 
-  updateTaskGroup(appKey);
+  updateTaskGroup(appKey, desktop);
     // プレビューの表示・非表示を管理
 if(!group._previewTimer){
   group._previewTimer = null;
@@ -4577,11 +4731,13 @@ function getTaskAppKey(title){
    同じアプリのウィンドウ
 ========================= */
 
-function getAppWindowIds(appKey){
+function getAppWindowIds(appKey, desktop=currentDesktop){
 
+  desktop = desktopNumber(desktop);
   return Object.values(windowsMap)
     .filter(o =>
-      getTaskAppKey(o.title) === appKey
+      getTaskAppKey(o.title) === appKey &&
+      desktopNumber(o.desktop) === desktop
     )
     .map(o => o.id);
 }
@@ -4591,18 +4747,20 @@ function getAppWindowIds(appKey){
    タスクグループ更新
 ========================= */
 
-function updateTaskGroup(appKey){
+function updateTaskGroup(appKey, desktop=currentDesktop){
 
+  desktop = desktopNumber(desktop);
   const group =
     [...document.querySelectorAll('.task-group')]
       .find(g =>
-        g.dataset.app === appKey
+        g.dataset.app === appKey &&
+        desktopNumber(g.dataset.desktop) === desktop
       );
 
   if(!group) return;
 
   const ids =
-    getAppWindowIds(appKey);
+    getAppWindowIds(appKey, desktop);
 
   group.dataset.windows =
     JSON.stringify(ids);
@@ -11418,6 +11576,20 @@ window.OS = {
 const desktopItemsStorageKey = 'webos10_desktop_items_v1';
 let desktopItems = JSON.parse(localStorage.getItem(desktopItemsStorageKey) || '[]');
 
+// 旧バージョンのショートカットはデスク1へ移行
+desktopItems = desktopItems.map(item => ({
+  ...item,
+  desktop: desktopNumber(item.desktop)
+}));
+
+// デスク2は初回作成時のみ完全な初期状態（ホーム画面の項目なし）
+const DESKTOP2_INIT_STORE = 'webos10_desktop2_initialized_v1';
+if(localStorage.getItem(DESKTOP2_INIT_STORE) !== '1'){
+  desktopItems = desktopItems.filter(item => desktopNumber(item.desktop) !== 2);
+  localStorage.setItem(DESKTOP2_INIT_STORE, '1');
+  saveDesktopItems();
+}
+
 function saveDesktopItems(){
   localStorage.setItem(desktopItemsStorageKey, JSON.stringify(desktopItems));
 }
@@ -11484,7 +11656,7 @@ function putFileOnDesktop(path,silent=false){
   if(!path || !files[path]){ if(!silent) toast('ファイルまたはフォルダが見つかりません'); return false; }
   if(desktopItems.some(x=>x.path===path)){ if(!silent) toast('すでにホーム画面にあります'); return false; }
   const pos=findFreeDesktopPosition();
-  desktopItems.push({path,name:path.split('/').pop(),type:files[path].type,icon:desktopItemIcon(path),x:pos.x,y:pos.y});
+  desktopItems.push({path,name:path.split('/').pop(),type:files[path].type,icon:desktopItemIcon(path),x:pos.x,y:pos.y,desktop:currentDesktop});
   saveDesktopItems();
   renderDesktopItems();
   if(!silent) toast(path.split('/').pop()+' をホーム画面に置きました');
@@ -11527,11 +11699,13 @@ function renderDesktopItems(){
 
     if(!item || !item.path) return;
     if(!files[item.path]) return;
+    item.desktop = desktopNumber(item.desktop);
 
     const el = document.createElement('div');
 
     el.className = 'icon desktop-user-item';
     el.dataset.desktopPath = item.path;
+    el.dataset.desktop = String(item.desktop);
 
     el.style.position = 'absolute';
     el.style.left =
@@ -11605,7 +11779,7 @@ function renderDesktopItems(){
       /*
        * ゴミ箱の上に来たらハイライト
        */
-      const trash = document.getElementById('trashIcon');
+      const trash = getCurrentDesktopTrash();
 
       if(trash){
 
@@ -11632,7 +11806,7 @@ function renderDesktopItems(){
       /*
        * ゴミ箱に入れる
        */
-      const trash = document.getElementById('trashIcon');
+      const trash = getCurrentDesktopTrash();
 
       if(trash){
 
@@ -11782,7 +11956,7 @@ function restoreDesktopIcon(index){
 
     // すでにホーム画面にある場合
     if(document.querySelector(
-      `#desktopIcons .icon[data-app="${CSS.escape(app)}"]`
+      `#desktopIcons .icon[data-app="${CSS.escape(app)}"][data-desktop="${currentDesktop}"]`
     )){
       desktopTrash.splice(index, 1);
       saveDesktopTrash();
@@ -11800,6 +11974,7 @@ function restoreDesktopIcon(index){
 
     el.className = 'icon';
     el.dataset.app = app;
+    el.dataset.desktop = String(currentDesktop);
 
     el.innerHTML = `
       <div class="ico">${escapeHtml(item.icon || '📄')}</div>
@@ -11993,10 +12168,21 @@ function moveDesktopIconToTrash(el){
 }
 const desktopPositionsKey='webos10_desktop_positions_v1';
 let desktopPositions=JSON.parse(localStorage.getItem(desktopPositionsKey)||'null')||{};
+
+// 旧形式のアイコン位置をデスク1へ移行
+Object.keys(desktopPositions).forEach(key => {
+  if(key.includes(':')) return;
+  const value = desktopPositions[key];
+  if(value && Number.isFinite(value.x) && Number.isFinite(value.y)){
+    desktopPositions['1:' + key] = value;
+    delete desktopPositions[key];
+  }
+});
 function saveDesktopPositions(){localStorage.setItem(desktopPositionsKey,JSON.stringify(desktopPositions))}
 function initOneDesktopIcon(el){
   const key = el.dataset.app;
   if(!key) return;
+  const desktop = desktopNumber(el.dataset.desktop);
 
   // ホーム画面の初期配置
   const positions = {
@@ -12013,13 +12199,14 @@ function initOneDesktopIcon(el){
 };
 
 // 保存済みの位置がなければ初期位置を使用
-if(!desktopPositions[key] && positions[key]){
-  desktopPositions[key] = positions[key];
+const positionKey = desktopPositionKey(key, desktop);
+if(!desktopPositions[positionKey] && positions[key]){
+  desktopPositions[positionKey] = positions[key];
 }
 
   // 念のため位置がないアイコンは左上に配置
-  if(!desktopPositions[key]){
-    desktopPositions[key] = {x: 12, y: 12};
+  if(!desktopPositions[positionKey]){
+    desktopPositions[positionKey] = {x: 12, y: 12};
   }
 
   applyIconPosition(el);
@@ -12046,7 +12233,7 @@ if(!desktopPositions[key] && positions[key]){
   document.addEventListener('mousemove', e => {
     if(!dragging) return;
 
-    const trash = document.getElementById('trashIcon');
+    const trash = getCurrentDesktopTrash();
     const tr = trash?.getBoundingClientRect();
 
     if(
@@ -12061,7 +12248,7 @@ if(!desktopPositions[key] && positions[key]){
       trash?.classList.remove('drag-over');
     }
 
-    const d = desktopPositions[key];
+    const d = desktopPositions[desktopPositionKey(key, desktop)];
 
     d.x = Math.max(
       0,
@@ -12081,7 +12268,7 @@ if(!desktopPositions[key] && positions[key]){
 
     dragging = false;
 
-    const trash = document.getElementById('trashIcon');
+    const trash = getCurrentDesktopTrash();
     const tr = trash?.getBoundingClientRect();
 
     const over =
@@ -12105,7 +12292,10 @@ function initDesktopIcons(){
 }
 
 function applyIconPosition(el){
- const p=desktopPositions[el.dataset.app];
+ const key = el.dataset.app;
+ if(!key) return;
+ const desktop = desktopNumber(el.dataset.desktop);
+ const p=desktopPositions[desktopPositionKey(key, desktop)];
  if(!p) return;
  el.style.left=p.x+'px';el.style.top=p.y+'px';
 }
@@ -12121,9 +12311,11 @@ function updateClock(){
  document.getElementById('lockTime').textContent=time+'　'+date;
 }
 setInterval(updateClock,1000);updateClock();
+ensureDesktop2BaseIcons();
 initDesktopIcons();
 renderDesktopItems();
 updateUsername();
+applyVirtualDesktopVisibility();
 
 document.documentElement.style.setProperty(
   '--accent',
@@ -12153,6 +12345,12 @@ document.addEventListener('mousedown', function(e){
 let ctrlAltTriggered = false;
 
 document.addEventListener('keydown', function(e){
+
+  if((e.ctrlKey && e.metaKey && (e.key === 'ArrowLeft' || e.key === 'ArrowRight'))){
+    e.preventDefault();
+    switchDesktop(e.key === 'ArrowLeft' ? 1 : 2);
+    return;
+  }
 
   // Windowsキー
   if(e.key === 'Meta' || e.key === 'OS'){
@@ -12220,19 +12418,21 @@ document.addEventListener('keyup', function(e){
     const app = icon.dataset.app;
 
     if(app && positions[app]){
-      icon.style.left = positions[app].x + 'px';
-      icon.style.top  = positions[app].y + 'px';
+      const desktop = desktopNumber(icon.dataset.desktop);
+      const key = desktopPositionKey(app, desktop);
+      if(!desktopPositions[key]){
+        desktopPositions[key] = positions[app];
+      }
+      applyIconPosition(icon);
     }
 
   });
 
-  // ゴミ箱
-  const trash = document.getElementById('trashIcon');
-
-  if(trash){
+  // ゴミ箱はデスク1・デスク2それぞれに配置
+  document.querySelectorAll('#desktopIcons [data-trash=\"true\"]').forEach(trash => {
     trash.style.left = positions.trash.x + 'px';
     trash.style.top  = positions.trash.y + 'px';
-  }
+  });
 
 })();
 </script>
