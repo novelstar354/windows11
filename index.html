@@ -8651,6 +8651,9 @@ if(cmd === 'restoration'){
       ) || '[]'
     ),
 
+    // デスクごとのホーム画面・ゴミ箱をそのまま保存
+    currentDesktop: desktopNumber(currentDesktop),
+
     quickState: JSON.parse(
       localStorage.getItem(
         'webos10_quick_settings_v1'
@@ -8687,6 +8690,11 @@ localStorage.setItem(
 localStorage.setItem(
   'webos10_desktop_trash_v1',
   JSON.stringify(webosRestorationData.desktopTrash)
+);
+
+localStorage.setItem(
+  'webos10_current_desktop_v1',
+  String(webosRestorationData.currentDesktop || 1)
 );
 
 localStorage.setItem(
@@ -11352,6 +11360,16 @@ function restoreFromCode(){
     }
 
     /*
+     * 現在のデスクトップ
+     */
+    if(data.currentDesktop !== undefined){
+      localStorage.setItem(
+        'webos10_current_desktop_v1',
+        String(desktopNumber(data.currentDesktop))
+      );
+    }
+
+    /*
      * クイック設定
      */
     if(data.quickState !== undefined){
@@ -12101,6 +12119,12 @@ function renderDesktopItems(){
       dragging = true;
       moved = false;
 
+      // ゴミ箱へ入れる前の位置を保存
+      el.__restorePosition = {
+        x: Number(item.x) || 0,
+        y: Number(item.y) || 0
+      };
+
       offsetX = e.clientX - rect.left;
       offsetY = e.clientY - rect.top;
 
@@ -12228,7 +12252,7 @@ function clearDesktopItemsForPath(path){
 // =========================
 // デスクトップのゴミ箱
 // =========================
-const trashStorageKey = 'webos14_desktop_trash_v1';
+const trashStorageKey = 'webos10_desktop_trash_v1';
 let desktopTrash = JSON.parse(localStorage.getItem(trashStorageKey) || '[]');
 function saveDesktopTrash(){
   localStorage.setItem(trashStorageKey, JSON.stringify(desktopTrash));
@@ -12241,8 +12265,10 @@ function getDesktopIconMeta(el){
 
   // ファイル・フォルダ
   if(el.dataset.desktopPath){
+
     const path = normalizePath(el.dataset.desktopPath);
     const file = files[path];
+
     return {
       kind: 'file',
       path: path,
@@ -12270,6 +12296,7 @@ function getDesktopIconMeta(el){
 
   return null;
 }
+
 function openTrash(){
   const d=document.getElementById('trashDialog');
   if(!d)return;
@@ -12283,11 +12310,18 @@ function renderTrash(){
   const list=document.getElementById('trashList');
   if(!list)return;
   list.innerHTML='';
-  if(!desktopTrash.length){
+
+  const desktop = desktopNumber(currentDesktop);
+  const visibleTrash = desktopTrash
+    .map((item,index)=>({item,index}))
+    .filter(({item}) => desktopNumber(item.desktop) === desktop);
+
+  if(!visibleTrash.length){
     list.innerHTML='<div class="trash-empty">ゴミ箱は空です</div>';
     return;
   }
-  desktopTrash.forEach((item,index)=>{
+
+  visibleTrash.forEach(({item,index})=>{
     const row=document.createElement('div');
     row.className='trash-item';
     row.innerHTML=`<div class="trash-item-icon">${escapeHtml(item.icon)}</div><div class="trash-item-name">${escapeHtml(item.name)}</div><button>復元</button>`;
@@ -12295,6 +12329,7 @@ function renderTrash(){
     list.appendChild(row);
   });
 }
+
 function restoreDesktopIcon(index){
   const item = desktopTrash[index];
 
@@ -12329,7 +12364,10 @@ function restoreDesktopIcon(index){
 
     el.className = 'icon';
     el.dataset.app = app;
-    el.dataset.desktop = String(currentDesktop);
+
+    // ゴミ箱へ入れる前のデスクトップへ復元
+    const restoreDesktop = desktopNumber(item.desktop);
+    el.dataset.desktop = String(restoreDesktop);
 
     el.innerHTML = `
       <div class="ico">${escapeHtml(item.icon || '📄')}</div>
@@ -12338,20 +12376,15 @@ function restoreDesktopIcon(index){
 
     el.ondblclick = () => openApp(app);
 
-    // ゴミ箱へ入れる前のデスクトップと位置へ復元する
-    const restoreDesktop = desktopNumber(item.desktop);
-    el.dataset.desktop = String(restoreDesktop);
+    icons.appendChild(el);
 
-    const restoreX = Number(item.x);
-    const restoreY = Number(item.y);
-    if(Number.isFinite(restoreX) && Number.isFinite(restoreY)){
+    // ゴミ箱へ入れる前の位置へ復元
+    if(Number.isFinite(Number(item.x)) && Number.isFinite(Number(item.y))){
       desktopPositions[desktopPositionKey(app, restoreDesktop)] = {
-        x: restoreX,
-        y: restoreY
+        x: Number(item.x),
+        y: Number(item.y)
       };
     }
-
-    icons.appendChild(el);
     saveDesktopPositions();
 
     // ドラッグ機能を初期化
@@ -12362,6 +12395,7 @@ function restoreDesktopIcon(index){
     saveDesktopTrash();
 
     renderTrash();
+    applyVirtualDesktopVisibility();
 
     toast(item.name + ' を復元しました');
 
@@ -12389,7 +12423,8 @@ function restoreDesktopIcon(index){
     }
 
     // 同じファイルを二重にホーム画面へ置かない
-    if(desktopItems.some(x => x.path === path)){
+    const restoreDesktop = desktopNumber(item.desktop);
+    if(desktopItems.some(x => x.path === path && desktopNumber(x.desktop) === restoreDesktop)){
       desktopTrash.splice(index, 1);
       saveDesktopTrash();
       renderTrash();
@@ -12402,7 +12437,9 @@ function restoreDesktopIcon(index){
      * フォルダの場合も「フォルダ自身」だけを登録。
      * 中身は登録しない。
      */
-    const pos = findFreeDesktopPosition();
+    const pos = (Number.isFinite(Number(item.x)) && Number.isFinite(Number(item.y)))
+      ? {x:Number(item.x), y:Number(item.y)}
+      : findFreeDesktopPosition();
 
     desktopItems.push({
       path: path,
@@ -12410,7 +12447,8 @@ function restoreDesktopIcon(index){
       type: files[path].type,
       icon: desktopItemIcon(path),
       x: pos.x,
-      y: pos.y
+      y: pos.y,
+      desktop: restoreDesktop
     });
 
     saveDesktopItems();
@@ -12445,9 +12483,12 @@ function restoreDesktopIcon(index){
       return;
     }
 
-    if(!desktopItems.some(x => x.path === path)){
+    const restoreDesktop = desktopNumber(item.desktop);
+    if(!desktopItems.some(x => x.path === path && desktopNumber(x.desktop) === restoreDesktop)){
 
-      const pos = findFreeDesktopPosition();
+      const pos = (Number.isFinite(Number(item.x)) && Number.isFinite(Number(item.y)))
+        ? {x:Number(item.x), y:Number(item.y)}
+        : findFreeDesktopPosition();
 
       desktopItems.push({
         path: path,
@@ -12455,7 +12496,8 @@ function restoreDesktopIcon(index){
         type: files[path].type,
         icon: desktopItemIcon(path),
         x: pos.x,
-        y: pos.y
+        y: pos.y,
+        desktop: restoreDesktop
       });
 
       saveDesktopItems();
@@ -12500,7 +12542,8 @@ function moveDesktopIconToTrash(el){
    */
   if(item.kind === 'app'){
 
-    // desktopPositions は残す。復元時に元の位置を使うため。
+    delete desktopPositions[item.app];
+
     saveDesktopPositions();
 
     el.remove();
@@ -12584,8 +12627,7 @@ if(!desktopPositions[positionKey] && positions[key]){
 
     dragging = true;
 
-    // ドラッグ開始時点の位置を復元用に保存する。
-    // ゴミ箱へ移動中に座標が変わっても、この位置へ戻せる。
+    // ゴミ箱へ移動中に座標が変わっても、ドラッグ開始時の位置へ戻せるよう保存
     const positionKey = desktopPositionKey(key, desktop);
     const savedPosition = desktopPositions[positionKey];
     el.__restorePosition = savedPosition
