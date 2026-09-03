@@ -12235,30 +12235,36 @@ function saveDesktopTrash(){
 }
 function getDesktopIconMeta(el){
 
+  // ゴミ箱へ入れる前のデスクトップと位置を保存して復元に使う
+  const desktop = desktopNumber(el.dataset.desktop);
+  const restorePosition = el.__restorePosition || null;
+
   // ファイル・フォルダ
   if(el.dataset.desktopPath){
-
     const path = normalizePath(el.dataset.desktopPath);
     const file = files[path];
-
     return {
       kind: 'file',
       path: path,
       icon: file ? desktopItemIcon(path) : '📄',
       name: path.split('/').pop(),
-      type: file?.type || 'file'
+      type: file?.type || 'file',
+      desktop: desktop,
+      x: restorePosition?.x,
+      y: restorePosition?.y
     };
   }
 
   // アプリ
   if(el.dataset.app){
-
     return {
       kind: 'app',
       app: el.dataset.app,
       icon: el.querySelector('.ico')?.textContent || '📄',
-      name: el.querySelector('span')?.textContent ||
-            el.dataset.app
+      name: el.querySelector('span')?.textContent || el.dataset.app,
+      desktop: desktop,
+      x: restorePosition?.x,
+      y: restorePosition?.y
     };
   }
 
@@ -12332,10 +12338,20 @@ function restoreDesktopIcon(index){
 
     el.ondblclick = () => openApp(app);
 
-    icons.appendChild(el);
+    // ゴミ箱へ入れる前のデスクトップと位置へ復元する
+    const restoreDesktop = desktopNumber(item.desktop);
+    el.dataset.desktop = String(restoreDesktop);
 
-    // 保存済み位置を削除して初期位置へ
-    delete desktopPositions[app];
+    const restoreX = Number(item.x);
+    const restoreY = Number(item.y);
+    if(Number.isFinite(restoreX) && Number.isFinite(restoreY)){
+      desktopPositions[desktopPositionKey(app, restoreDesktop)] = {
+        x: restoreX,
+        y: restoreY
+      };
+    }
+
+    icons.appendChild(el);
     saveDesktopPositions();
 
     // ドラッグ機能を初期化
@@ -12484,8 +12500,7 @@ function moveDesktopIconToTrash(el){
    */
   if(item.kind === 'app'){
 
-    delete desktopPositions[item.app];
-
+    // desktopPositions は残す。復元時に元の位置を使うため。
     saveDesktopPositions();
 
     el.remove();
@@ -12568,6 +12583,17 @@ if(!desktopPositions[positionKey] && positions[key]){
     if(e.button !== 0 || el.dataset.trash === 'true') return;
 
     dragging = true;
+
+    // ドラッグ開始時点の位置を復元用に保存する。
+    // ゴミ箱へ移動中に座標が変わっても、この位置へ戻せる。
+    const positionKey = desktopPositionKey(key, desktop);
+    const savedPosition = desktopPositions[positionKey];
+    el.__restorePosition = savedPosition
+      ? {x: Number(savedPosition.x), y: Number(savedPosition.y)}
+      : {
+          x: parseFloat(el.style.left) || 0,
+          y: parseFloat(el.style.top) || 0
+        };
 
     const r = el.getBoundingClientRect();
 
