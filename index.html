@@ -12463,11 +12463,11 @@ function getDefaultDesktopAppPosition(app){
     calculator:{x: 12, y: 294},
     browser:   {x: 12, y: 388},
     excel:     {x: 90, y: 12},
-  powerpointer:{x: 168, y: 12},
+  powerpointer:{x: 90, y: 200},
     word:      {x: 90, y: 106},
-    taskmgr:   {x: 90, y: 200},
-    terminal:  {x: 90, y: 294},
-    settings:  {x: 90, y: 388}
+    taskmgr:   {x: 90, y: 294},
+    terminal:  {x: 90, y: 388},
+    settings:  {x: 168, y: 12}
   };
   return positions[app] ? {...positions[app]} : {x: 12, y: 12};
 }
@@ -12739,11 +12739,11 @@ function initOneDesktopIcon(el){
   // 2行目
   browser:     {x: 12,  y: 388},
   excel:       {x: 90,  y: 12},
-  powerpointer:{x: 168, y: 12},
-  word:        {x: 90,  y: 106},
-  taskmgr:     {x: 90,  y: 200},
-  terminal:    {x: 90,  y: 294},
-  settings:    {x: 90,  y: 388}
+powerpointer:{x: 90, y: 200},
+    word:      {x: 90, y: 106},
+    taskmgr:   {x: 90, y: 294},
+    terminal:  {x: 90, y: 388},
+    settings:  {x: 168, y: 12}
 };
 
 // 保存済みの位置がなければ初期位置を使用
@@ -12967,11 +12967,11 @@ document.addEventListener('keyup', function(e){
   // 2行目
   browser:     {x: 12,  y: 388},
   excel:       {x: 90,  y: 12},
-  powerpointer:{x: 168, y: 12},
-  word:        {x: 90,  y: 106},
-  taskmgr:     {x: 90,  y: 200},
-  terminal:    {x: 90,  y: 294},
-  settings:    {x: 90,  y: 388}
+    powerpointer:{x: 90, y: 200},
+    word:      {x: 90, y: 106},
+    taskmgr:   {x: 90, y: 294},
+    terminal:  {x: 90, y: 388},
+    settings:  {x: 168, y: 12}
 };
 
   document.querySelectorAll('#desktopIcons .icon[data-app]').forEach(icon => {
