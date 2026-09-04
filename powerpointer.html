@@ -664,11 +664,6 @@ button{
     >
   </div>
 
-  <div class="title-actions">
-    <button onclick="minimizeApp()">−</button>
-    <button onclick="toggleMaximize()">□</button>
-    <button onclick="closeApp()">×</button>
-  </div>
 </div>
 
 <!-- RIBBON -->
@@ -3466,51 +3461,7 @@ document.addEventListener(
   }
 );
 
-/* =========================================================
-   TITLEBAR
-========================================================= */
 
-function minimizeApp(){
-
-  const app=
-    document.querySelector(".app");
-
-  app.style.transform=
-    "scale(.8)";
-
-  app.style.transformOrigin=
-    "top center";
-
-}
-
-function toggleMaximize(){
-
-  if(!document.fullscreenElement){
-
-    document.documentElement
-      .requestFullscreen?.();
-
-  }else{
-
-    document.exitFullscreen?.();
-
-  }
-
-}
-
-function closeApp(){
-
-  if(
-    confirm(
-      "PowerPointerを閉じますか？"
-    )
-  ){
-
-    window.close();
-
-  }
-
-}
 
 /* =========================================================
    INIT
