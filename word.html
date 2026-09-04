@@ -124,8 +124,8 @@
         <button onclick="insertTable()">Insert Table</button>
 
         <!-- File Handling -->
-<button onclick="saveWordToExplorer()">Save</button>
-<button onclick="loadDocument()">ファイルを開く</button>
+<button onclick="saveDocument()">Save</button>
+<button onclick="openWordFilePicker()">Open</button>
 <button onclick="clearEditor()">Clear</button>
 
         <!-- Undo/Redo -->
@@ -514,6 +514,77 @@ function openWordFileFromExplorer(path){
     localStorage.setItem(
         "word_current_file",
         path
+    );
+}
+/* ========================================
+   Word：Explorerからファイルを開く
+======================================== */
+
+function openWordFilePicker(){
+
+    const files = getWindowsFiles();
+
+    const wordFiles = Object.values(files).filter(file =>
+        file &&
+        file.type === "file" &&
+        (
+            file.app === "word" ||
+            file.extension === ".word"
+        )
+    );
+
+    if(wordFiles.length === 0){
+        alert("ExplorerにWordファイルがありません。");
+        return;
+    }
+
+    let message = "開くWordファイルを選択してください。\n\n";
+
+    wordFiles.forEach((file, index) => {
+        message +=
+            (index + 1) + ". " +
+            (file.name || file.path) +
+            "\n";
+    });
+
+    const answer = prompt(
+        message + "\n番号を入力してください。",
+        "1"
+    );
+
+    if(answer === null) return;
+
+    const index = parseInt(answer, 10) - 1;
+
+    if(
+        isNaN(index) ||
+        index < 0 ||
+        index >= wordFiles.length
+    ){
+        alert("無効な番号です。");
+        return;
+    }
+
+    const file = wordFiles[index];
+
+    document.getElementById("editor").innerHTML =
+        file.content || "";
+
+    document.getElementById("documentFileName").value =
+        file.name ||
+        file.path.split("/").pop();
+
+    currentWordFilePath =
+        file.path;
+
+    localStorage.setItem(
+        "word_current_file",
+        file.path
+    );
+
+    localStorage.setItem(
+        "documentContent",
+        file.content || ""
     );
 }
     // Save content before editing for undo functionality
