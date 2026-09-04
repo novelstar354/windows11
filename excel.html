@@ -46,6 +46,7 @@ padding-bottom:3px;
 
 <div id="toolbar">
 <button onclick="saveExcelAs()">名前を付けて保存</button>
+<button onclick="openExcelFilePicker()">開く</button>
 <button onclick="addRow()">行+</button>
 <button onclick="addCol()">列+</button>
 <button onclick="deleteRows()">行削除</button>
@@ -241,9 +242,17 @@ function saveSheets(){
   localStorage.setItem("excelJS_colWidths", JSON.stringify(colWidths));
 
   // Windows共通ファイルシステム
-    const STORAGE_KEY = "webos10_files_v2";
+   const STORAGE_KEY = "webos10_files_v2";
 
-  let files = {};
+let files = {};
+
+try {
+    files = JSON.parse(
+        localStorage.getItem(STORAGE_KEY) || "{}"
+    );
+} catch(e) {
+    files = {};
+}
  
 
   const filename =
@@ -972,6 +981,164 @@ function saveExcelAs(){
   saveSheets();
 
   alert("エクスプローラーに保存しました");
+}
+/* ========================================
+   Excel：Explorerからファイルを開く
+======================================== */
+
+function openExcelFilePicker(){
+
+    const STORAGE_KEY = "webos10_files_v2";
+
+    let files = {};
+
+    try{
+        files = JSON.parse(
+            localStorage.getItem(STORAGE_KEY) || "{}"
+        );
+    }catch(e){
+        files = {};
+    }
+
+    const excelFiles = Object.values(files).filter(file =>
+        file &&
+        file.type === "file" &&
+        (
+            file.app === "excel" ||
+            file.extension === ".excel"
+        )
+    );
+
+    if(excelFiles.length === 0){
+        alert("ExplorerにExcelファイルがありません。");
+        return;
+    }
+
+    let message =
+        "開くExcelファイルを選択してください。\n\n";
+
+    excelFiles.forEach((file, index) => {
+
+        message +=
+            (index + 1) + ". " +
+            (file.name || file.path) +
+            "\n";
+
+    });
+
+    const answer = prompt(
+        message + "\n番号を入力してください。",
+        "1"
+    );
+
+    if(answer === null) return;
+
+    const index =
+        parseInt(answer, 10) - 1;
+
+    if(
+        isNaN(index) ||
+        index < 0 ||
+        index >= excelFiles.length
+    ){
+        alert("無効な番号です。");
+        return;
+    }
+
+    const file = excelFiles[index];
+
+    let data;
+
+    try{
+
+        data = JSON.parse(
+            file.content || "{}"
+        );
+
+    }catch(e){
+
+        alert("Excelファイルを読み込めませんでした。");
+        return;
+
+    }
+
+    if(!data.sheets || !Array.isArray(data.sheets)){
+
+        alert("このExcelファイルは壊れているか、対応していません。");
+        return;
+
+    }
+
+    sheets =
+        data.sheets;
+
+    sheetNames =
+        Array.isArray(data.sheetNames)
+            ? data.sheetNames
+            : sheets.map((s,i) => "Sheet" + (i + 1));
+
+    rows =
+        parseInt(data.rows) ||
+        sheets[0]?.length ||
+        100;
+
+    cols =
+        parseInt(data.cols) ||
+        sheets[0]?.[0]?.length ||
+        26;
+
+    colWidths =
+        Array.isArray(data.colWidths)
+            ? data.colWidths
+            : new Array(cols).fill(120);
+
+    currentSheet = 0;
+
+    window.currentExcelFileName =
+        file.name ||
+        file.path.split("/").pop();
+
+    /*
+     * Excel内部の保存状態も更新
+     */
+    localStorage.setItem(
+        "excelJS_sheets",
+        JSON.stringify(sheets)
+    );
+
+    localStorage.setItem(
+        "excelJS_sheetNames",
+        JSON.stringify(sheetNames)
+    );
+
+    localStorage.setItem(
+        "excelJS_rows",
+        rows
+    );
+
+    localStorage.setItem(
+        "excelJS_cols",
+        cols
+    );
+
+    localStorage.setItem(
+        "excelJS_colWidths",
+        JSON.stringify(colWidths)
+    );
+
+    localStorage.setItem(
+        "excel_current_file",
+        file.path
+    );
+
+    build();
+    calculateAll();
+
+    alert(
+        "「" +
+        (file.name || file.path.split("/").pop()) +
+        "」を開きました。"
+    );
 }
 document.addEventListener("keydown", function(e){
     const active = document.activeElement;
