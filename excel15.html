@@ -1,0 +1,931 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>Pixel</title>
+<link rel="icon" href="https://cdn-icons-png.freepik.com/256/5968/5968557.png?semt=ais_white_label" sizes="16×16" type="image/png" /> 
+<style>
+body{margin:0;font-family:Segoe UI,Arial;background:#f1f3f4;}
+#toolbar{background:#202124;color:white;padding:8px;display:flex;gap:6px;user-select: none;
+  -webkit-user-select: none;}
+button{padding:6px 10px;}
+#formulaBar{width:100%;padding:6px;font-size:16px;border:none;box-sizing:border-box;}
+#sheetWrap {
+  overflow: auto;      /* 既にある */
+  height: 80vh;        /* 高さを増やすと見やすくなる */
+  width: 100vw;        /* 横幅いっぱいに広げる */
+  box-sizing: border-box;
+}
+table {
+  border-collapse: collapse;
+  background: white;
+  border: 1px solid #cfcfcf;
+  table-layout: fixed;    /* 固定列幅 */
+  min-width: max-content; /* はみ出る分は横スクロール */
+}
+th,td{border:1px solid #ccc;width:90px;height:28px;text-align:center;position:relative;}
+th{background:#f3f3f3;font-weight:normal;}
+td:hover{outline:1px solid #4a90e2;outline-offset:-1px;}
+input:focus{outline:2px solid #4a8cff;z-index:1;}
+input{width:100%;height:100%;border:none;outline:none;text-align:center;}
+.selected{background:#e8f0ff;outline:2px solid #4a8cff;outline-offset:-2px;}
+.col-resize{position:absolute;right:0;top:0;width:5px;height:100%;cursor:col-resize;}
+#sheets{display:flex;gap:5px;padding:6px;background:#ddd;}
+.sheetTab{background:white;padding:5px 10px;cursor:pointer;border:1px solid #aaa;}
+.activeSheet{background:#cfe2ff;}
+#functionPanel{position:fixed;right:20px;top:80px;width:260px;background:white;border:1px solid #aaa;padding:15px;display:none;box-shadow:0 5px 15px rgba(0,0,0,0.2);overflow:auto;max-height:70vh;}
+.func{margin-bottom:12px;font-size:14px;}
+#functionPanel h4{
+margin-top:15px;
+border-bottom:1px solid #ddd;
+padding-bottom:3px;
+}
+</style>
+</head>
+<body>
+
+<div id="toolbar">
+<button onclick="addRow()">行+</button>
+<button onclick="addCol()">列+</button>
+<button onclick="deleteRows()">行削除</button>
+<button onclick="deleteCols()">列削除</button>
+<button onclick="undo()">Undo</button>
+<button onclick="redo()">Redo</button>
+<button onclick="addSheet()">シート+</button>
+<button onclick="deleteSheet()">シート削除</button>
+<button onclick="showFunctions()">関数</button>
+<button onclick="clearAll()">全削除</button>
+</div>
+
+<input id="formulaBar">
+
+<div id="sheetWrap">
+<table id="sheet"></table>
+</div>
+<div id="sheets"></div>
+
+<!--<div id="functionPanel">
+
+<h3>関数一覧</h3>
+
+<h4>基本</h4>
+
+<div class="func"><b>SUM</b><br>=SUM(A1:A5)<br>範囲の合計</div>
+<div class="func"><b>AVERAGE</b><br>=AVERAGE(A1:A5)<br>平均</div>
+<div class="func"><b>MAX</b><br>=MAX(A1:A5)<br>最大値</div>
+<div class="func"><b>MIN</b><br>=MIN(A1:A5)<br>最小値</div>
+<div class="func"><b>COUNT</b><br>=COUNT(A1:A5)<br>数値セル数</div>
+
+<h4>数学</h4>
+
+<div class="func"><b>ABS</b><br>=ABS(-5)<br>絶対値</div>
+<div class="func"><b>ROUND</b><br>=ROUND(3.6)<br>四捨五入</div>
+<div class="func"><b>FLOOR</b><br>=FLOOR(3.9)<br>切り捨て</div>
+<div class="func"><b>CEIL</b><br>=CEIL(3.1)<br>切り上げ</div>
+<div class="func"><b>SQRT</b><br>=SQRT(16)<br>平方根</div>
+<div class="func"><b>POWER</b><br>=POWER(2,3)<br>べき乗</div>
+<div class="func"><b>RAND</b><br>=RAND()<br>0〜1の乱数</div>
+<div class="func"><b>MOD</b><br>=MOD(10,3)<br>余り</div>
+
+<h4>文字</h4>
+
+<div class="func"><b>LEN</b><br>=LEN(Hello)<br>文字数</div>
+<div class="func"><b>UPPER</b><br>=UPPER(hello)<br>大文字</div>
+<div class="func"><b>LOWER</b><br>=LOWER(HELLO)<br>小文字</div>
+<div class="func"><b>CONCAT</b><br>=CONCAT(A1,B1)<br>文字結合</div>
+<div class="func"><b>LEFT</b><br>=LEFT(Hello,2)<br>左から取得</div>
+<div class="func"><b>RIGHT</b><br>=RIGHT(Hello,2)<br>右から取得</div>
+<div class="func"><b>MID</b><br>=MID(Hello,2,3)<br>途中取得</div>
+<div class="func"><b>TRIM</b><br>=TRIM(A1)<br>空白削除</div>
+
+<h4>論理</h4>
+
+<div class="func"><b>IF</b><br>=IF(A1>10,OK,NG)<br>条件分岐</div>
+<div class="func"><b>AND</b><br>=AND(A1>5,B1>5)<br>両方true</div>
+<div class="func"><b>OR</b><br>=OR(A1>5,B1>5)<br>どちらかtrue</div>
+<div class="func"><b>NOT</b><br>=NOT(A1>5)<br>true/false反転</div>
+
+<h4>日付</h4>
+
+<div class="func"><b>TODAY</b><br>=TODAY()<br>今日の日付</div>
+<div class="func"><b>NOW</b><br>=NOW()<br>現在の日時</div>
+<div class="func"><b>YEAR</b><br>=YEAR(NOW())<br>年</div>
+<div class="func"><b>MONTH</b><br>=MONTH(NOW())<br>月</div>
+<div class="func"><b>DAY</b><br>=DAY(NOW())<br>日</div>
+
+<h4>統計</h4>
+
+<div class="func"><b>MEDIAN</b><br>=MEDIAN(A1:A10)<br>中央値</div>
+<div class="func"><b>MODE</b><br>=MODE(A1:A10)<br>最頻値</div>
+<div class="func"><b>STDEV</b><br>=STDEV(A1:A10)<br>標準偏差</div>
+<div class="func"><b>VAR</b><br>=VAR(A1:A10)<br>分散</div>
+
+<button onclick="hideFunctions()">閉じる</button>
+</div>
+-->
+<div id="functionPanel">
+<h3>関数一覧</h3>
+<div id="functionList"></div>
+<button onclick="hideFunctions()">閉じる</button>
+</div>
+
+<script>
+let rows = 100; // もともと 30
+let cols = 26;  // もともと 15
+let colWidths = new Array(cols).fill(120); // 初期幅を少し広げる
+let sheets=[], currentSheet=0;
+let sheetNames=[];
+let selectedCell=null, selectedRange=[];
+let history=[], redoStack=[];
+const sheet=document.getElementById("sheet"), formulaBar=document.getElementById("formulaBar"), sheetTabs=document.getElementById("sheets");
+
+const functions=[
+
+["基本","SUM","=SUM(A1:A5)","合計"],
+["基本","AVERAGE","=AVERAGE(A1:A5)","平均"],
+["基本","MAX","=MAX(A1:A5)","最大値"],
+["基本","MIN","=MIN(A1:A5)","最小値"],
+["基本","COUNT","=COUNT(A1:A5)","数値数"],
+
+["数学","ABS","=ABS(-5)","絶対値"],
+["数学","ROUND","=ROUND(3.6)","四捨五入"],
+["数学","SQRT","=SQRT(16)","平方根"],
+["数学","POWER","=POWER(2,3)","べき乗"],
+
+["文字","LEN","=LEN(text)","文字数"],
+["文字","UPPER","=UPPER(text)","大文字"],
+["文字","LOWER","=LOWER(text)","小文字"],
+
+["論理","IF","=IF(A1>10,OK,NG)","条件分岐"],
+["論理","AND","=AND(A1>5,B1>5)","AND"],
+["論理","OR","=OR(A1>5,B1>5)","OR"],
+
+["日付","TODAY","=TODAY()","今日"],
+["日付","NOW","=NOW()","現在時刻"],
+
+["統計","MEDIAN","=MEDIAN(A1:A10)","中央値"],
+["統計","MODE","=MODE(A1:A10)","最頻値"],
+["統計","STDEV","=STDEV(A1:A10)","標準偏差"],
+
+["検索","VLOOKUP","=VLOOKUP(value,A1:C10,2)","検索"],
+["検索","XLOOKUP","=XLOOKUP(value,A:A,B:B)","検索"]
+
+];
+
+function buildFunctionPanel(){
+
+const panel=document.getElementById("functionList");
+panel.innerHTML="";
+
+let currentCategory="";
+
+functions.forEach(f=>{
+
+const category=f[0];
+const name=f[1];
+const example=f[2];
+const desc=f[3];
+
+if(category!==currentCategory){
+
+const h=document.createElement("h4");
+h.textContent=category;
+panel.appendChild(h);
+
+currentCategory=category;
+
+}
+
+const div=document.createElement("div");
+div.className="func";
+
+div.innerHTML=
+"<b>"+name+"</b><br>"+
+example+"<br>"+
+desc;
+
+panel.appendChild(div);
+
+});
+
+}
+
+buildFunctionPanel();
+
+function colName(n){
+    let s="";
+    while(n>=0){
+        s=String.fromCharCode(n%26+65)+s;
+        n=Math.floor(n/26)-1;
+    }
+    return s;
+}
+
+function initSheet(){
+  const data=[];
+  for(let r=0;r<rows;r++){
+    const row=[];
+    for(let c=0;c<cols;c++) row.push({formula:"",value:"",dependents:[]});
+    data.push(row);
+  }
+  sheets.push(data);
+  sheetNames.push("Sheet"+sheets.length);
+}
+function saveSheets(){
+  localStorage.setItem("excelJS_sheets", JSON.stringify(sheets))
+  localStorage.setItem("excelJS_sheetNames", JSON.stringify(sheetNames))
+  localStorage.setItem("excelJS_rows", rows)
+  localStorage.setItem("excelJS_cols", cols)
+  localStorage.setItem("excelJS_colWidths", JSON.stringify(colWidths))
+}
+function loadSheets(){
+  const s=localStorage.getItem("excelJS_sheets");
+  if(s){
+    sheets=JSON.parse(s);
+    sheetNames=JSON.parse(localStorage.getItem("excelJS_sheetNames")||"[]");
+    rows=parseInt(localStorage.getItem("excelJS_rows")||30);
+    cols=parseInt(localStorage.getItem("excelJS_cols")||15);
+    colWidths=JSON.parse(localStorage.getItem("excelJS_colWidths")||new Array(cols).fill(90));
+    return true;
+  }
+  return false;
+}
+// ---------- ビルド ----------
+function build(){
+  sheet.innerHTML="";
+  const header=document.createElement("tr");
+  header.appendChild(document.createElement("th"));
+  for(let c=0;c<cols;c++){
+    const th=document.createElement("th"); th.innerText=colName(c); th.style.width=colWidths[c]+"px";
+    const res=document.createElement("div"); res.className="col-resize"; let startX,startW;
+    res.onmousedown=e=>{
+      startX=e.pageX; startW=colWidths[c];
+      document.onmousemove=e2=>{
+        const newW=startW+(e2.pageX-startX);
+        colWidths[c]=newW;
+        for(let r=0;r<=rows;r++){
+          const row=sheet.rows[r];
+          if(row && row.cells[c+1]) row.cells[c+1].style.width=newW+"px";
+        }
+      };
+      document.onmouseup=()=>{document.onmousemove=null;}
+    }
+    th.appendChild(res); header.appendChild(th);
+  }
+  sheet.appendChild(header);
+
+  for(let r=0;r<rows;r++){
+    const tr=document.createElement("tr");
+    const th=document.createElement("th"); th.innerText=r+1; tr.appendChild(th);
+    for(let c=0;c<cols;c++){
+      const td=document.createElement("td"); td.style.width=colWidths[c]+"px";
+      const input=document.createElement("input"); input.dataset.r=r; input.dataset.c=c;
+      const cell=sheets[currentSheet][r][c]; input.value=cell.value;
+
+      input.onfocus=()=>{selectedCell=input; formulaBar.value=cell.formula;}
+      input.oninput=()=>{
+    cell.formula=input.value;
+    updateCell(r,c);
+    calculateAll();   // 追加
+    saveSheets();
+}
+      input.onmousedown=()=>{clearSelect(); selectedRange=[input]; td.classList.add("selected");}
+      input.onmouseover=e=>{if(e.buttons===1){selectedRange.push(input); td.classList.add("selected");}}
+      td.appendChild(input); tr.appendChild(td);
+    }
+    sheet.appendChild(tr);
+  }
+  buildTabs();
+}
+
+// ---------- タブ ----------
+function buildTabs(){
+  sheetTabs.innerHTML="";
+
+  sheets.forEach((s,i)=>{
+    const tab=document.createElement("div");
+    tab.className="sheetTab"+(i===currentSheet?" activeSheet":"");
+    tab.innerText=sheetNames[i] || "Sheet"+(i+1);
+    tab.draggable=true;
+
+    // シート切替
+    tab.onclick=()=>{
+      currentSheet=i;
+      build();
+      calculateAll();
+    };
+    tab.oncontextmenu=(e)=>{
+e.preventDefault();
+
+const name=prompt("シート名を入力",sheetNames[i]);
+
+if(name){
+sheetNames[i]=name;
+saveSheets();
+buildTabs();
+}
+
+}
+    // 名前変更（ダブルクリック）
+    tab.ondblclick=()=>{
+      const name=prompt("シート名を入力", sheetNames[i]);
+      if(name){
+        sheetNames[i]=name;
+        saveSheets();
+        buildTabs();
+      }
+    };
+
+    // ドラッグ開始
+    tab.ondragstart=e=>{
+      e.dataTransfer.setData("sheetIndex",i);
+    };
+
+    // ドロップ許可
+    tab.ondragover=e=>e.preventDefault();
+
+    // ドロップ並び替え
+    tab.ondrop=e=>{
+      const from=parseInt(e.dataTransfer.getData("sheetIndex"));
+      const to=i;
+
+      const sheetMove=sheets.splice(from,1)[0];
+      const nameMove=sheetNames.splice(from,1)[0];
+
+      sheets.splice(to,0,sheetMove);
+      sheetNames.splice(to,0,nameMove);
+
+      currentSheet=to;
+
+      build();
+      calculateAll();
+      saveSheets();
+    };
+
+    sheetTabs.appendChild(tab);
+  })
+}function deleteSheet(){
+  if(sheets.length === 1){
+    alert("最後のシートは削除できません");
+    return;
+  }
+
+  if(!confirm("このシートを削除しますか？")) return;
+
+  sheets.splice(currentSheet,1);
+
+  if(currentSheet >= sheets.length){
+    currentSheet = sheets.length - 1;
+  }
+
+  build();
+  calculateAll();
+  saveSheets();
+}
+// ---------- 操作 ----------
+function addSheet(){initSheet(); build(); saveSheets();}
+function clearSelect(){document.querySelectorAll(".selected").forEach(e=>e.classList.remove("selected")); selectedRange=[];}
+function getCell(r,c){return document.querySelector(`input[data-r="${r}"][data-c="${c}"]`);}
+function addRow() {
+    // 上限チェックをなくす、または大きくする
+    if (rows >= 1000) return; // 1000行まで許可
+    rows++;
+    sheets.forEach(s => {
+        const row = [];
+        for (let c = 0; c < cols; c++) row.push({formula:"", value:"", dependents:[]});
+        s.push(row);
+    });
+    build();
+    saveSheets();
+}
+function addCol() {
+    if (cols >= 100) return; // 100列まで許可
+    cols++;
+    colWidths.push(90);
+    sheets.forEach(s => s.forEach(r => r.push({formula:"", value:"", dependents:[]})));
+    build();
+    saveSheets();
+}
+function deleteRows() {
+    if (rows <= 1) {
+        alert("これ以上行を削除できません");
+        return;
+    }
+
+    if (selectedRange.length === 0) {
+        alert("削除する行を選択してください");
+        return;
+    }
+
+    // 選択セルから行番号を取得してユニークに
+    const rowsToDelete = [...new Set(selectedRange.map(input => parseInt(input.dataset.r)))].sort((a,b)=>b-a);
+    if(!confirm(`行 ${rowsToDelete.map(r=>r+1).join(", ")} を削除しますか？`)) return;
+
+    sheets.forEach(sheetData => {
+        rowsToDelete.forEach(r => {
+            if(sheetData.length > 1) sheetData.splice(r, 1);
+        });
+    });
+
+    rows -= rowsToDelete.length;
+    if(rows < 1) rows = 1;
+
+    build();
+    calculateAll();
+    saveSheets();
+    clearSelect();
+}
+function deleteCols() {
+    if (cols <= 1) {
+        alert("これ以上列を削除できません");
+        return;
+    }
+
+    if (selectedRange.length === 0) {
+        alert("削除する列を選択してください");
+        return;
+    }
+
+    // 選択セルから列番号を取得してユニークに
+    const colsToDelete = [...new Set(selectedRange.map(input => parseInt(input.dataset.c)))].sort((a,b)=>b-a);
+    if(!confirm(`列 ${colsToDelete.map(c=>colName(c)).join(", ")} を削除しますか？`)) return;
+
+    sheets.forEach(sheetData => {
+        sheetData.forEach(row => {
+            colsToDelete.forEach(c => {
+                if(row.length > 1) row.splice(c, 1);
+            });
+        });
+    });
+
+    cols -= colsToDelete.length;
+    if(cols < 1) cols = 1;
+
+    // 列幅も削除
+    colsToDelete.forEach(c => colWidths.splice(c, 1));
+
+    build();
+    calculateAll();
+    saveSheets();
+    clearSelect();
+}
+
+// ---------- 依存チェーン計算 ----------
+function parseCell(name){
+    const colMatch=name.match(/[A-Z]+/);
+    const rowMatch=name.match(/[0-9]+/);
+    if(!colMatch || !rowMatch) return {r:0,c:0};
+    const col=colMatch[0];
+    const row=parseInt(rowMatch[0])-1;
+    let c=0;
+    for(let i=0;i<col.length;i++) c=c*26+(col.charCodeAt(i)-64);
+    c--;
+    return {r:row,c:c};
+}
+
+function getRange(a,b){
+  const nums=[];
+  for(let r=a.r;r<=b.r;r++){
+    for(let c=a.c;c<=b.c;c++){
+      const v=parseFloat(sheets[currentSheet][r][c].value);
+      if(!isNaN(v)) nums.push(v);
+      else nums.push(0); // 空セルは0扱い
+    }
+  }
+  return nums;
+}
+
+function updateCell(r,c, visited=new Set()){
+  const key=r+","+c;
+  if(visited.has(key)){ sheets[currentSheet][r][c].value="#循環"; return; }
+  visited.add(key);
+  const cell=sheets[currentSheet][r][c]; 
+  const f=cell.formula || ""; // undefined防止
+  if(!f.startsWith("=")){cell.value=f || "";} // 空文字なら ""
+  else{
+    try{
+      if(f.startsWith("=SUM(")){const p=f.slice(5,-1).split(":"); const n=getRange(parseCell(p[0]),parseCell(p[1])); cell.value=n.reduce((a,b)=>a+b,0);}
+      else if(f.startsWith("=AVERAGE(")){const p=f.slice(9,-1).split(":"); const n=getRange(parseCell(p[0]),parseCell(p[1])); cell.value=n.length? n.reduce((a,b)=>a+b,0)/n.length : 0;}
+      else if(f.startsWith("=MAX(")){const p=f.slice(5,-1).split(":"); const n=getRange(parseCell(p[0]),parseCell(p[1])); cell.value=n.length? Math.max(...n) : 0;}
+      else if(f.startsWith("=MIN(")){const p=f.slice(5,-1).split(":"); const n=getRange(parseCell(p[0]),parseCell(p[1])); cell.value=n.length? Math.min(...n) : 0;}
+      else if(f.startsWith("=COUNT(")){const p=f.slice(7,-1).split(":"); const n=getRange(parseCell(p[0]),parseCell(p[1])); cell.value=n.length;}
+        else if(f.startsWith("=ABS(")){
+  const v=parseFloat(f.slice(5,-1));
+  cell.value=Math.abs(v);
+}
+
+else if(f.startsWith("=ROUND(")){
+  const p=f.slice(7,-1).split(",");
+  cell.value=Math.round(parseFloat(p[0]));
+}
+
+else if(f.startsWith("=SQRT(")){
+  const v=parseFloat(f.slice(6,-1));
+  cell.value=Math.sqrt(v);
+}
+
+else if(f.startsWith("=POWER(")){
+  const p=f.slice(7,-1).split(",");
+  cell.value=Math.pow(parseFloat(p[0]),parseFloat(p[1]));
+}
+
+else if(f.startsWith("=RAND(")){
+  cell.value=Math.random();
+}
+
+else if(f.startsWith("=LEN(")){
+  const t=f.slice(5,-1);
+  cell.value=t.length;
+}
+
+else if(f.startsWith("=UPPER(")){
+  const t=f.slice(7,-1);
+  cell.value=t.toUpperCase();
+}
+
+else if(f.startsWith("=LOWER(")){
+  const t=f.slice(7,-1);
+  cell.value=t.toLowerCase();
+}
+
+else if(f.startsWith("=CONCAT(")){
+  const p=f.slice(8,-1).split(",");
+  cell.value=p.join("");
+}
+
+else if(f.startsWith("=IF(")){
+  const p=f.slice(4,-1).split(",");
+  cell.value=eval(p[0]) ? p[1] : p[2];
+}
+
+else if(f.startsWith("=AND(")){
+  const p=f.slice(5,-1).split(",");
+  cell.value=p.every(v=>eval(v));
+}
+
+else if(f.startsWith("=OR(")){
+  const p=f.slice(4,-1).split(",");
+  cell.value=p.some(v=>eval(v));
+}
+
+else if(f.startsWith("=NOT(")){
+  const v=f.slice(5,-1);
+  cell.value=!eval(v);
+}
+
+else if(f.startsWith("=TODAY(")){
+  cell.value=new Date().toLocaleDateString();
+}
+
+else if(f.startsWith("=NOW(")){
+  cell.value=new Date().toLocaleString();
+}
+else if(f.startsWith("=SUMIF(")){
+const p=f.slice(7,-1).split(",");
+const range=getRange(parseCell(p[0]),parseCell(p[1]));
+cell.value=range.filter(v=>v>parseFloat(p[2])).reduce((a,b)=>a+b,0);
+}
+
+else if(f.startsWith("=PRODUCT(")){
+const p=f.slice(9,-1).split(":");
+const nums=getRange(parseCell(p[0]),parseCell(p[1]));
+cell.value=nums.reduce((a,b)=>a*b,1);
+}
+
+else if(f.startsWith("=RANDOMINT(")){
+const p=f.slice(11,-1).split(",");
+cell.value=Math.floor(Math.random()*(p[1]-p[0]+1))+parseInt(p[0]);
+}
+
+else if(f.startsWith("=DISTANCE(")){
+const p=f.slice(9,-1).split(",");
+const dx=parseFloat(p[0])-parseFloat(p[2]);
+const dy=parseFloat(p[1])-parseFloat(p[3]);
+cell.value=Math.sqrt(dx*dx+dy*dy);
+}
+
+else if(f.startsWith("=PERCENT(")){
+const p=f.slice(8,-1).split(",");
+cell.value=(parseFloat(p[0])/parseFloat(p[1]))*100;
+}
+
+else if(f.startsWith("=CLAMP(")){
+const p=f.slice(6,-1).split(",");
+const v=parseFloat(p[0]);
+cell.value=Math.min(Math.max(v,parseFloat(p[1])),parseFloat(p[2]));
+}
+// ---------- 数学 ----------
+else if(f.startsWith("=FLOOR(")){
+  const v=parseFloat(f.slice(7,-1));
+  cell.value=Math.floor(v);
+}
+
+else if(f.startsWith("=CEIL(")){
+  const v=parseFloat(f.slice(6,-1));
+  cell.value=Math.ceil(v);
+}
+
+else if(f.startsWith("=MOD(")){
+  const p=f.slice(5,-1).split(",");
+  cell.value=parseFloat(p[0])%parseFloat(p[1]);
+}
+
+else if(f.startsWith("=SIN(")){
+  const v=parseFloat(f.slice(5,-1));
+  cell.value=Math.sin(v);
+}
+
+else if(f.startsWith("=COS(")){
+  const v=parseFloat(f.slice(5,-1));
+  cell.value=Math.cos(v);
+}
+
+else if(f.startsWith("=TAN(")){
+  const v=parseFloat(f.slice(5,-1));
+  cell.value=Math.tan(v);
+}
+
+else if(f.startsWith("=LOG(")){
+  const v=parseFloat(f.slice(5,-1));
+  cell.value=Math.log10(v);
+}
+
+else if(f.startsWith("=LN(")){
+  const v=parseFloat(f.slice(4,-1));
+  cell.value=Math.log(v);
+}
+
+// ---------- 文字 ----------
+else if(f.startsWith("=LEFT(")){
+  const p=f.slice(6,-1).split(",");
+  cell.value=p[0].substring(0,parseInt(p[1]));
+}
+
+else if(f.startsWith("=RIGHT(")){
+  const p=f.slice(7,-1).split(",");
+  const text=p[0];
+  const n=parseInt(p[1]);
+  cell.value=text.substring(text.length-n);
+}
+
+else if(f.startsWith("=MID(")){
+  const p=f.slice(5,-1).split(",");
+  const text=p[0];
+  const start=parseInt(p[1])-1;
+  const len=parseInt(p[2]);
+  cell.value=text.substring(start,start+len);
+}
+
+else if(f.startsWith("=REPEAT(")){
+  const p=f.slice(8,-1).split(",");
+  cell.value=p[0].repeat(parseInt(p[1]));
+}
+
+else if(f.startsWith("=REVERSE(")){
+  const t=f.slice(9,-1);
+  cell.value=t.split("").reverse().join("");
+}
+
+// ---------- 日付 ----------
+else if(f.startsWith("=YEAR(")){
+  const d=new Date();
+  cell.value=d.getFullYear();
+}
+
+else if(f.startsWith("=MONTH(")){
+  const d=new Date();
+  cell.value=d.getMonth()+1;
+}
+
+else if(f.startsWith("=DAY(")){
+  const d=new Date();
+  cell.value=d.getDate();
+}
+
+else if(f.startsWith("=HOUR(")){
+  const d=new Date();
+  cell.value=d.getHours();
+}
+
+else if(f.startsWith("=MINUTE(")){
+  const d=new Date();
+  cell.value=d.getMinutes();
+}
+
+else if(f.startsWith("=SECOND(")){
+  const d=new Date();
+  cell.value=d.getSeconds();
+}
+
+// ---------- 統計 ----------
+else if(f.startsWith("=MEDIAN(")){
+  const p=f.slice(8,-1).split(":");
+  const nums=getRange(parseCell(p[0]),parseCell(p[1])).sort((a,b)=>a-b);
+  const mid=Math.floor(nums.length/2);
+  cell.value=nums.length%2 ? nums[mid] : (nums[mid-1]+nums[mid])/2;
+}
+
+else if(f.startsWith("=MODE(")){
+  const p=f.slice(6,-1).split(":");
+  const nums=getRange(parseCell(p[0]),parseCell(p[1]));
+  const map={};
+  nums.forEach(n=>map[n]=(map[n]||0)+1);
+  cell.value=Object.keys(map).reduce((a,b)=>map[a]>map[b]?a:b);
+}
+
+else if(f.startsWith("=STDEV(")){
+  const p=f.slice(7,-1).split(":");
+  const nums=getRange(parseCell(p[0]),parseCell(p[1]));
+  const avg=nums.reduce((a,b)=>a+b,0)/nums.length;
+  const variance=nums.reduce((a,b)=>a+(b-avg)**2,0)/nums.length;
+  cell.value=Math.sqrt(variance);
+}
+else if(f.startsWith("=VLOOKUP(")){
+const p=f.slice(9,-1).split(",");
+
+const value=parseFloat(p[0]);
+const range=p[1].split(":");
+
+const start=parseCell(range[0]);
+const end=parseCell(range[1]);
+
+const col=parseInt(p[2])-1;
+
+for(let r=start.r;r<=end.r;r++){
+if(parseFloat(sheets[currentSheet][r][start.c].value)==value){
+cell.value=sheets[currentSheet][r][start.c+col].value;
+break;
+}
+}
+}
+else if(f.startsWith("=XLOOKUP(")){
+const p=f.slice(9,-1).split(",");
+
+const value=parseFloat(p[0]);
+
+const lookup=parseCell(p[1]);
+const result=parseCell(p[2]);
+
+for(let r=0;r<rows;r++){
+if(parseFloat(sheets[currentSheet][r][lookup.c].value)==value){
+cell.value=sheets[currentSheet][r][result.c].value;
+break;
+}
+}
+}
+
+else if(f.startsWith("=VAR(")){
+  const p=f.slice(5,-1).split(":");
+  const nums=getRange(parseCell(p[0]),parseCell(p[1]));
+  const avg=nums.reduce((a,b)=>a+b,0)/nums.length;
+  cell.value=nums.reduce((a,b)=>a+(b-avg)**2,0)/nums.length;
+}else{
+
+let expr=f.slice(1);
+
+// セル参照置き換え
+expr=expr.replace(/[A-Z]+[0-9]+/g,(ref)=>{
+    const pos=parseCell(ref);
+    return sheets[currentSheet][pos.r][pos.c].value || 0;
+});
+cell.value=eval(expr);
+
+}
+    }catch{cell.value="";}
+  }
+  const input=getCell(r,c); if(input && document.activeElement!==input) input.value=cell.value;
+}
+
+function calculateAll(){
+  for(let r=0;r<rows;r++){
+    for(let c=0;c<cols;c++){
+      updateCell(r,c,new Set());
+    }
+  }
+}
+
+formulaBar.oninput=()=>{
+  if(selectedCell){
+    const r=selectedCell.dataset.r, c=selectedCell.dataset.c;
+    sheets[currentSheet][r][c].formula=formulaBar.value;
+    updateCell(r,c);
+    saveSheets();
+  }
+}
+
+// ---------- 履歴 ----------
+function recordHistory(){history.push(JSON.stringify(sheets)); if(history.length>100) history.shift();}
+function undo(){if(history.length===0) return; redoStack.push(JSON.stringify(sheets)); sheets=JSON.parse(history.pop()); build(); calculateAll(); saveSheets();}
+function redo(){if(redoStack.length===0) return; history.push(JSON.stringify(sheets)); sheets=JSON.parse(redoStack.pop()); build(); calculateAll(); saveSheets();}
+function clearAll(){if(!confirm("全てのセルを削除しますか？")) return; sheets.forEach(s=>s.forEach(r=>{for(let c=0;c<r.length;c++) r[c]={formula:"",value:"",dependents:[]};})); build(); saveSheets();}
+
+// ---------- 関数パネル ----------
+function showFunctions(){document.getElementById("functionPanel").style.display="block";}
+function hideFunctions(){document.getElementById("functionPanel").style.display="none";}
+
+document.addEventListener("keydown",e=>{
+
+if(e.ctrlKey && e.key==="z") undo();
+if(e.ctrlKey && e.key==="y") redo();
+
+if(e.key==="Enter" && selectedCell){
+
+e.preventDefault();
+
+let r=parseInt(selectedCell.dataset.r);
+let c=parseInt(selectedCell.dataset.c);
+
+r++;
+
+if(r>=rows){
+addRow();
+}
+
+const next=getCell(r,c);
+
+if(next){
+next.focus();
+selectedCell=next;
+}
+
+}
+
+});
+
+if(!loadSheets()) initSheet();
+build();
+calculateAll();
+let clipboard=null;
+
+document.addEventListener("keydown",e=>{
+
+// コピー
+if(e.ctrlKey && e.key==="c" && selectedRange.length){
+
+clipboard=selectedRange.map(c=>{
+return {
+r:parseInt(c.dataset.r),
+c:parseInt(c.dataset.c),
+data:JSON.parse(JSON.stringify(
+sheets[currentSheet][c.dataset.r][c.dataset.c]
+))
+};
+
+});
+
+}
+
+// 貼り付け
+if(e.ctrlKey && e.key==="v" && clipboard && selectedCell){
+
+let baseR=parseInt(selectedCell.dataset.r);
+let baseC=parseInt(selectedCell.dataset.c);
+
+clipboard.forEach(item=>{
+
+const r=baseR+(item.r-clipboard[0].r);
+const c=baseC+(item.c-clipboard[0].c);
+
+if(r<rows && c<cols){
+sheets[currentSheet][r][c]=JSON.parse(JSON.stringify(item.data));
+}
+
+});
+
+build();
+calculateAll();
+saveSheets();
+
+}
+
+});
+document.addEventListener("keydown", function(e){
+    const active = document.activeElement;
+    if(active.tagName !== "INPUT" || !active.dataset.r) return; // input でなければ無視
+
+    let r = parseInt(active.dataset.r);
+    let c = parseInt(active.dataset.c);
+    let next = null;
+
+    switch(e.key){
+        case "ArrowUp": r--; break;
+        case "ArrowDown": r++; break;
+        case "ArrowLeft": c--; break;
+        case "ArrowRight": c++; break;
+        default: return; // 矢印キー以外は無視
+    }
+
+    if(r>=0 && r<rows && c>=0 && c<cols){
+        next = document.querySelector(`input[data-r="${r}"][data-c="${c}"]`);
+    }
+
+    if(next){
+        e.preventDefault();
+        next.focus();
+        selectedCell = next;
+    }
+});
+
+</script>
+</body>
+</html>
