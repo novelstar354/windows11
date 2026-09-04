@@ -50,7 +50,7 @@ background-size:110px 110px,170px 170px}
   left:0;
   bottom:48px;
   width:430px;
-  height:520px;
+  height:550px;
 
   background:rgba(30,30,30,.98);
   box-shadow:0 0 20px #0008;
@@ -135,6 +135,7 @@ background-size:110px 110px,170px 170px}
   color:#fff !important;
 }
 .content{flex:1;min-height:0;overflow:auto}
+.office-app-frame{display:block;width:100%;height:100%;border:0;background:#fff}
 .lock{position:fixed;inset:0;background:linear-gradient(135deg,#0b5ca8,#143c70);z-index:50000;display:flex;align-items:center;justify-content:center;transition:opacity .35s}
 .lock.hidden{opacity:0;pointer-events:none}
 .lockbox{text-align:center;width:320px}.lockbox .avatar{font-size:72px;margin-bottom:10px}.lockbox h1{font-weight:400;margin:5px}.lockbox p{margin:8px 0 18px;color:#dcecff}.lockbox input{width:240px;padding:11px;border:1px solid #ddd}.lockbox button{margin-top:10px;padding:10px 25px;background:#1683d8;color:#fff;cursor:pointer}.hint{font-size:11px;opacity:.7;margin-top:15px}
@@ -3175,6 +3176,8 @@ input[type="range"]::-moz-range-progress {
     <div class="icon" data-app="terminal" data-desktop="1" ondblclick="openApp('terminal')"><div class="ico">⌨️</div><span>ターミナル</span></div>
     <div class="icon" data-app="calculator" data-desktop="1" ondblclick="openApp('calculator')"><div class="ico">🧮</div><span>電卓</span></div>
     <div class="icon" data-app="browser" data-desktop="1" ondblclick="openApp('browser')"><div class="ico">🌐</div><span>ブラウザ</span></div>
+    <div class="icon" data-app="word" data-desktop="1" ondblclick="openApp('word')"><div class="ico">📘</div><span>Word</span></div>
+    <div class="icon" data-app="excel" data-desktop="1" ondblclick="openApp('excel')"><div class="ico">📗</div><span>Excel</span></div>
     <div class="icon" data-app="taskmgr" data-desktop="1" ondblclick="openApp('taskmgr')"><div class="ico">📊</div><span>タスク マネージャー</span></div>
     <div class="icon" data-app="settings" data-desktop="1" ondblclick="openApp('settings')"><div class="ico">⚙️</div><span>設定</span></div>
   </div>
@@ -3387,6 +3390,18 @@ input[type="range"]::-moz-range-progress {
          onclick="openApp('browser');toggleStart()">
       <b>🌐</b>
       <span>ブラウザ</span>
+    </div>
+
+    <div class="app-tile"
+         onclick="openApp('word');toggleStart()">
+      <b>📘</b>
+      <span>Word</span>
+    </div>
+
+    <div class="app-tile"
+         onclick="openApp('excel');toggleStart()">
+      <b>📗</b>
+      <span>Excel</span>
     </div>
 
     
@@ -4419,6 +4434,8 @@ function ensureDesktop2BaseIcons(){
     ['terminal','⌨️','ターミナル'],
     ['calculator','🧮','電卓'],
     ['browser','🌐','ブラウザ'],
+    ['word','📘','Word'],
+    ['excel','📗','Excel'],
     ['taskmgr','📊','タスク マネージャー'],
     ['settings','⚙️','設定']
   ];
@@ -4908,6 +4925,12 @@ function getTaskAppKey(title){
   if(title.includes('ブラウザ'))
     return 'browser';
 
+  if(title.includes('Word'))
+    return 'word';
+
+  if(title.includes('Excel'))
+    return 'excel';
+
   if(title.includes('タスク マネージャー'))
     return 'taskmgr';
 
@@ -5205,7 +5228,18 @@ function openApp(app){
   if(app==='taskmgr')return openTaskManager();
   if(app==='calculator')return openCalculator();
   if(app==='browser')return openBrowser();
+  if(app==='word')return openOfficeApp('Word','word.html','📘');
+  if(app==='excel')return openOfficeApp('Excel','excel15.html','📗');
   if(app==='about')return makeWindow('WebOS 10 について',`<div class="about"><h1>WebOS 10</h1><p>ブラウザだけで動くWindows 10のWebOSデスクトップ環境。</p><p>バージョン 10.0.26100</p></div>`,'ℹ️',{width:500,height:330});
+}
+
+function openOfficeApp(title, src, icon){
+  return makeWindow(
+    title,
+    `<iframe class="office-app-frame" src="${escapeHtml(src)}" title="${escapeHtml(title)}"></iframe>`,
+    icon,
+    {width:1000,height:680}
+  );
 }
 
 function openExplorer(){
@@ -11974,8 +12008,6 @@ function findFreeDesktopPosition(){
   const positions = [];
 
   icons.forEach(el => {
-    if(el.id === 'trashIcon') return;
-
     const x = parseFloat(el.style.left);
     const y = parseFloat(el.style.top);
 
@@ -11988,7 +12020,8 @@ function findFreeDesktopPosition(){
   const colWidth = 90;
   const rowHeight = 94;
 
-  const startX = 190;
+  // 復元ファイルは、ゴミ箱を避けつつ左上から空いている場所を探す
+  const startX = 12;
   const startY = 12;
 
   for(let row = 0; row < 20; row++){
@@ -12330,6 +12363,21 @@ function renderTrash(){
   });
 }
 
+function getDefaultDesktopAppPosition(app){
+  const positions = {
+    explorer:  {x: 12, y: 106},
+    editor:    {x: 12, y: 200},
+    calculator:{x: 12, y: 294},
+    browser:   {x: 12, y: 388},
+    excel:     {x: 90, y: 12},
+    word:      {x: 90, y: 106},
+    taskmgr:   {x: 90, y: 200},
+    terminal:  {x: 90, y: 294},
+    settings:  {x: 90, y: 388}
+  };
+  return positions[app] ? {...positions[app]} : {x: 12, y: 12};
+}
+
 function restoreDesktopIcon(index){
   const item = desktopTrash[index];
 
@@ -12378,13 +12426,9 @@ function restoreDesktopIcon(index){
 
     icons.appendChild(el);
 
-    // ゴミ箱へ入れる前の位置へ復元
-    if(Number.isFinite(Number(item.x)) && Number.isFinite(Number(item.y))){
-      desktopPositions[desktopPositionKey(app, restoreDesktop)] = {
-        x: Number(item.x),
-        y: Number(item.y)
-      };
-    }
+    // アプリはゴミ箱から復元するとデフォルト位置へ戻す
+    desktopPositions[desktopPositionKey(app, restoreDesktop)] =
+      getDefaultDesktopAppPosition(app);
     saveDesktopPositions();
 
     // ドラッグ機能を初期化
@@ -12437,9 +12481,8 @@ function restoreDesktopIcon(index){
      * フォルダの場合も「フォルダ自身」だけを登録。
      * 中身は登録しない。
      */
-    const pos = (Number.isFinite(Number(item.x)) && Number.isFinite(Number(item.y)))
-      ? {x:Number(item.x), y:Number(item.y)}
-      : findFreeDesktopPosition();
+    // ファイル・フォルダは、復元時に左上から空いている場所へ配置
+    const pos = findFreeDesktopPosition();
 
     desktopItems.push({
       path: path,
@@ -12486,9 +12529,8 @@ function restoreDesktopIcon(index){
     const restoreDesktop = desktopNumber(item.desktop);
     if(!desktopItems.some(x => x.path === path && desktopNumber(x.desktop) === restoreDesktop)){
 
-      const pos = (Number.isFinite(Number(item.x)) && Number.isFinite(Number(item.y)))
-        ? {x:Number(item.x), y:Number(item.y)}
-        : findFreeDesktopPosition();
+      // ファイル・フォルダは、復元時に左上から空いている場所へ配置
+      const pos = findFreeDesktopPosition();
 
       desktopItems.push({
         path: path,
@@ -12542,7 +12584,7 @@ function moveDesktopIconToTrash(el){
    */
   if(item.kind === 'app'){
 
-    delete desktopPositions[item.app];
+    delete desktopPositions[desktopPositionKey(item.app, desktopNumber(item.desktop))];
 
     saveDesktopPositions();
 
@@ -12596,13 +12638,15 @@ function initOneDesktopIcon(el){
   // 1行目
   explorer:    {x: 12,  y: 106},
   editor:      {x: 12, y: 200},
-  terminal:    {x: 90, y: 106},
   calculator:  {x: 12, y: 294},
 
   // 2行目
   browser:     {x: 12,  y: 388},
-  taskmgr:     {x: 90,  y: 12},
-  settings:    {x: 90,  y: 200}
+  excel:       {x: 90,  y: 12},
+  word:        {x: 90,  y: 106},
+  taskmgr:     {x: 90,  y: 200},
+  terminal:    {x: 90,  y: 294},
+  settings:    {x: 90,  y: 388}
 };
 
 // 保存済みの位置がなければ初期位置を使用
@@ -12821,13 +12865,15 @@ document.addEventListener('keyup', function(e){
   trash: {x:12, y:12},
   explorer:    {x: 12,  y: 106},
   editor:      {x: 12, y: 200},
-  terminal:    {x: 90, y: 106},
   calculator:  {x: 12, y: 294},
 
   // 2行目
   browser:     {x: 12,  y: 388},
-  taskmgr:     {x: 90,  y: 12},
-  settings:    {x: 90,  y: 200}
+  excel:       {x: 90,  y: 12},
+  word:        {x: 90,  y: 106},
+  taskmgr:     {x: 90,  y: 200},
+  terminal:    {x: 90,  y: 294},
+  settings:    {x: 90,  y: 388}
 };
 
   document.querySelectorAll('#desktopIcons .icon[data-app]').forEach(icon => {
