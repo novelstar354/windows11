@@ -45,6 +45,7 @@ padding-bottom:3px;
 <body>
 
 <div id="toolbar">
+<button onclick="saveExcelAs()">名前を付けて保存</button>
 <button onclick="addRow()">行+</button>
 <button onclick="addCol()">列+</button>
 <button onclick="deleteRows()">行削除</button>
@@ -232,11 +233,60 @@ function initSheet(){
   sheetNames.push("Sheet"+sheets.length);
 }
 function saveSheets(){
-  localStorage.setItem("excelJS_sheets", JSON.stringify(sheets))
-  localStorage.setItem("excelJS_sheetNames", JSON.stringify(sheetNames))
-  localStorage.setItem("excelJS_rows", rows)
-  localStorage.setItem("excelJS_cols", cols)
-  localStorage.setItem("excelJS_colWidths", JSON.stringify(colWidths))
+  // Excel自身の保存
+  localStorage.setItem("excelJS_sheets", JSON.stringify(sheets));
+  localStorage.setItem("excelJS_sheetNames", JSON.stringify(sheetNames));
+  localStorage.setItem("excelJS_rows", rows);
+  localStorage.setItem("excelJS_cols", cols);
+  localStorage.setItem("excelJS_colWidths", JSON.stringify(colWidths));
+
+  // Windows共通ファイルシステム
+    const STORAGE_KEY = "webos10_files_v2";
+
+  let files = {};
+ 
+
+  const filename =
+  window.currentExcelFileName ||
+  "Book1.excel";
+
+const path = "Documents/" + filename;
+
+files[path] = {
+  type: "file",
+  name: filename,
+  path: path,
+  extension: ".excel",
+  mime: "application/json",
+  app: "excel",
+  content: JSON.stringify({
+    sheets: sheets,
+    sheetNames: sheetNames,
+    rows: rows,
+    cols: cols,
+    colWidths: colWidths
+  }),
+  updatedAt: Date.now()
+};
+
+localStorage.setItem(
+  STORAGE_KEY,
+  JSON.stringify(files)
+);
+
+  // index.html側で使っている files が存在する場合も同期
+  try {
+    localStorage.setItem("files", JSON.stringify(files));
+  } catch(e) {}
+
+  // Windows本体へ保存を通知
+  try {
+    window.parent.postMessage({
+      type: "webos-file-saved",
+      path: path,
+      app: "excel"
+    }, "*");
+  } catch(e) {}
 }
 function loadSheets(){
   const s=localStorage.getItem("excelJS_sheets");
@@ -899,6 +949,30 @@ saveSheets();
 }
 
 });
+window.currentExcelFileName = "Book1.excel";
+
+function saveExcelAs(){
+  let name = prompt(
+    "ファイル名を入力してください",
+    window.currentExcelFileName || "Book1.excel"
+  );
+
+  if(!name) return;
+
+  name = name.trim();
+
+  if(!name) return;
+
+  if(!name.toLowerCase().endsWith(".excel")){
+    name += ".excel";
+  }
+
+  window.currentExcelFileName = name;
+
+  saveSheets();
+
+  alert("エクスプローラーに保存しました");
+}
 document.addEventListener("keydown", function(e){
     const active = document.activeElement;
     if(active.tagName !== "INPUT" || !active.dataset.r) return; // input でなければ無視
