@@ -70,6 +70,25 @@
         .hidden {
             display: none;
         }
+        #file-name-bar{
+    height:38px;
+    display:flex;
+    align-items:center;
+    gap:8px;
+    padding:6px 12px;
+    background:#f7f7f7;
+    border-bottom:1px solid #ccc;
+    flex-shrink:0;
+}
+
+#documentFileName{
+    width:280px;
+    height:26px;
+    padding:4px 8px;
+    border:1px solid #aaa;
+    border-radius:4px;
+    background:#fff;
+}
     </style>
 </head>
 <body>
@@ -105,9 +124,9 @@
         <button onclick="insertTable()">Insert Table</button>
 
         <!-- File Handling -->
-        <button onclick="saveDocument()">Save</button>
-        <button onclick="loadDocument()">Load</button>
-        <button onclick="clearEditor()">Clear</button>
+<button onclick="saveWordToExplorer()">Save</button>
+<button onclick="loadDocument()">ファイルを開く</button>
+<button onclick="clearEditor()">Clear</button>
 
         <!-- Undo/Redo -->
         <button onclick="undo()">Undo</button>
@@ -122,9 +141,82 @@
     <div id="editor" contenteditable="true">
         <p><!--ここにテキストを入力してください...--></p>
     </div>
+    <div id="file-name-bar">
+    <span>ファイル名：</span>
+    <input id="documentFileName" value="新しい文書.word">
+</div>
 </div>
 
 <script>
+    const WORD_STORAGE_KEY = "webos10_files_v2";
+
+let currentWordFilePath =
+  new URLSearchParams(location.search).get("file");
+
+function getWordFiles(){
+  try{
+    return JSON.parse(
+      localStorage.getItem(WORD_STORAGE_KEY) || "{}"
+    );
+  }catch{
+    return {};
+  }
+}
+
+function saveWordToExplorer(){
+  const editor = document.getElementById("editor");
+  const files = getWordFiles();
+
+  if(!currentWordFilePath){
+    const name = prompt(
+      "ファイル名を入力してください",
+      "文書1.word"
+    );
+
+    if(!name) return;
+
+    let filename = name.trim();
+
+    if(!filename.toLowerCase().endsWith(".word")){
+      filename += ".word";
+    }
+
+    currentWordFilePath =
+      "Documents/" + filename;
+  }
+
+  const filename =
+    currentWordFilePath.split("/").pop();
+
+  files[currentWordFilePath] = {
+    type: "file",
+    name: filename,
+    path: currentWordFilePath,
+    extension: ".word",
+    mime: "text/html",
+    app: "word",
+    content: editor.innerHTML,
+    updatedAt: Date.now()
+  };
+
+  localStorage.setItem(
+    WORD_STORAGE_KEY,
+    JSON.stringify(files)
+  );
+
+  localStorage.setItem(
+    "documentContent",
+    editor.innerHTML
+  );
+
+  window.parent.postMessage({
+    type: "webos-file-saved",
+    path: currentWordFilePath,
+    app: "word"
+  }, "*");
+
+  alert("Explorerに保存しました");
+}
     let undoStack = [];
     let redoStack = [];
 
@@ -223,12 +315,230 @@
             document.getElementById('editor').innerHTML = contentToRedo;
         }
     }
+/* ========================================
+   Windows 11 共通ファイルシステム
+======================================== */
 
+const WORD_FILES_KEY = "windows11_files";
+
+function getWindowsFiles(){
+    try{
+        return JSON.parse(
+            localStorage.getItem(WORD_FILES_KEY) || "{}"
+        );
+    }catch(e){
+        return {};
+    }
+}
+
+function saveWindowsFiles(files){
+    localStorage.setItem(
+        WORD_FILES_KEY,
+        JSON.stringify(files)
+    );
+
+    /*
+     * Windows側で使っている可能性のある
+     * files形式にも同期
+     */
+    try{
+        localStorage.setItem(
+            "files",
+            JSON.stringify(files)
+        );
+    }catch(e){}
+}
+
+function normalizeWordFileName(name){
+    name = String(name || "").trim();
+
+    if(!name){
+        name = "新しい文書";
+    }
+
+    /*
+     * 拡張子がなければ .word を付ける
+     */
+    if(!/\.[a-z0-9]+$/i.test(name)){
+        name += ".word";
+    }
+
+    return name;
+}
+
+function saveDocument(){
+
+    const editor =
+        document.getElementById("editor");
+
+    const filenameInput =
+        document.getElementById("documentFileName");
+
+    const filename =
+        normalizeWordFileName(
+            filenameInput.value
+        );
+
+    filenameInput.value = filename;
+
+    const files =
+        getWindowsFiles();
+
+    const path =
+        "Documents/" + filename;
+
+    files[path] = {
+        type: "file",
+        name: filename,
+        path: path,
+        extension: ".word",
+        mime: "text/html",
+        app: "word",
+        content: editor.innerHTML,
+        updatedAt: Date.now()
+    };
+
+    saveWindowsFiles(files);
+
+    /*
+     * 旧形式も互換用に残す
+     */
+    localStorage.setItem(
+        "documentContent",
+        editor.innerHTML
+    );
+
+    localStorage.setItem(
+        "word_current_file",
+        path
+    );
+
+    alert(
+        "「" + filename +
+        "」をエクスプローラーに保存しました。"
+    );
+}
+
+function loadDocument(){
+
+    const files =
+        getWindowsFiles();
+
+    const filename =
+        normalizeWordFileName(
+            document.getElementById(
+                "documentFileName"
+            ).value
+        );
+
+    const path =
+        "Documents/" + filename;
+
+    const file =
+        files[path];
+
+    if(
+        file &&
+        file.type === "file" &&
+        file.app === "word"
+    ){
+
+        document.getElementById(
+            "editor"
+        ).innerHTML =
+            file.content || "";
+
+        document.getElementById(
+            "documentFileName"
+        ).value =
+            file.name || filename;
+
+        localStorage.setItem(
+            "word_current_file",
+            path
+        );
+
+        return;
+    }
+
+    /*
+     * 旧Wordデータとの互換
+     */
+    const oldContent =
+        localStorage.getItem(
+            "documentContent"
+        );
+
+    if(oldContent){
+
+        document.getElementById(
+            "editor"
+        ).innerHTML =
+            oldContent;
+
+        return;
+    }
+
+    alert(
+        "ファイルが見つかりません。"
+    );
+}
+function openWordFileFromExplorer(path){
+
+    const files =
+        getWindowsFiles();
+
+    const file =
+        files[path];
+
+    if(!file) return;
+
+    if(
+        file.app !== "word" &&
+        file.extension !== ".word"
+    ){
+        return;
+    }
+
+    document.getElementById(
+        "editor"
+    ).innerHTML =
+        file.content || "";
+
+    document.getElementById(
+        "documentFileName"
+    ).value =
+        file.name ||
+        path.split("/").pop();
+
+    localStorage.setItem(
+        "word_current_file",
+        path
+    );
+}
     // Save content before editing for undo functionality
     document.getElementById('editor').addEventListener('input', () => {
         undoStack.push(document.getElementById('editor').innerHTML);
         redoStack = [];  // Clear redo stack on new input
     });
+function loadWordFromExplorer(){
+  if(!currentWordFilePath) return;
+
+  const files = getWordFiles();
+  const item = files[currentWordFilePath];
+
+  if(!item || item.type !== "file") return;
+
+  document.getElementById("editor").innerHTML =
+    item.content || "";
+
+  localStorage.setItem(
+    "documentContent",
+    item.content || ""
+  );
+}
+
+loadWordFromExplorer();
 </script>
 
 </body>
