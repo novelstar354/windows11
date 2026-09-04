@@ -43,26 +43,11 @@ background-size:110px 110px,170px 170px}
   background:rgba(255,255,255,.28) !important;
   border-color:rgba(255,255,255,.95) !important;
   transform:scale(1.12);
-  box-shadow:0 0 0 3px rgba(255,255,255,.18),0 0 22px rgba(255,255,255,.55);
+  box-shadow:0 0 0 2px rgba(255,255,255,.12),0 0 12px rgba(255,255,255,.28);
   z-index:5000 !important;
 }
-.icon[data-trash="true"].drag-over .ico{animation:trashDropPulse .55s ease-in-out infinite alternate}
-.icon[data-trash="true"].drag-over::after{
-  content:"ここにドロップ";
-  position:absolute;
-  left:50%;
-  top:calc(100% + 7px);
-  transform:translateX(-50%);
-  white-space:nowrap;
-  padding:4px 8px;
-  border-radius:5px;
-  background:rgba(20,20,20,.9);
-  color:#fff;
-  font-size:11px;
-  text-shadow:none;
-  box-shadow:0 2px 8px rgba(0,0,0,.35);
-  pointer-events:none;
-}
+.icon[data-trash="true"].drag-over .ico{transform:scale(1.12);transition:transform .18s ease}
+.icon[data-trash="true"].drag-over::after{display:none !important;}
 .icon[data-trash="true"].trash-drop-success{animation:trashDropSuccess .5s ease both}
 @keyframes trashDropPulse{from{transform:scale(1)}to{transform:scale(1.2)}}
 @keyframes trashDropSuccess{
