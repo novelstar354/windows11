@@ -1,0 +1,3534 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>PowerPointer</title>
+
+<style>
+*{box-sizing:border-box}
+
+html,body{
+  margin:0;
+  width:100%;
+  height:100%;
+  font-family:"Segoe UI",Arial,sans-serif;
+  background:#f3f3f3;
+  color:#222;
+  overflow:hidden;
+}
+
+button,input,select,textarea{
+  font:inherit;
+}
+
+button{
+  border:0;
+  background:none;
+  cursor:pointer;
+}
+
+.app{
+  width:100%;
+  height:100vh;
+  display:flex;
+  flex-direction:column;
+}
+
+/* TITLEBAR */
+
+.titlebar{
+  height:34px;
+  flex-shrink:0;
+  background:#fff;
+  display:flex;
+  align-items:center;
+  padding:0 10px;
+  border-bottom:1px solid #ddd;
+}
+
+.logo{
+  font-weight:700;
+  color:#c43b33;
+  margin-right:12px;
+}
+
+.filename-wrap{
+  display:flex;
+  align-items:center;
+}
+
+.filename-input{
+  width:240px;
+  height:26px;
+  border:1px solid transparent;
+  background:transparent;
+  color:#555;
+  font-size:13px;
+  padding:4px 6px;
+  border-radius:4px;
+  outline:none;
+}
+
+.filename-input:hover,
+.filename-input:focus{
+  border-color:#bbb;
+  background:#fff;
+}
+
+.title-actions{
+  margin-left:auto;
+  display:flex;
+  gap:3px;
+}
+
+.title-actions button{
+  width:34px;
+  height:28px;
+  border-radius:4px;
+}
+
+.title-actions button:hover{
+  background:#eee;
+}
+
+.title-actions button:last-child:hover{
+  background:#e81123;
+  color:#fff;
+}
+
+/* RIBBON */
+
+.ribbon{
+  height:120px;
+  flex-shrink:0;
+  background:#fff;
+  border-bottom:1px solid #d4d4d4;
+  display:flex;
+  flex-direction:column;
+}
+
+.tabs{
+  height:31px;
+  display:flex;
+  align-items:center;
+  padding-left:10px;
+  gap:2px;
+}
+
+.tab{
+  padding:6px 15px;
+  height:31px;
+  font-size:13px;
+}
+
+.tab:hover{
+  background:#f2f2f2;
+}
+
+.tab.active{
+  color:#c43b33;
+  border-bottom:2px solid #c43b33;
+  font-weight:600;
+}
+
+.tools{
+  flex:1;
+  display:flex;
+  align-items:center;
+  padding:5px 12px;
+  gap:5px;
+  overflow-x:auto;
+}
+
+.tool{
+  min-width:64px;
+  height:55px;
+  border-radius:5px;
+  padding:3px 7px;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:2px;
+  font-size:11px;
+  flex-shrink:0;
+}
+
+.tool:hover{
+  background:#f0f0f0;
+}
+
+.tool .ico{
+  font-size:21px;
+  line-height:21px;
+}
+
+.tool.small{
+  min-width:45px;
+}
+
+.separator{
+  height:45px;
+  width:1px;
+  background:#ddd;
+  margin:0 4px;
+  flex-shrink:0;
+}
+
+.ribbon-panel{
+  display:none;
+}
+
+.ribbon-panel.active{
+  display:flex;
+}
+
+/* WORKSPACE */
+
+.workspace{
+  min-height:0;
+  flex:1;
+  display:flex;
+}
+
+.sidebar{
+  width:205px;
+  flex-shrink:0;
+  background:#eee;
+  border-right:1px solid #d0d0d0;
+  display:flex;
+  flex-direction:column;
+}
+
+.sidebar-head{
+  height:38px;
+  padding:10px 12px;
+  font-size:12px;
+  font-weight:600;
+  color:#555;
+}
+
+.slides{
+  flex:1;
+  overflow:auto;
+  padding:5px 10px 20px 32px;
+}
+
+.slide-item{
+  position:relative;
+  margin-bottom:10px;
+  cursor:pointer;
+}
+
+.slide-thumb{
+  background:#fff;
+  border:1px solid #aaa;
+  aspect-ratio:16/9;
+  position:relative;
+  overflow:hidden;
+  box-shadow:0 1px 2px #bbb;
+}
+
+.slide-item:hover .slide-thumb{
+  border-color:#777;
+}
+
+.slide-item.active .slide-thumb{
+  border:2px solid #c43b33;
+}
+
+.slide-number{
+  position:absolute;
+  left:-24px;
+  top:8px;
+  font-size:12px;
+  color:#555;
+}
+
+.add-slide{
+  margin:4px 10px 12px;
+  padding:8px;
+  background:#fff;
+  border:1px solid #ccc;
+  border-radius:4px;
+}
+
+.add-slide:hover{
+  background:#f8f8f8;
+}
+
+/* EDITOR */
+
+.editor-area{
+  flex:1;
+  min-width:0;
+  display:flex;
+  flex-direction:column;
+  background:#dcdcdc;
+}
+
+.editor-toolbar{
+  height:42px;
+  flex-shrink:0;
+  background:#eee;
+  border-bottom:1px solid #ccc;
+  display:flex;
+  align-items:center;
+  padding:0 10px;
+  gap:6px;
+  overflow-x:auto;
+}
+
+.editor-toolbar button{
+  padding:5px 9px;
+  border:1px solid transparent;
+  border-radius:4px;
+  white-space:nowrap;
+}
+
+.editor-toolbar button:hover{
+  background:#fff;
+  border-color:#ccc;
+}
+
+.editor-toolbar input[type=color]{
+  width:32px;
+  height:27px;
+  padding:1px;
+  border:1px solid #aaa;
+  cursor:pointer;
+}
+
+.editor-toolbar select{
+  height:27px;
+}
+
+.font-size-input{
+  width:65px;
+  height:27px;
+  border:1px solid #aaa;
+  border-radius:3px;
+  padding:2px 5px;
+  background:#fff;
+}
+
+.zoom{
+  margin-left:auto;
+  display:flex;
+  align-items:center;
+  gap:5px;
+  font-size:12px;
+  flex-shrink:0;
+}
+
+.zoom input{
+  width:120px;
+}
+
+/* CANVAS */
+
+.canvas-wrap{
+  flex:1;
+  min-height:0;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  overflow:auto;
+  padding:30px;
+  position:relative;
+}
+
+.slide{
+  width:min(900px,80vw);
+  aspect-ratio:16/9;
+  background:#fff;
+  position:relative;
+  overflow:hidden;
+  box-shadow:0 3px 12px rgba(0,0,0,.25);
+  flex-shrink:0;
+}
+
+.slide.grid{
+  background-image:
+    linear-gradient(rgba(0,0,0,.08) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(0,0,0,.08) 1px,transparent 1px);
+  background-size:25px 25px;
+}
+
+/* ELEMENT */
+
+.element{
+  position:absolute;
+  min-width:25px;
+  min-height:20px;
+  cursor:move;
+  user-select:none;
+}
+
+.element.selected{
+  outline:2px solid #4285f4;
+  z-index:999;
+}
+
+.text-element{
+  padding:4px 7px;
+  white-space:pre-wrap;
+  overflow:hidden;
+  outline-offset:0;
+}
+
+.text-element[contenteditable="true"]{
+  cursor:text;
+  user-select:text;
+}
+
+.shape{
+  border:1px solid #666;
+}
+
+.image-element{
+  background-position:center;
+  background-repeat:no-repeat;
+  background-size:contain;
+  border:1px solid transparent;
+}
+
+.triangle-shape{
+  width:100%;
+  height:100%;
+  background:inherit;
+  clip-path:polygon(50% 0%,100% 100%,0% 100%);
+}
+
+.arrow-shape{
+  width:100%;
+  height:100%;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:transparent !important;
+  border:none !important;
+  color:inherit;
+  font-size:40px;
+  line-height:1;
+}
+
+.line-shape{
+  height:3px !important;
+  min-height:3px !important;
+  border:0 !important;
+  transform-origin:left center;
+}
+
+.resize{
+  position:absolute;
+  width:9px;
+  height:9px;
+  background:#fff;
+  border:1px solid #4285f4;
+  display:none;
+  z-index:1000;
+}
+
+.element.selected .resize{
+  display:block;
+}
+
+.resize.nw{left:-5px;top:-5px;cursor:nwse-resize}
+.resize.n{left:50%;top:-5px;transform:translateX(-50%);cursor:ns-resize}
+.resize.ne{right:-5px;top:-5px;cursor:nesw-resize}
+.resize.e{right:-5px;top:50%;transform:translateY(-50%);cursor:ew-resize}
+.resize.se{right:-5px;bottom:-5px;cursor:nwse-resize}
+.resize.s{left:50%;bottom:-5px;transform:translateX(-50%);cursor:ns-resize}
+.resize.sw{left:-5px;bottom:-5px;cursor:nesw-resize}
+.resize.w{left:-5px;top:50%;transform:translateY(-50%);cursor:ew-resize}
+
+/* STATUS */
+
+.statusbar{
+  height:25px;
+  flex-shrink:0;
+  background:#fff;
+  border-top:1px solid #ccc;
+  display:flex;
+  align-items:center;
+  padding:0 10px;
+  font-size:11px;
+  color:#666;
+}
+
+/* NOTES */
+
+.notes-panel{
+  position:absolute;
+  right:15px;
+  bottom:15px;
+  width:300px;
+  background:#fff;
+  border:1px solid #bbb;
+  box-shadow:0 4px 15px rgba(0,0,0,.2);
+  display:none;
+  z-index:50;
+}
+
+.notes-panel.show{
+  display:block;
+}
+
+.notes-head{
+  padding:8px 10px;
+  border-bottom:1px solid #ddd;
+  font-size:12px;
+  font-weight:bold;
+}
+
+#notes{
+  width:100%;
+  height:130px;
+  border:0;
+  resize:none;
+  padding:10px;
+  outline:none;
+}
+
+/* MODAL */
+
+.modal-back{
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.55);
+  display:none;
+  align-items:center;
+  justify-content:center;
+  z-index:1000;
+}
+
+.modal{
+  background:#fff;
+  width:min(1100px,94vw);
+  height:min(720px,92vh);
+  border-radius:8px;
+  box-shadow:0 15px 50px #333;
+  display:flex;
+  flex-direction:column;
+  overflow:hidden;
+}
+
+.modal-head{
+  height:45px;
+  padding:0 15px;
+  display:flex;
+  align-items:center;
+  border-bottom:1px solid #ddd;
+  font-weight:600;
+}
+
+.modal-head button{
+  margin-left:auto;
+  font-size:20px;
+}
+
+.show-area{
+  flex:1;
+  background:#111;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:30px;
+  overflow:hidden;
+}
+
+.show-slide{
+  width:min(1100px,90vw);
+  aspect-ratio:16/9;
+  background:#fff;
+  position:relative;
+  overflow:hidden;
+}
+
+.modal-foot{
+  height:52px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:8px;
+}
+
+.modal-foot button{
+  padding:7px 16px;
+  border:1px solid #ccc;
+  border-radius:4px;
+  background:#fff;
+}
+
+.modal-foot button:hover{
+  background:#f0f0f0;
+}
+
+/* CONTEXT */
+
+.context{
+  position:fixed;
+  background:#fff;
+  border:1px solid #bbb;
+  box-shadow:0 4px 15px #999;
+  display:none;
+  z-index:2000;
+  min-width:180px;
+  padding:4px 0;
+}
+
+.context button{
+  display:block;
+  width:100%;
+  text-align:left;
+  padding:8px 12px;
+}
+
+.context button:hover{
+  background:#eee;
+}
+
+/* TOAST */
+
+.toast{
+  position:fixed;
+  left:50%;
+  bottom:35px;
+  transform:translateX(-50%) translateY(20px);
+  background:#222;
+  color:#fff;
+  padding:9px 16px;
+  border-radius:5px;
+  font-size:13px;
+  opacity:0;
+  pointer-events:none;
+  transition:.2s;
+  z-index:5000;
+}
+
+.toast.show{
+  opacity:1;
+  transform:translateX(-50%) translateY(0);
+}
+
+@keyframes slideFade{
+  from{opacity:0}
+  to{opacity:1}
+}
+
+.show-slide.fade{
+  animation:slideFade .35s ease;
+}
+
+/* OBJECT ANIMATIONS */
+@keyframes ppFadeIn{
+  from{opacity:0}
+  to{opacity:1}
+}
+@keyframes ppZoom{
+  from{opacity:0;transform:scale(.55)}
+  to{opacity:1;transform:scale(1)}
+}
+@keyframes ppSlideIn{
+  from{opacity:0;transform:translateX(-70px)}
+  to{opacity:1;transform:translateX(0)}
+}
+.pp-anim-fadeIn{animation:ppFadeIn .55s ease both}
+.pp-anim-zoom{animation:ppZoom .55s cubic-bezier(.2,.8,.2,1) both}
+.pp-anim-slideIn{animation:ppSlideIn .55s ease-out both}
+
+@media(max-width:900px){
+  .sidebar{width:155px}
+  .tool{min-width:52px}
+  .ribbon{height:115px}
+}
+</style>
+</head>
+
+<body>
+
+<div class="app">
+
+<div class="titlebar">
+  <div class="logo">▰ PowerPointer</div>
+
+  <div class="filename-wrap">
+    <input
+      class="filename-input"
+      id="filename"
+      value="プレゼンテーション1"
+      onchange="changeFilename(this.value)"
+      onkeydown="if(event.key==='Enter')this.blur()"
+    >
+  </div>
+
+  <div class="title-actions">
+    <button onclick="minimizeApp()">−</button>
+    <button onclick="toggleMaximize()">□</button>
+    <button onclick="closeApp()">×</button>
+  </div>
+</div>
+
+<!-- RIBBON -->
+
+<div class="ribbon">
+
+<div class="tabs">
+  <button class="tab active" data-tab="home">ホーム</button>
+  <button class="tab" data-tab="insert">挿入</button>
+  <button class="tab" data-tab="design">デザイン</button>
+  <button class="tab" data-tab="transition">画面切り替え</button>
+  <button class="tab" data-tab="animation">アニメーション</button>
+  <button class="tab" data-tab="view">表示</button>
+</div>
+
+<!-- HOME -->
+
+<div class="tools ribbon-panel active" id="panel-home">
+
+<button class="tool" onclick="addText()">
+  <span class="ico">T</span>テキスト
+</button>
+
+<button class="tool" onclick="addShape('rect')">
+  <span class="ico">□</span>四角形
+</button>
+
+<button class="tool" onclick="addShape('circle')">
+  <span class="ico">○</span>円
+</button>
+
+<button class="tool" onclick="addShape('triangle')">
+  <span class="ico">△</span>三角形
+</button>
+
+<div class="separator"></div>
+
+<button class="tool small" onclick="formatText('bold')">
+  <span class="ico">B</span>太字
+</button>
+
+<button class="tool small" onclick="formatText('italic')">
+  <span class="ico">I</span>斜体
+</button>
+
+<button class="tool" onclick="editSelectedText()">
+  <span class="ico">✎</span>再入力
+</button>
+
+<button class="tool small" onclick="duplicateSelected()">
+  <span class="ico">▣</span>複製
+</button>
+
+<button class="tool small" onclick="deleteSelected()">
+  <span class="ico">⌫</span>削除
+</button>
+
+<div class="separator"></div>
+
+<button class="tool" onclick="newSlide()">
+  <span class="ico">＋</span>新しいスライド
+</button>
+
+<button class="tool" onclick="duplicateSlide()">
+  <span class="ico">▣</span>スライド複製
+</button>
+
+<button class="tool" onclick="deleteSlide()">
+  <span class="ico">🗑</span>スライド削除
+</button>
+
+<button class="tool" onclick="undo()">
+  <span class="ico">↶</span>元に戻す
+</button>
+
+<button class="tool" onclick="redo()">
+  <span class="ico">↷</span>やり直す
+</button>
+
+<button class="tool" onclick="savePresentation()">
+  <span class="ico">💾</span>保存
+</button>
+
+<button class="tool" onclick="loadPresentation()">
+  <span class="ico">📂</span>開く
+</button>
+
+<button class="tool" onclick="startShow()">
+  <span class="ico">▶</span>スライドショー
+</button>
+
+</div>
+
+<!-- INSERT -->
+
+<div class="tools ribbon-panel" id="panel-insert">
+
+<button class="tool" onclick="addText()">
+  <span class="ico">T</span>テキスト
+</button>
+
+<button class="tool" onclick="editSelectedText()">
+  <span class="ico">✎</span>再入力
+</button>
+
+<button class="tool" onclick="addImage()">
+  <span class="ico">🖼️</span>画像
+</button>
+
+<button class="tool" onclick="addShape('rect')">
+  <span class="ico">□</span>四角形
+</button>
+
+<button class="tool" onclick="addShape('circle')">
+  <span class="ico">○</span>円
+</button>
+
+<button class="tool" onclick="addShape('triangle')">
+  <span class="ico">△</span>三角形
+</button>
+
+<button class="tool" onclick="addShape('line')">
+  <span class="ico">╱</span>線
+</button>
+
+<button class="tool" onclick="addShape('arrow')">
+  <span class="ico">➜</span>矢印
+</button>
+
+<button class="tool" onclick="toggleNotes()">
+  <span class="ico">📝</span>発表者ノート
+</button>
+
+</div>
+
+<!-- DESIGN -->
+
+<div class="tools ribbon-panel" id="panel-design">
+
+<button class="tool" onclick="setBackground('#ffffff')">
+  <span class="ico">⬜</span>白
+</button>
+
+<button class="tool" onclick="setBackground('#f3f6ff')">
+  <span class="ico">🔵</span>青系
+</button>
+
+<button class="tool" onclick="setBackground('#fff5f3')">
+  <span class="ico">🔴</span>赤系
+</button>
+
+<button class="tool" onclick="setBackground('#f4fff4')">
+  <span class="ico">🟢</span>緑系
+</button>
+
+<button class="tool" onclick="setBackground('#fffbea')">
+  <span class="ico">🟡</span>黄色系
+</button>
+
+<label class="tool">
+  <span class="ico">
+    <input
+      type="color"
+      id="designBg"
+      value="#ffffff"
+      onchange="setBackground(this.value)"
+    >
+  </span>
+  背景色
+</label>
+
+</div>
+
+<!-- TRANSITION -->
+
+<div class="tools ribbon-panel" id="panel-transition">
+
+<button class="tool" onclick="setTransition('none')">
+  <span class="ico">■</span>なし
+</button>
+
+<button class="tool" onclick="setTransition('fade')">
+  <span class="ico">◐</span>フェード
+</button>
+
+</div>
+
+<!-- ANIMATION -->
+
+<div class="tools ribbon-panel" id="panel-animation">
+
+<button class="tool" onclick="setAnimation('none')">
+  <span class="ico">■</span>なし
+</button>
+
+<button class="tool" onclick="setAnimation('fadeIn')">
+  <span class="ico">◐</span>フェードイン
+</button>
+
+<button class="tool" onclick="setAnimation('zoom')">
+  <span class="ico">⊙</span>ズーム
+</button>
+
+<button class="tool" onclick="setAnimation('slideIn')">
+  <span class="ico">➜</span>スライド
+</button>
+
+</div>
+
+<!-- VIEW -->
+
+<div class="tools ribbon-panel" id="panel-view">
+
+<button class="tool" onclick="toggleGrid()">
+  <span class="ico">▦</span>グリッド
+</button>
+
+<button class="tool" onclick="toggleSnap()">
+  <span class="ico">🧲</span>スナップ
+</button>
+
+<button class="tool" onclick="toggleNotes()">
+  <span class="ico">📝</span>ノート
+</button>
+
+<button class="tool" onclick="setZoom(50)">
+  <span class="ico">−</span>縮小
+</button>
+
+<button class="tool" onclick="setZoom(85)">
+  <span class="ico">100%</span>標準
+</button>
+
+<button class="tool" onclick="setZoom(130)">
+  <span class="ico">＋</span>拡大
+</button>
+
+</div>
+
+</div>
+
+<!-- WORKSPACE -->
+
+<div class="workspace">
+
+<aside class="sidebar">
+
+<div class="sidebar-head">
+  スライド
+</div>
+
+<div class="slides" id="slides"></div>
+
+<button class="add-slide" onclick="newSlide()">
+  ＋ 新しいスライド
+</button>
+
+</aside>
+
+<main class="editor-area">
+
+<div class="editor-toolbar">
+
+<button onclick="formatText('bold')"><b>B</b></button>
+<button onclick="formatText('italic')"><i>I</i></button>
+
+<select id="fontFamily" onchange="setFontFamily(this.value)">
+  <option value="Segoe UI">Segoe UI</option>
+  <option value="Arial">Arial</option>
+  <option value="Times New Roman">Times New Roman</option>
+  <option value="Meiryo">メイリオ</option>
+  <option value="Yu Gothic">游ゴシック</option>
+</select>
+
+<!-- ★ 細かい文字サイズ -->
+
+<input
+  id="fontSizeInput"
+  class="font-size-input"
+  type="number"
+  min="1"
+  max="300"
+  step="1"
+  value="32"
+  onchange="setFontSize(this.value)"
+  title="文字サイズ(px)"
+>
+
+<span style="font-size:11px">px</span>
+
+<!-- ★ 文字色 -->
+
+<input
+  id="textColor"
+  type="color"
+  value="#222222"
+  onchange="setTextColor(this.value)"
+  title="文字色"
+>
+
+<!-- ★ 図形色 -->
+
+<input
+  id="fillColor"
+  type="color"
+  value="#4b8bd8"
+  onchange="setFillColor(this.value)"
+  title="図形色"
+>
+
+<button onclick="alignElement('left')">左</button>
+<button onclick="alignElement('center')">中央</button>
+<button onclick="alignElement('right')">右</button>
+
+<button onclick="bringFront()">最前面</button>
+<button onclick="sendBack()">最背面</button>
+
+<button onclick="rotateSelected(-15)">↶</button>
+<button onclick="rotateSelected(15)">↷</button>
+
+<div class="zoom">
+  ズーム
+  <input
+    id="zoom"
+    type="range"
+    min="50"
+    max="130"
+    value="85"
+    oninput="setZoom(this.value)"
+  >
+  <span id="zoomValue">85%</span>
+</div>
+
+</div>
+
+<div class="canvas-wrap">
+
+<div class="slide" id="slide"></div>
+
+<div class="notes-panel" id="notesPanel">
+
+<div class="notes-head">
+  発表者ノート
+</div>
+
+<textarea
+  id="notes"
+  placeholder="このスライドの発表者ノートを入力..."
+></textarea>
+
+</div>
+
+</div>
+
+<div class="statusbar">
+
+<span id="status">
+  スライド 1 / 1
+</span>
+
+<span
+  id="selectionStatus"
+  style="margin-left:15px"
+></span>
+
+<span style="margin-left:auto">
+  PowerPointer
+</span>
+
+</div>
+
+</main>
+</div>
+</div>
+
+<!-- SHOW -->
+
+<div class="modal-back" id="showModal">
+
+<div class="modal">
+
+<div class="modal-head">
+  スライドショー
+  <button onclick="closeShow()">×</button>
+</div>
+
+<div class="show-area">
+  <div class="show-slide" id="showSlide"></div>
+</div>
+
+<div class="modal-foot">
+  <button onclick="prevShow()">◀ 前へ</button>
+  <button onclick="nextShow()">次へ ▶</button>
+  <button onclick="closeShow()">終了</button>
+</div>
+
+</div>
+</div>
+
+<!-- CONTEXT -->
+
+<div class="context" id="context">
+
+<button onclick="addText();hideContext()">
+  テキストボックス
+</button>
+
+<button onclick="addImage();hideContext()">
+  画像
+</button>
+
+<button onclick="addShape('rect');hideContext()">
+  四角形
+</button>
+
+<button onclick="addShape('circle');hideContext()">
+  円
+</button>
+
+<button onclick="addShape('triangle');hideContext()">
+  三角形
+</button>
+
+<button onclick="duplicateSelected();hideContext()">
+  複製
+</button>
+
+<button onclick="copySelected();hideContext()">
+  コピー
+</button>
+
+<button onclick="deleteSelected();hideContext()">
+  削除
+</button>
+
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+
+/* =========================================================
+   DATA
+========================================================= */
+
+const KEY="powerpointer_data_v3";
+
+const defaultData={
+  filename:"プレゼンテーション1",
+  slides:[
+    {
+      background:"#ffffff",
+      transition:"fade",
+      notes:"",
+      elements:[
+        {
+          type:"text",
+          x:12,y:12,w:76,h:18,
+          text:"プレゼンテーションのタイトル",
+          fontSize:32,
+          bold:true,
+          italic:false,
+          color:"#222222",
+          align:"left",
+          fontFamily:"Segoe UI",
+          rotate:0,
+          animation:"none"
+        },
+        {
+          type:"text",
+          x:12,y:34,w:76,h:12,
+          text:"サブタイトルを入力",
+          fontSize:20,
+          bold:false,
+          italic:false,
+          color:"#555555",
+          align:"left",
+          fontFamily:"Segoe UI",
+          rotate:0,
+          animation:"none"
+        }
+      ]
+    }
+  ]
+};
+
+let data=loadLocal();
+
+let current=0;
+let selected=null;
+
+let drag=null;
+let resizeData=null;
+
+let showIndex=0;
+
+let clipboard=null;
+
+let history=[];
+let historyIndex=-1;
+
+let gridEnabled=false;
+let snapEnabled=true;
+
+let editingText=false;
+
+/* =========================================================
+   HELPERS
+========================================================= */
+
+const $=id=>document.getElementById(id);
+
+function clone(obj){
+  return JSON.parse(JSON.stringify(obj));
+}
+
+function loadLocal(){
+
+  try{
+
+    const old=
+      JSON.parse(
+        localStorage.getItem(KEY)
+      );
+
+    return old||clone(defaultData);
+
+  }catch{
+
+    return clone(defaultData);
+
+  }
+
+}
+
+function save(){
+
+  localStorage.setItem(
+    KEY,
+    JSON.stringify(data)
+  );
+
+}
+
+function snapshot(){
+
+  return clone(data);
+
+}
+
+function pushHistory(){
+
+  history=
+    history.slice(
+      0,
+      historyIndex+1
+    );
+
+  history.push(snapshot());
+
+  if(history.length>50){
+    history.shift();
+  }
+
+  historyIndex=
+    history.length-1;
+
+  save();
+
+}
+
+function toast(text){
+
+  const t=$("toast");
+
+  t.textContent=text;
+
+  t.classList.add("show");
+
+  clearTimeout(toast.timer);
+
+  toast.timer=setTimeout(()=>{
+    t.classList.remove("show");
+  },1400);
+
+}
+
+/* =========================================================
+   HISTORY
+========================================================= */
+
+function undo(){
+
+  if(historyIndex<=0){
+
+    toast("これ以上戻せません");
+    return;
+
+  }
+
+  historyIndex--;
+
+  data=
+    clone(history[historyIndex]);
+
+  current=
+    Math.min(
+      current,
+      data.slides.length-1
+    );
+
+  selected=null;
+
+  render();
+
+  toast("元に戻しました");
+
+}
+
+function redo(){
+
+  if(historyIndex>=history.length-1){
+
+    toast("これ以上進めません");
+    return;
+
+  }
+
+  historyIndex++;
+
+  data=
+    clone(history[historyIndex]);
+
+  current=
+    Math.min(
+      current,
+      data.slides.length-1
+    );
+
+  selected=null;
+
+  render();
+
+  toast("やり直しました");
+
+}
+
+/* =========================================================
+   RENDER
+========================================================= */
+
+function render(){
+
+  editingText=false;
+
+  const list=$("slides");
+
+  list.innerHTML="";
+
+  data.slides.forEach((s,i)=>{
+
+    const item=
+      document.createElement("div");
+
+    item.className=
+      "slide-item"+
+      (i===current?" active":"");
+
+    item.onclick=()=>{
+
+      current=i;
+      selected=null;
+
+      render();
+
+    };
+
+    const num=
+      document.createElement("div");
+
+    num.className="slide-number";
+    num.textContent=i+1;
+
+    const thumb=
+      document.createElement("div");
+
+    thumb.className="slide-thumb";
+
+    thumb.style.background=
+      s.background;
+
+    drawElements(
+      thumb,
+      s.elements,
+      true
+    );
+
+    item.append(
+      num,
+      thumb
+    );
+
+    list.appendChild(item);
+
+  });
+
+  const s=
+    data.slides[current];
+
+  $("slide").innerHTML="";
+
+  $("slide").style.backgroundColor=
+    s.background;
+
+  $("slide").classList.toggle(
+    "grid",
+    gridEnabled
+  );
+
+  drawElements(
+    $("slide"),
+    s.elements,
+    false
+  );
+
+  $("status").textContent=
+    `スライド ${current+1} / ${data.slides.length}`;
+
+  $("filename").value=
+    data.filename||
+    "プレゼンテーション1";
+
+  $("selectionStatus").textContent=
+    selected!==null
+      ? `${selected+1} 個目のオブジェクトを選択中`
+      :"";
+
+  updateNotes();
+  updateToolbar();
+
+  save();
+
+}
+
+/* =========================================================
+   DRAW
+========================================================= */
+
+function drawElements(
+  container,
+  elements,
+  thumb=false,
+  playAnimation=false
+){
+
+  elements.forEach((e,i)=>{
+
+    const el=
+      document.createElement("div");
+
+    el.dataset.i=i;
+
+    el.style.left=e.x+"%";
+    el.style.top=e.y+"%";
+    el.style.width=e.w+"%";
+    el.style.height=e.h+"%";
+
+    /* SLIDESHOW ANIMATION */
+    if(playAnimation && e.animation && e.animation!=="none"){
+      el.classList.add("pp-anim-"+e.animation);
+    }
+
+    /* TEXT */
+
+    if(e.type==="text"){
+
+      el.className=
+        "element text-element";
+
+      el.textContent=
+        e.text||"";
+
+      el.style.fontSize=
+        (
+          thumb
+            ? Math.max(5,e.fontSize*.22)
+            : e.fontSize
+        )+"px";
+
+      el.style.fontWeight=
+        e.bold
+          ? "700"
+          : "400";
+
+      el.style.fontStyle=
+        e.italic
+          ? "italic"
+          : "normal";
+
+      el.style.color=
+        e.color||
+        "#222222";
+
+      el.style.textAlign=
+        e.align||
+        "left";
+
+      el.style.fontFamily=
+        e.fontFamily||
+        "Segoe UI";
+
+      if(e.rotate){
+        el.style.transform=
+          `rotate(${e.rotate}deg)`;
+      }
+
+      if(!thumb){
+
+        el.contentEditable=true;
+        el.spellcheck=false;
+
+        el.onclick=ev=>{
+
+          ev.stopPropagation();
+
+          if(selected!==i){
+
+            selected=i;
+            render();
+
+          }
+
+        };
+
+        el.oninput=()=>{
+
+          e.text=
+            el.innerText;
+
+          save();
+
+          renderThumbsOnly();
+
+        };
+
+        el.onfocus=()=>{
+
+          editingText=true;
+
+        };
+
+        el.onblur=()=>{
+
+          editingText=false;
+
+          save();
+
+        };
+
+      }
+
+    }
+
+    /* IMAGE */
+
+    else if(e.type==="image"){
+
+      el.className=
+        "element image-element";
+
+      el.style.backgroundImage=
+        `url("${e.src}")`;
+
+      if(e.rotate){
+
+        el.style.transform=
+          `rotate(${e.rotate}deg)`;
+
+      }
+
+    }
+
+    /* RECT */
+
+    else if(e.type==="rect"){
+
+      el.className=
+        "element shape";
+
+      el.style.backgroundColor=
+        e.fill||
+        "#4b8bd8";
+
+      el.style.borderRadius=
+        "4px";
+
+    }
+
+    /* CIRCLE */
+
+    else if(e.type==="circle"){
+
+      el.className=
+        "element shape";
+
+      el.style.backgroundColor=
+        e.fill||
+        "#4b8bd8";
+
+      el.style.borderRadius=
+        "50%";
+
+    }
+
+    /* TRIANGLE */
+
+    else if(e.type==="triangle"){
+
+      el.className=
+        "element shape";
+
+      el.style.backgroundColor=
+        "transparent";
+
+      el.style.border=
+        "none";
+
+      const tri=
+        document.createElement("div");
+
+      tri.className=
+        "triangle-shape";
+
+      tri.style.backgroundColor=
+        e.fill||
+        "#4b8bd8";
+
+      el.appendChild(tri);
+
+      if(e.rotate){
+
+        el.style.transform=
+          `rotate(${e.rotate}deg)`;
+
+      }
+
+    }
+
+    /* LINE */
+
+    else if(e.type==="line"){
+
+      el.className=
+        "element shape line-shape";
+
+      el.style.backgroundColor=
+        e.fill||
+        "#222222";
+
+      el.style.border=
+        "none";
+
+      el.style.transform=
+        `rotate(${e.rotate||0}deg)`;
+
+    }
+
+    /* ARROW */
+
+    else if(e.type==="arrow"){
+
+      el.className=
+        "element shape arrow-shape";
+
+      el.textContent="➜";
+
+      el.style.color=
+        e.fill||
+        "#4b8bd8";
+
+      if(e.rotate){
+
+        el.style.transform=
+          `rotate(${e.rotate}deg)`;
+
+      }
+
+    }
+
+    /* EDIT MODE */
+
+    if(!thumb){
+
+      if(selected===i){
+
+        el.classList.add("selected");
+
+      }
+
+      /* object selection */
+
+      if(e.type!=="text"){
+
+        el.onclick=ev=>{
+
+          ev.stopPropagation();
+
+          selected=i;
+
+          render();
+
+        };
+
+      }
+
+      /* drag */
+
+      el.onmousedown=ev=>{
+
+        if(
+          ev.target.classList.contains("resize")
+        ){
+          return;
+        }
+
+        if(
+          e.type==="text" &&
+          editingText
+        ){
+          return;
+        }
+
+        startDrag(
+          ev,
+          el,
+          i
+        );
+
+      };
+
+      /* resize handles */
+
+      [
+        "nw","n","ne",
+        "e","se","s","sw","w"
+      ].forEach(dir=>{
+
+        const r=
+          document.createElement("div");
+
+        r.className=
+          "resize "+dir;
+
+        r.onmousedown=ev=>{
+
+          ev.stopPropagation();
+
+          startResize(
+            ev,
+            el,
+            i,
+            dir
+          );
+
+        };
+
+        el.appendChild(r);
+
+      });
+
+    }
+
+    container.appendChild(el);
+
+  });
+
+}
+
+/* =========================================================
+   THUMBNAILS
+========================================================= */
+
+function renderThumbsOnly(){
+
+  document
+    .querySelectorAll(".slide-thumb")
+    .forEach((thumb,i)=>{
+
+      thumb.innerHTML="";
+
+      drawElements(
+        thumb,
+        data.slides[i].elements,
+        true
+      );
+
+    });
+
+}
+
+/* =========================================================
+   DRAG
+========================================================= */
+
+function startDrag(
+  ev,
+  el,
+  i
+){
+
+  if(ev.button!==0)return;
+
+  selected=i;
+
+  const rect=
+    $("slide").getBoundingClientRect();
+
+  const e=
+    data.slides[current]
+      .elements[i];
+
+  drag={
+    i,
+    startX:ev.clientX,
+    startY:ev.clientY,
+    x:e.x,
+    y:e.y,
+    rect,
+    moved:false
+  };
+
+  document.onmousemove=
+    moveDrag;
+
+  document.onmouseup=
+    endDrag;
+
+}
+
+function moveDrag(ev){
+
+  if(!drag)return;
+
+  const dx=
+    (ev.clientX-drag.startX)/
+    drag.rect.width*100;
+
+  const dy=
+    (ev.clientY-drag.startY)/
+    drag.rect.height*100;
+
+  const e=
+    data.slides[current]
+      .elements[drag.i];
+
+  let x=
+    drag.x+dx;
+
+  let y=
+    drag.y+dy;
+
+  if(snapEnabled){
+
+    x=
+      Math.round(x*2)/2;
+
+    y=
+      Math.round(y*2)/2;
+
+  }
+
+  e.x=
+    Math.max(
+      0,
+      Math.min(
+        100-e.w,
+        x
+      )
+    );
+
+  e.y=
+    Math.max(
+      0,
+      Math.min(
+        100-e.h,
+        y
+      )
+    );
+
+  drag.moved=true;
+
+  const el=
+    $("slide")
+      .querySelector(
+        `.element[data-i="${drag.i}"]`
+      );
+
+  if(el){
+
+    el.style.left=
+      e.x+"%";
+
+    el.style.top=
+      e.y+"%";
+
+  }
+
+}
+
+function endDrag(){
+
+  if(drag){
+
+    if(drag.moved){
+      pushHistory();
+    }
+
+    drag=null;
+
+  }
+
+  document.onmousemove=null;
+  document.onmouseup=null;
+
+  render();
+
+}
+
+/* =========================================================
+   RESIZE
+========================================================= */
+
+function startResize(
+  ev,
+  el,
+  i,
+  dir
+){
+
+  const rect=
+    $("slide").getBoundingClientRect();
+
+  const e=
+    data.slides[current]
+      .elements[i];
+
+  selected=i;
+
+  resizeData={
+    i,
+    dir,
+    startX:ev.clientX,
+    startY:ev.clientY,
+    x:e.x,
+    y:e.y,
+    w:e.w,
+    h:e.h,
+    rect,
+    changed:false
+  };
+
+  document.onmousemove=
+    moveResize;
+
+  document.onmouseup=
+    endResize;
+
+}
+
+function moveResize(ev){
+
+  if(!resizeData)return;
+
+  const d=
+    resizeData;
+
+  const dx=
+    (ev.clientX-d.startX)/
+    d.rect.width*100;
+
+  const dy=
+    (ev.clientY-d.startY)/
+    d.rect.height*100;
+
+  let x=d.x;
+  let y=d.y;
+  let w=d.w;
+  let h=d.h;
+
+  if(d.dir.includes("e"))
+    w=d.w+dx;
+
+  if(d.dir.includes("s"))
+    h=d.h+dy;
+
+  if(d.dir.includes("w")){
+
+    x=d.x+dx;
+    w=d.w-dx;
+
+  }
+
+  if(d.dir.includes("n")){
+
+    y=d.y+dy;
+    h=d.h-dy;
+
+  }
+
+  w=Math.max(3,w);
+  h=Math.max(3,h);
+
+  if(snapEnabled){
+
+    x=Math.round(x*2)/2;
+    y=Math.round(y*2)/2;
+    w=Math.round(w*2)/2;
+    h=Math.round(h*2)/2;
+
+  }
+
+  const e=
+    data.slides[current]
+      .elements[d.i];
+
+  e.x=
+    Math.max(
+      0,
+      Math.min(
+        100-w,
+        x
+      )
+    );
+
+  e.y=
+    Math.max(
+      0,
+      Math.min(
+        100-h,
+        y
+      )
+    );
+
+  e.w=
+    Math.min(
+      100-e.x,
+      w
+    );
+
+  e.h=
+    Math.min(
+      100-e.y,
+      h
+    );
+
+  d.changed=true;
+
+  const el=
+    $("slide")
+      .querySelector(
+        `.element[data-i="${d.i}"]`
+      );
+
+  if(el){
+
+    el.style.left=
+      e.x+"%";
+
+    el.style.top=
+      e.y+"%";
+
+    el.style.width=
+      e.w+"%";
+
+    el.style.height=
+      e.h+"%";
+
+  }
+
+}
+
+function endResize(){
+
+  if(resizeData){
+
+    if(resizeData.changed){
+      pushHistory();
+    }
+
+    resizeData=null;
+
+  }
+
+  document.onmousemove=null;
+  document.onmouseup=null;
+
+  render();
+
+}
+
+/* =========================================================
+   TEXT
+========================================================= */
+
+function addText(){
+
+  const e={
+    type:"text",
+    x:25,
+    y:25,
+    w:50,
+    h:15,
+    text:"テキストを入力",
+    fontSize:32,
+    bold:false,
+    italic:false,
+    color:"#222222",
+    align:"left",
+    fontFamily:"Segoe UI",
+    rotate:0,
+    animation:"none"
+  };
+
+  data.slides[current]
+    .elements.push(e);
+
+  selected=
+    data.slides[current]
+      .elements.length-1;
+
+  pushHistory();
+  render();
+
+  setTimeout(()=>{
+    editSelectedText(true);
+  },50);
+
+}
+
+function editSelectedText(selectAll=true){
+
+  if(selected===null){
+
+    toast("テキストを選択してください");
+    return;
+
+  }
+
+  const e=
+    data.slides[current]
+      .elements[selected];
+
+  if(e.type!=="text"){
+
+    toast("テキストを選択してください");
+    return;
+
+  }
+
+  const el=
+    $("slide")
+      .querySelector(
+        `.element[data-i="${selected}"]`
+      );
+
+  if(!el)return;
+
+  editingText=true;
+
+  el.contentEditable=true;
+
+  el.focus();
+
+  if(selectAll){
+
+    const range=
+      document.createRange();
+
+    range.selectNodeContents(el);
+
+    const selection=
+      window.getSelection();
+
+    selection.removeAllRanges();
+
+    selection.addRange(range);
+
+  }
+
+}
+
+/* =========================================================
+   TEXT FORMAT
+========================================================= */
+
+function formatText(kind){
+
+  if(selected===null){
+
+    toast("テキストを選択してください");
+    return;
+
+  }
+
+  const e=
+    data.slides[current]
+      .elements[selected];
+
+  if(e.type!=="text"){
+
+    toast("テキストを選択してください");
+    return;
+
+  }
+
+  e[kind]=!e[kind];
+
+  pushHistory();
+  render();
+
+}
+
+function setFontSize(v){
+
+  if(selected===null)return;
+
+  const e=
+    data.slides[current]
+      .elements[selected];
+
+  if(e.type!=="text"){
+
+    toast("テキストを選択してください");
+    return;
+
+  }
+
+  let size=
+    parseInt(v,10);
+
+  if(!Number.isFinite(size))
+    size=32;
+
+  size=
+    Math.max(
+      1,
+      Math.min(
+        300,
+        size
+      )
+    );
+
+  e.fontSize=size;
+
+  pushHistory();
+  render();
+
+}
+
+function setFontFamily(v){
+
+  if(selected===null)return;
+
+  const e=
+    data.slides[current]
+      .elements[selected];
+
+  if(e.type!=="text")return;
+
+  e.fontFamily=v;
+
+  pushHistory();
+  render();
+
+}
+
+function setTextColor(v){
+
+  if(selected===null){
+
+    toast("文字を選択してください");
+    return;
+
+  }
+
+  const e=
+    data.slides[current]
+      .elements[selected];
+
+  if(e.type!=="text"){
+
+    toast("文字を選択してください");
+    return;
+
+  }
+
+  e.color=v;
+
+  pushHistory();
+  render();
+
+}
+
+function alignElement(v){
+
+  if(selected===null)return;
+
+  const e=
+    data.slides[current]
+      .elements[selected];
+
+  if(e.type!=="text")return;
+
+  e.align=v;
+
+  pushHistory();
+  render();
+
+}
+
+/* =========================================================
+   SHAPES
+========================================================= */
+
+function addShape(type){
+
+  const e={
+    type:type,
+    x:30,
+    y:30,
+    w:30,
+    h:25,
+
+    /* ★ すべて同じ初期色 */
+
+    fill:(($("fillColor")&&$("fillColor").value)||"#4b8bd8"),
+
+    rotate:0,
+    animation:"none"
+  };
+
+  data.slides[current]
+    .elements.push(e);
+
+  selected=
+    data.slides[current]
+      .elements.length-1;
+
+  pushHistory();
+  render();
+
+}
+
+/* ★ 図形色変更 */
+
+function setFillColor(v){
+
+  if(selected===null){
+    toast("図形を選択してください");
+    return;
+  }
+
+  const e=
+    data.slides[current]
+      .elements[selected];
+
+  if(e.type==="text" || e.type==="image"){
+    toast("図形を選択してください");
+    return;
+  }
+
+  e.fill=v;
+
+  /* 画面を作り直さず、選択中の図形だけ即時更新 */
+  const el=$('slide').querySelector(`.element[data-i="${selected}"]`);
+  if(el){
+    if(e.type==="arrow"){
+      el.style.color=v;
+    }else if(e.type==="triangle"){
+      const tri=el.querySelector('.triangle-shape');
+      if(tri) tri.style.backgroundColor=v;
+    }else{
+      el.style.backgroundColor=v;
+    }
+  }
+
+  save();
+}
+
+
+/* =========================================================
+   IMAGE
+========================================================= */
+
+function addImage(){
+
+  const input=
+    document.createElement("input");
+
+  input.type="file";
+  input.accept="image/*";
+
+  input.onchange=()=>{
+
+    const file=
+      input.files[0];
+
+    if(!file)return;
+
+    const reader=
+      new FileReader();
+
+    reader.onload=()=>{
+
+      const e={
+        type:"image",
+        x:20,
+        y:20,
+        w:60,
+        h:45,
+        src:reader.result,
+        rotate:0,
+        animation:"none"
+      };
+
+      data.slides[current]
+        .elements.push(e);
+
+      selected=
+        data.slides[current]
+          .elements.length-1;
+
+      pushHistory();
+      render();
+
+      toast("画像を挿入しました");
+
+    };
+
+    reader.readAsDataURL(file);
+
+  };
+
+  input.click();
+
+}
+
+/* =========================================================
+   OBJECT ORDER
+========================================================= */
+
+function bringFront(){
+
+  if(selected===null)return;
+
+  const arr=
+    data.slides[current]
+      .elements;
+
+  const item=
+    arr.splice(
+      selected,
+      1
+    )[0];
+
+  arr.push(item);
+
+  selected=
+    arr.length-1;
+
+  pushHistory();
+  render();
+
+}
+
+function sendBack(){
+
+  if(selected===null)return;
+
+  const arr=
+    data.slides[current]
+      .elements;
+
+  const item=
+    arr.splice(
+      selected,
+      1
+    )[0];
+
+  arr.unshift(item);
+
+  selected=0;
+
+  pushHistory();
+  render();
+
+}
+
+/* =========================================================
+   ROTATE
+========================================================= */
+
+function rotateSelected(amount){
+
+  if(selected===null)return;
+
+  const e=
+    data.slides[current]
+      .elements[selected];
+
+  e.rotate=
+    (e.rotate||0)+amount;
+
+  pushHistory();
+  render();
+
+}
+
+/* =========================================================
+   COPY
+========================================================= */
+
+function copySelected(){
+
+  if(selected===null)return;
+
+  clipboard=
+    clone(
+      data.slides[current]
+        .elements[selected]
+    );
+
+  toast("コピーしました");
+
+}
+
+function pasteSelected(){
+
+  if(!clipboard)return;
+
+  const item=
+    clone(clipboard);
+
+  item.x=
+    Math.min(
+      100-item.w,
+      (item.x||20)+5
+    );
+
+  item.y=
+    Math.min(
+      100-item.h,
+      (item.y||20)+5
+    );
+
+  data.slides[current]
+    .elements.push(item);
+
+  selected=
+    data.slides[current]
+      .elements.length-1;
+
+  pushHistory();
+  render();
+
+}
+
+function duplicateSelected(){
+
+  if(selected===null)return;
+
+  const item=
+    clone(
+      data.slides[current]
+        .elements[selected]
+    );
+
+  item.x=
+    Math.min(
+      100-item.w,
+      item.x+5
+    );
+
+  item.y=
+    Math.min(
+      100-item.h,
+      item.y+5
+    );
+
+  data.slides[current]
+    .elements
+    .splice(
+      selected+1,
+      0,
+      item
+    );
+
+  selected++;
+
+  pushHistory();
+  render();
+
+}
+
+/* =========================================================
+   DELETE
+========================================================= */
+
+function deleteSelected(){
+
+  if(selected===null)return;
+
+  data.slides[current]
+    .elements
+    .splice(
+      selected,
+      1
+    );
+
+  selected=null;
+
+  pushHistory();
+  render();
+
+}
+
+/* =========================================================
+   SLIDES
+========================================================= */
+
+function newSlide(){
+
+  data.slides.splice(
+    current+1,
+    0,
+    {
+      background:"#ffffff",
+      transition:"fade",
+      notes:"",
+      elements:[]
+    }
+  );
+
+  current++;
+
+  selected=null;
+
+  pushHistory();
+  render();
+
+}
+
+function duplicateSlide(){
+
+  const copy=
+    clone(
+      data.slides[current]
+    );
+
+  data.slides.splice(
+    current+1,
+    0,
+    copy
+  );
+
+  current++;
+
+  selected=null;
+
+  pushHistory();
+  render();
+
+}
+
+function deleteSlide(){
+
+  if(data.slides.length<=1){
+
+    toast("最後の1枚は削除できません");
+    return;
+
+  }
+
+  if(!confirm(
+    `スライド ${current+1} を削除しますか？`
+  )){
+    return;
+  }
+
+  data.slides.splice(
+    current,
+    1
+  );
+
+  if(
+    current>=
+    data.slides.length
+  ){
+    current=
+      data.slides.length-1;
+  }
+
+  selected=null;
+
+  pushHistory();
+  render();
+
+  toast("スライドを削除しました");
+
+}
+
+/* =========================================================
+   BACKGROUND
+========================================================= */
+
+function setBackground(v){
+
+  data.slides[current]
+    .background=v;
+
+  $("slide").style.backgroundColor=v;
+
+  const color=
+    $("designBg");
+
+  if(color)
+    color.value=v;
+
+  pushHistory();
+  render();
+
+}
+
+/* =========================================================
+   ZOOM
+========================================================= */
+
+function setZoom(v){
+
+  const value=
+    Math.max(
+      50,
+      Math.min(
+        130,
+        Number(v)
+      )
+    );
+
+  $("slide").style.width=
+    value+"vw";
+
+  $("zoom").value=value;
+
+  $("zoomValue").textContent=
+    value+"%";
+
+}
+
+/* =========================================================
+   VIEW
+========================================================= */
+
+function toggleGrid(){
+
+  gridEnabled=
+    !gridEnabled;
+
+  $("slide")
+    .classList
+    .toggle(
+      "grid",
+      gridEnabled
+    );
+
+  toast(
+    gridEnabled
+      ?"グリッドを表示"
+      :"グリッドを非表示"
+  );
+
+}
+
+function toggleSnap(){
+
+  snapEnabled=
+    !snapEnabled;
+
+  toast(
+    snapEnabled
+      ?"スナップ ON"
+      :"スナップ OFF"
+  );
+
+}
+
+/* =========================================================
+   NOTES
+========================================================= */
+
+function toggleNotes(){
+
+  $("notesPanel")
+    .classList
+    .toggle("show");
+
+}
+
+function updateNotes(){
+
+  $("notes").value=
+    data.slides[current]
+      .notes||"";
+
+}
+
+$("notes")
+.addEventListener(
+  "input",
+  ()=>{
+
+    data.slides[current]
+      .notes=
+      $("notes").value;
+
+    save();
+
+  }
+);
+
+/* =========================================================
+   TRANSITION
+========================================================= */
+
+function setTransition(type){
+
+  data.slides[current]
+    .transition=type;
+
+  pushHistory();
+
+  toast(
+    "画面切り替え: "+type
+  );
+
+}
+
+function setAnimation(type){
+
+  if(selected===null){
+
+    toast(
+      "オブジェクトを選択してください"
+    );
+
+    return;
+
+  }
+
+  const e=
+    data.slides[current]
+      .elements[selected];
+
+  e.animation=type;
+
+  pushHistory();
+
+  toast(
+    "アニメーションを設定しました"
+  );
+
+}
+
+/* =========================================================
+   SAVE / LOAD
+========================================================= */
+
+function savePresentation(){
+
+  const blob=
+    new Blob(
+      [
+        JSON.stringify(
+          data,
+          null,
+          2
+        )
+      ],
+      {
+        type:
+          "application/json"
+      }
+    );
+
+  const url=
+    URL.createObjectURL(blob);
+
+  const a=
+    document.createElement("a");
+
+  a.href=url;
+
+  a.download=
+    (
+      data.filename||
+      "presentation"
+    )+
+    ".powerpointer.json";
+
+  a.click();
+
+  URL.revokeObjectURL(url);
+
+  toast(
+    "プレゼンテーションを保存しました"
+  );
+
+}
+
+function loadPresentation(){
+
+  const input=
+    document.createElement("input");
+
+  input.type="file";
+
+  input.accept=
+    ".json,.powerpointer.json";
+
+  input.onchange=()=>{
+
+    const file=
+      input.files[0];
+
+    if(!file)return;
+
+    const reader=
+      new FileReader();
+
+    reader.onload=()=>{
+
+      try{
+
+        const loaded=
+          JSON.parse(
+            reader.result
+          );
+
+        if(
+          !loaded.slides||
+          !Array.isArray(
+            loaded.slides
+          )
+        ){
+          throw new Error();
+        }
+
+        data=loaded;
+
+        if(!data.filename){
+          data.filename=
+            "プレゼンテーション1";
+        }
+
+        current=0;
+        selected=null;
+
+        history=[
+          snapshot()
+        ];
+
+        historyIndex=0;
+
+        render();
+
+        toast(
+          "プレゼンテーションを開きました"
+        );
+
+      }catch{
+
+        toast(
+          "ファイルを読み込めませんでした"
+        );
+
+      }
+
+    };
+
+    reader.readAsText(file);
+
+  };
+
+  input.click();
+
+}
+
+/* =========================================================
+   FILENAME
+========================================================= */
+
+function changeFilename(value){
+
+  value=
+    (value||"").trim();
+
+  if(!value){
+
+    value=
+      "プレゼンテーション1";
+
+  }
+
+  data.filename=value;
+
+  $("filename").value=value;
+
+  save();
+
+  toast(
+    "ファイル名を変更しました"
+  );
+
+}
+
+/* =========================================================
+   SHOW
+========================================================= */
+
+function startShow(){
+
+  showIndex=current;
+
+  renderShow();
+
+  $("showModal")
+    .style.display="flex";
+
+}
+
+function renderShow(){
+
+  const box=
+    $("showSlide");
+
+  const s=
+    data.slides[showIndex];
+
+  box.innerHTML="";
+
+  box.style.backgroundColor=
+    s.background;
+
+  drawElements(
+    box,
+    s.elements,
+    true,
+    true
+  );
+
+  box.classList.remove("fade");
+
+  if(s.transition==="fade"){
+
+    void box.offsetWidth;
+
+    box.classList.add("fade");
+
+  }
+
+}
+
+function nextShow(){
+
+  if(
+    showIndex<
+    data.slides.length-1
+  ){
+
+    showIndex++;
+
+    renderShow();
+
+  }
+
+}
+
+function prevShow(){
+
+  if(showIndex>0){
+
+    showIndex--;
+
+    renderShow();
+
+  }
+
+}
+
+function closeShow(){
+
+  $("showModal")
+    .style.display="none";
+
+}
+
+/* =========================================================
+   TOOLBAR UPDATE
+========================================================= */
+
+function updateToolbar(){
+
+  if(selected===null){
+
+    $("fontSizeInput").value=32;
+    $("textColor").value="#222222";
+    $("fillColor").value="#4b8bd8";
+
+    $("designBg").value=
+      data.slides[current]
+        .background||
+      "#ffffff";
+
+    return;
+
+  }
+
+  const e=
+    data.slides[current]
+      .elements[selected];
+
+  if(e.type==="text"){
+
+    $("fontSizeInput").value=
+      e.fontSize||32;
+
+    $("fontFamily").value=
+      e.fontFamily||
+      "Segoe UI";
+
+    $("textColor").value=
+      e.color||
+      "#222222";
+
+  }
+
+  if(
+    e.type!=="text" &&
+    e.type!=="image"
+  ){
+
+    $("fillColor").value=
+      e.fill||
+      "#4b8bd8";
+
+  }
+
+  $("designBg").value=
+    data.slides[current]
+      .background||
+    "#ffffff";
+
+}
+
+/* =========================================================
+   TABS
+========================================================= */
+
+document
+  .querySelectorAll(".tab")
+  .forEach(tab=>{
+
+    tab.addEventListener(
+      "click",
+      ()=>{
+
+        document
+          .querySelectorAll(".tab")
+          .forEach(t=>
+            t.classList
+              .remove("active")
+          );
+
+        document
+          .querySelectorAll(".ribbon-panel")
+          .forEach(p=>
+            p.classList
+              .remove("active")
+          );
+
+        tab.classList
+          .add("active");
+
+        $("panel-"+tab.dataset.tab)
+          .classList
+          .add("active");
+
+      }
+    );
+
+  });
+
+/* =========================================================
+   CONTEXT MENU
+========================================================= */
+
+function hideContext(){
+
+  $("context")
+    .style.display="none";
+
+}
+
+$("slide")
+  .addEventListener(
+    "contextmenu",
+    e=>{
+
+      e.preventDefault();
+
+      const context=
+        $("context");
+
+      context.style.left=
+        Math.min(
+          e.clientX,
+          window.innerWidth-190
+        )+"px";
+
+      context.style.top=
+        Math.min(
+          e.clientY,
+          window.innerHeight-300
+        )+"px";
+
+      context.style.display=
+        "block";
+
+    }
+  );
+
+document.addEventListener(
+  "click",
+  e=>{
+
+    if(
+      !e.target.closest(
+        ".context"
+      )
+    ){
+      hideContext();
+    }
+
+  }
+);
+
+/* =========================================================
+   SLIDE CLICK
+========================================================= */
+
+$("slide")
+  .addEventListener(
+    "click",
+    ()=>{
+
+      selected=null;
+
+      render();
+
+    }
+  );
+
+/* =========================================================
+   KEYBOARD
+========================================================= */
+
+document.addEventListener(
+  "keydown",
+  e=>{
+
+    const editing=
+      e.target.isContentEditable||
+      e.target.tagName==="TEXTAREA"||
+      e.target.tagName==="INPUT"||
+      e.target.tagName==="SELECT";
+
+    if(
+      $("showModal")
+        .style.display==="flex"
+    ){
+
+      if(e.key==="ArrowRight"){
+
+        e.preventDefault();
+        nextShow();
+
+      }
+
+      if(e.key==="ArrowLeft"){
+
+        e.preventDefault();
+        prevShow();
+
+      }
+
+      if(e.key==="Escape"){
+
+        closeShow();
+
+      }
+
+      return;
+
+    }
+
+    if(e.ctrlKey||e.metaKey){
+
+      if(
+        e.key.toLowerCase()==="s"
+      ){
+
+        e.preventDefault();
+        savePresentation();
+        return;
+
+      }
+
+      if(
+        e.key.toLowerCase()==="z"
+      ){
+
+        e.preventDefault();
+
+        if(e.shiftKey)
+          redo();
+        else
+          undo();
+
+        return;
+
+      }
+
+      if(
+        e.key.toLowerCase()==="y"
+      ){
+
+        e.preventDefault();
+        redo();
+        return;
+
+      }
+
+      if(
+        e.key.toLowerCase()==="c" &&
+        !editing
+      ){
+
+        e.preventDefault();
+        copySelected();
+        return;
+
+      }
+
+      if(
+        e.key.toLowerCase()==="v" &&
+        !editing
+      ){
+
+        e.preventDefault();
+        pasteSelected();
+        return;
+
+      }
+
+      if(
+        e.key.toLowerCase()==="d" &&
+        !editing
+      ){
+
+        e.preventDefault();
+        duplicateSelected();
+        return;
+
+      }
+
+      if(
+        e.key.toLowerCase()==="a" &&
+        !editing
+      ){
+
+        e.preventDefault();
+
+        if(
+          data.slides[current]
+            .elements.length
+        ){
+
+          selected=0;
+          render();
+
+        }
+
+        return;
+
+      }
+
+    }
+
+    if(editing)return;
+
+    if(
+      e.key==="Delete"||
+      e.key==="Backspace"
+    ){
+
+      e.preventDefault();
+      deleteSelected();
+      return;
+
+    }
+
+    if(e.key==="Escape"){
+
+      selected=null;
+      render();
+
+    }
+
+    if(selected!==null){
+
+      const el=
+        data.slides[current]
+          .elements[selected];
+
+      let moved=false;
+
+      if(e.key==="ArrowLeft"){
+
+        el.x=
+          Math.max(
+            0,
+            el.x-.5
+          );
+
+        moved=true;
+
+      }
+
+      if(e.key==="ArrowRight"){
+
+        el.x=
+          Math.min(
+            100-el.w,
+            el.x+.5
+          );
+
+        moved=true;
+
+      }
+
+      if(e.key==="ArrowUp"){
+
+        el.y=
+          Math.max(
+            0,
+            el.y-.5
+          );
+
+        moved=true;
+
+      }
+
+      if(e.key==="ArrowDown"){
+
+        el.y=
+          Math.min(
+            100-el.h,
+            el.y+.5
+          );
+
+        moved=true;
+
+      }
+
+      if(moved){
+
+        e.preventDefault();
+
+        pushHistory();
+        render();
+
+      }
+
+    }
+
+  }
+);
+
+/* =========================================================
+   TITLEBAR
+========================================================= */
+
+function minimizeApp(){
+
+  const app=
+    document.querySelector(".app");
+
+  app.style.transform=
+    "scale(.8)";
+
+  app.style.transformOrigin=
+    "top center";
+
+}
+
+function toggleMaximize(){
+
+  if(!document.fullscreenElement){
+
+    document.documentElement
+      .requestFullscreen?.();
+
+  }else{
+
+    document.exitFullscreen?.();
+
+  }
+
+}
+
+function closeApp(){
+
+  if(
+    confirm(
+      "PowerPointerを閉じますか？"
+    )
+  ){
+
+    window.close();
+
+  }
+
+}
+
+/* =========================================================
+   INIT
+========================================================= */
+
+if(!history.length){
+
+  history=[
+    snapshot()
+  ];
+
+  historyIndex=0;
+
+}
+
+render();
+
+</script>
+
+</body>
+</html>
