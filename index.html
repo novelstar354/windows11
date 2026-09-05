@@ -3835,6 +3835,44 @@ let config=Object.assign(
 let z=200, winId=0, activeFile='README.md', windowsMap={};
 
 function saveFiles(){localStorage.setItem(STORE,JSON.stringify(files))}
+
+/* ==========================================================
+   Officeアプリ（Word / Excel）からのファイル保存を受信
+   iframe側とlocalStorageの保存先が異なる場合でも、
+   親のWindowsファイルシステムへ確実に保存する。
+   ========================================================== */
+window.addEventListener("message", function(event){
+  const data = event.data;
+  if(!data || data.type !== "webos-file-saved") return;
+
+  const path = normalizePath(data.path || "");
+  if(!path) return;
+
+  const incoming = data.file;
+  if(!incoming || incoming.type !== "file") return;
+
+  files[path] = {
+    ...incoming,
+    type: "file",
+    path: path,
+    name: incoming.name || path.split("/").pop(),
+    updatedAt: Date.now()
+  };
+
+  saveFiles();
+
+  // 現在開いているExplorerを即時更新
+  const explorer = getExplorerWindow();
+  if(explorer){
+    renderFiles(explorer.id);
+    if(typeof renderExplorerFolderTree === "function"){
+      renderExplorerFolderTree();
+    }
+  }
+
+  toast("「" + (files[path].name || path.split("/").pop()) + "」を保存しました");
+});
+
 function saveConfig(){localStorage.setItem(CONFIG,JSON.stringify(config))}
 function toast(s){
   // 集中モード中はOSの通知（トースト）を表示しない。
@@ -5320,7 +5358,7 @@ function openOfficeFile(path){
   if(app === 'excel'){
     return openOfficeApp(
       item.name || 'Excel',
-      'excel15.html?file=' + encodeURIComponent(path),
+      'excel.html?file=' + encodeURIComponent(path),
       '📗'
     );
   }
@@ -12458,17 +12496,20 @@ function renderTrash(){
 
 function getDefaultDesktopAppPosition(app){
   const positions = {
-    explorer:  {x: 12, y: 106},
-    editor:    {x: 12, y: 200},
-    calculator:{x: 12, y: 294},
-    browser:   {x: 12, y: 388},
-    excel:     {x: 90, y: 12},
+  // 1行目
+  explorer:    {x: 12,  y: 106},
+  editor:      {x: 12, y: 200},
+  calculator:  {x: 12, y: 294},
+
+  // 2行目
+  browser:     {x: 12,  y: 388},
+  excel:       {x: 90,  y: 12},
   powerpointer:{x: 90, y: 200},
-    word:      {x: 90, y: 106},
-    taskmgr:   {x: 90, y: 294},
-    terminal:  {x: 90, y: 388},
-    settings:  {x: 168, y: 12}
-  };
+  word:        {x: 90,  y: 106},
+  taskmgr:     {x: 90,  y: 294},
+  terminal:    {x: 90,  y: 388},
+  settings:    {x: 168,  y: 12}
+};
   return positions[app] ? {...positions[app]} : {x: 12, y: 12};
 }
 
@@ -12739,12 +12780,25 @@ function initOneDesktopIcon(el){
   // 2行目
   browser:     {x: 12,  y: 388},
   excel:       {x: 90,  y: 12},
-powerpointer:{x: 90, y: 200},
-    word:      {x: 90, y: 106},
-    taskmgr:   {x: 90, y: 294},
-    terminal:  {x: 90, y: 388},
-    settings:  {x: 168, y: 12}
+  powerpointer:{x: 90, y: 200},
+  word:        {x: 90,  y: 106},
+  taskmgr:     {x: 90,  y: 294},
+  terminal:    {x: 90,  y: 294 },
+  settings:    {x: 168,  y: 12}
 };
+
+    /*explorer:    {x: 12,  y: 106},
+  editor:      {x: 12, y: 200},
+  calculator:  {x: 12, y: 294},
+
+  // 2行目
+  browser:     {x: 12,  y: 388},
+  excel:       {x: 90,  y: 12},
+  powerpointer:{x: 168, y: 12},
+  word:        {x: 90,  y: 106},
+  taskmgr:     {x: 90,  y: 200},
+  terminal:    {x: 90,  y: 294},
+  settings:    {x: 90,  y: 388}*/
 
 // 保存済みの位置がなければ初期位置を使用
 const positionKey = desktopPositionKey(key, desktop);
@@ -12958,8 +13012,8 @@ document.addEventListener('keyup', function(e){
 (function fixDesktopIconPositions(){
 
   const positions = {
-  // 1行目
   trash: {x:12, y:12},
+  // 1行目
   explorer:    {x: 12,  y: 106},
   editor:      {x: 12, y: 200},
   calculator:  {x: 12, y: 294},
@@ -12967,11 +13021,11 @@ document.addEventListener('keyup', function(e){
   // 2行目
   browser:     {x: 12,  y: 388},
   excel:       {x: 90,  y: 12},
-    powerpointer:{x: 90, y: 200},
-    word:      {x: 90, y: 106},
-    taskmgr:   {x: 90, y: 294},
-    terminal:  {x: 90, y: 388},
-    settings:  {x: 168, y: 12}
+  powerpointer:{x: 90, y: 200},
+  word:        {x: 90,  y: 106},
+  taskmgr:     {x: 90,  y: 294},
+  terminal:    {x: 90,  y: 294 },
+  settings:    {x: 168,  y: 12}
 };
 
   document.querySelectorAll('#desktopIcons .icon[data-app]').forEach(icon => {
