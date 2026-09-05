@@ -283,19 +283,21 @@ localStorage.setItem(
   JSON.stringify(files)
 );
 
+  // Windows親画面へ「ファイル本体」を送る
+  try {
+    window.parent.postMessage({
+      type: "webos-file-saved",
+      path: path,
+      app: "excel",
+      file: files[path]
+    }, "*");
+  } catch(e) {}
+
   // index.html側で使っている files が存在する場合も同期
   try {
     localStorage.setItem("files", JSON.stringify(files));
   } catch(e) {}
 
-  // Windows本体へ保存を通知
-  try {
-    window.parent.postMessage({
-      type: "webos-file-saved",
-      path: path,
-      app: "excel"
-    }, "*");
-  } catch(e) {}
 }
 function loadSheets(){
   const s=localStorage.getItem("excelJS_sheets");
@@ -958,7 +960,13 @@ saveSheets();
 }
 
 });
-window.currentExcelFileName = "Book1.excel";
+window.currentExcelFilePath =
+    new URLSearchParams(location.search).get("file") || "";
+
+window.currentExcelFileName =
+    window.currentExcelFilePath
+      ? decodeURIComponent(window.currentExcelFilePath.split("/").pop())
+      : "Book1.excel";
 
 function saveExcelAs(){
   let name = prompt(
@@ -1140,6 +1148,51 @@ function openExcelFilePicker(){
         "」を開きました。"
     );
 }
+
+/* Windowsから ?file= で開かれた既存Excelを自動読み込み */
+(function loadExcelFromQuery(){
+  const path = window.currentExcelFilePath;
+  if(!path) return;
+
+  try{
+    const files = JSON.parse(
+      localStorage.getItem("webos10_files_v2") || "{}"
+    );
+    const file = files[path];
+
+    if(file && file.app === "excel" && file.content){
+      const data = JSON.parse(file.content);
+
+      if(Array.isArray(data.sheets)){
+        sheets = data.sheets;
+        sheetNames = Array.isArray(data.sheetNames)
+          ? data.sheetNames
+          : sheets.map((s,i)=>"Sheet"+(i+1));
+        rows = parseInt(data.rows) || sheets[0]?.length || 100;
+        cols = parseInt(data.cols) || sheets[0]?.[0]?.length || 26;
+        colWidths = Array.isArray(data.colWidths)
+          ? data.colWidths
+          : new Array(cols).fill(120);
+
+        currentSheet = 0;
+        window.currentExcelFileName =
+          file.name || path.split("/").pop();
+
+        localStorage.setItem("excelJS_sheets", JSON.stringify(sheets));
+        localStorage.setItem("excelJS_sheetNames", JSON.stringify(sheetNames));
+        localStorage.setItem("excelJS_rows", rows);
+        localStorage.setItem("excelJS_cols", cols);
+        localStorage.setItem("excelJS_colWidths", JSON.stringify(colWidths));
+
+        build();
+        calculateAll();
+      }
+    }
+  }catch(e){
+    console.warn("Excel query file load failed:", e);
+  }
+})();
+
 document.addEventListener("keydown", function(e){
     const active = document.activeElement;
     if(active.tagName !== "INPUT" || !active.dataset.r) return; // input でなければ無視
