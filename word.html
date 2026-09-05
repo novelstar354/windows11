@@ -212,7 +212,8 @@ function saveWordToExplorer(){
   window.parent.postMessage({
     type: "webos-file-saved",
     path: currentWordFilePath,
-    app: "word"
+    app: "word",
+    file: files[currentWordFilePath]
   }, "*");
 
   alert("Explorerに保存しました");
@@ -381,15 +382,18 @@ function saveDocument(){
 
     filenameInput.value = filename;
 
-    const files =
-        getWindowsFiles();
-
     const path =
-        "Documents/" + filename;
+        currentWordFilePath ||
+        ("Documents/" + filename);
 
-    files[path] = {
+    currentWordFilePath = path;
+
+    const actualFilename =
+        path.split("/").pop();
+
+    const file = {
         type: "file",
-        name: filename,
+        name: actualFilename,
         path: path,
         extension: ".word",
         mime: "text/html",
@@ -398,23 +402,36 @@ function saveDocument(){
         updatedAt: Date.now()
     };
 
-    saveWindowsFiles(files);
+    // Word自身の保存
+    const files = getWordFiles();
+    files[path] = file;
+    localStorage.setItem(
+        WORD_STORAGE_KEY,
+        JSON.stringify(files)
+    );
 
-    /*
-     * 旧形式も互換用に残す
-     */
+    // 旧形式も互換用に残す
     localStorage.setItem(
         "documentContent",
         editor.innerHTML
     );
-
     localStorage.setItem(
         "word_current_file",
         path
     );
 
+    // Windows親画面へファイル本体を渡す
+    try {
+        window.parent.postMessage({
+            type: "webos-file-saved",
+            path: path,
+            app: "word",
+            file: file
+        }, "*");
+    } catch(e) {}
+
     alert(
-        "「" + filename +
+        "「" + actualFilename +
         "」をエクスプローラーに保存しました。"
     );
 }
