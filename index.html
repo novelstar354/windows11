@@ -158,6 +158,43 @@ background-size:110px 110px,170px 170px}
 .lock{position:fixed;inset:0;background:linear-gradient(135deg,#0b5ca8,#143c70);z-index:50000;display:flex;align-items:center;justify-content:center;transition:opacity .35s}
 .lock.hidden{opacity:0;pointer-events:none}
 .lockbox{text-align:center;width:320px}.lockbox .avatar{font-size:72px;margin-bottom:10px}.lockbox h1{font-weight:400;margin:5px}.lockbox p{margin:8px 0 18px;color:#dcecff}.lockbox input{width:240px;padding:11px;border:1px solid #ddd}.lockbox button{margin-top:10px;padding:10px 25px;background:#1683d8;color:#fff;cursor:pointer}.hint{font-size:11px;opacity:.7;margin-top:15px}
+
+/* 設定からのPIN変更：ロック画面風 */
+.pin-change-screen{
+  position:fixed;inset:0;z-index:59000;
+  display:none;align-items:center;justify-content:center;
+  background:rgba(0,0,0,.38);
+  color:#111;
+  padding:20px;
+}
+.pin-change-screen.show{display:flex}
+.pin-change-box{
+  width:min(430px,calc(100vw - 34px));
+  background:#fff;
+  border:1px solid #cfcfcf;
+  border-radius:8px;
+  box-shadow:0 12px 36px rgba(0,0,0,.28);
+  padding:24px;
+  text-align:left;
+}
+.pin-change-box .avatar{display:none}
+.pin-change-box h1{font-size:20px;font-weight:600;margin:0 0 6px;color:#222}
+.pin-change-box p{margin:0 0 16px;color:#666;font-size:13px}
+.pin-change-box input{display:block;width:100%;margin:8px 0;padding:10px 11px;background:#fff;color:#111;border:1px solid #aaa;border-radius:4px;outline:none}
+.pin-change-box input:focus{border-color:#0879c9;box-shadow:0 0 0 2px rgba(8,121,201,.14)}
+.pin-change-box .pin-change-main{margin-top:10px;padding:9px 18px;background:#0879c9;color:#fff;border:1px solid #0879c9;border-radius:4px;cursor:pointer}
+.pin-change-box .pin-change-main:hover{background:#0669ad}
+.pin-change-box .pin-change-link{
+  display:block;margin:12px 0 0;padding:0;background:transparent!important;
+  border:0!important;box-shadow:none!important;color:#0879c9!important;
+  text-decoration:underline;cursor:pointer;font-size:12px
+}
+.pin-change-box .pin-change-cancel{
+  display:block;margin:18px 0 0;padding:8px 14px;background:#f5f5f5!important;
+  color:#222!important;border:1px solid #ccc!important;border-radius:4px;cursor:pointer
+}
+.pin-change-box .pin-change-cancel:hover{background:#e9e9e9!important}
+.pin-change-error{color:#c62828;font-size:13px;min-height:18px;margin-top:6px}
 .explorer{height:100%;display:flex;background:#fff;overflow:hidden;min-height:0}.side{width:190px;flex:0 0 190px;box-sizing:border-box;border-right:1px solid #ddd;padding:10px;background:#f7f7f7;overflow-y:auto;overflow-x:hidden;min-height:0}.side div{padding:8px;cursor:pointer}.side div:hover,.side .sel{background:#e5f2ff}
 .side button{display:block;width:100%;margin:5px 0;padding:7px;text-align:left;background:#fff;border:1px solid #ccc;cursor:pointer}.side button:hover{background:#eaf5ff}.files{flex:1;min-width:0;min-height:0;padding:15px;display:flex;gap:14px;align-content:flex-start;align-items:flex-start;flex-wrap:wrap;overflow-y:auto;overflow-x:hidden}.fileitem{width:86px;height:90px;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;border:1px solid transparent;flex:0 0 86px}.fileitem:hover{background:#eef6ff;border-color:#c8def5}.fileitem .big{font-size:38px}.fileitem span{font-size:12px;text-align:center}
 .notepad{height:100%;display:flex;flex-direction:column}.editorbar{height:42px;background:#f2f2f2;border-bottom:1px solid #ccc;display:flex;align-items:center;gap:4px;padding:5px}.editorbar button{padding:6px 12px;background:#fff;border:1px solid #ccc;cursor:pointer}.editorbar button:hover{background:#e5e5e5}.editor{flex:1;display:flex;min-height:0}.lines{width:42px;background:#f3f3f3;color:#888;text-align:right;padding:9px 7px;line-height:20px;font:14px/20px Consolas,monospace;overflow:hidden}.code{flex:1;border:0;outline:0;resize:none;padding:9px;font:14px/20px Consolas,monospace;color:#111;background:#fff;white-space:pre;overflow:auto}
@@ -3496,6 +3533,35 @@ input[type="range"]::-moz-range-progress {
 </button>
   </div>
 </div>
+<div id="changePinDialog" class="pin-change-screen" aria-hidden="true">
+  <div class="pin-change-box">
+    <h1 id="changePinUsername">WebOS User</h1>
+
+    <div id="changePinVerifyStep">
+      <p>セキュリティ確認</p>
+      <label style="display:block;font-size:12px;color:#555;margin-bottom:5px">現在のパスワード</label>
+      <input id="currentPin" type="password" placeholder="現在のパスワードを入力"
+             onkeydown="if(event.key==='Enter')verifyCurrentPinForChange()">
+      <div id="currentPinError" class="pin-change-error"></div>
+      <button class="pin-change-main" onclick="verifyCurrentPinForChange()">確認して次へ</button>
+      <button class="pin-change-link" onclick="showPasswordRecovery()">パスワードが分からない場合</button>
+    </div>
+
+    <div id="changePinNewStep" style="display:none">
+      <p>新しいパスワードを設定します</p>
+      <label style="display:block;font-size:12px;color:#555;margin-bottom:5px">新しいパスワード</label>
+      <input id="newPin" type="password" placeholder="4文字以上">
+      <label style="display:block;font-size:12px;color:#555;margin:12px 0 5px">新しいパスワード（確認）</label>
+      <input id="confirmNewPin" type="password" placeholder="もう一度入力"
+             onkeydown="if(event.key==='Enter')changePin()">
+      <div id="newPinError" class="pin-change-error"></div>
+      <button class="pin-change-main" onclick="changePin()">パスワードを変更</button>
+    </div>
+
+    <button class="pin-change-cancel" onclick="closeChangePinDialog()">キャンセル</button>
+  </div>
+</div>
+
 <div id="recoveryDialog"
      style="
        position:fixed;
@@ -4008,8 +4074,18 @@ function recoverWithSpecialPassword(){
 
   pin = "1234";
 
-  // PIN入力欄にフォーカス
-  document.getElementById('pin').focus();
+  // ロック画面または設定のPIN変更画面へ戻す
+  const changeDialog = document.getElementById('changePinDialog');
+  if(changeDialog?.classList.contains('show')){
+    const current = document.getElementById('currentPin');
+    if(current){
+      current.value = '';
+      document.getElementById('currentPinError').textContent = '';
+      current.focus();
+    }
+  }else{
+    document.getElementById('pin')?.focus();
+  }
 }
 function resetEverything(){
 
@@ -11314,18 +11390,12 @@ function openSettings(){
 
         <h3>🔐 ロック</h3>
 
-        <label>
-          <span>新しいPIN</span>
-
-          <input
-            id="newPin"
-            type="password"
-            placeholder="4桁以上"
-          >
-        </label>
+        <p style="margin:0 0 12px;color:#666;font-size:12px">
+          PINを変更するには、最初に現在のPINを確認します。
+        </p>
 
         <button
-          onclick="changePin()"
+          onclick="openChangePinDialog()"
           style="padding:7px 14px"
         >
           PINを変更
@@ -11895,7 +11965,84 @@ function renderSettingsBluetoothDetail(root){
     
   `;
 }
-function changePin(){const v=document.getElementById('newPin')?.value;if(!v||v.length<4)return toast('4文字以上にしてください');config.pin=v;saveConfig();toast('PINを変更しました')}
+function openChangePinDialog(){
+  const dialog=document.getElementById('changePinDialog');
+  if(!dialog) return;
+
+  const name=document.getElementById('changePinUsername');
+  if(name) name.textContent=config.username || 'WebOS User';
+
+  document.getElementById('changePinVerifyStep').style.display='block';
+  document.getElementById('changePinNewStep').style.display='none';
+
+  const current=document.getElementById('currentPin');
+  const next=document.getElementById('newPin');
+  const confirm=document.getElementById('confirmNewPin');
+  if(current) current.value='';
+  if(next) next.value='';
+  if(confirm) confirm.value='';
+  document.getElementById('currentPinError').textContent='';
+  document.getElementById('newPinError').textContent='';
+
+  dialog.classList.add('show');
+  dialog.setAttribute('aria-hidden','false');
+  setTimeout(()=>current?.focus(),100);
+}
+
+function closeChangePinDialog(){
+  const dialog=document.getElementById('changePinDialog');
+  if(!dialog) return;
+  dialog.classList.remove('show');
+  dialog.setAttribute('aria-hidden','true');
+}
+
+function verifyCurrentPinForChange(){
+  const input=document.getElementById('currentPin');
+  const error=document.getElementById('currentPinError');
+  if(!input || !error) return;
+
+  if(input.value !== config.pin){
+    error.textContent='現在のパスワードが違います';
+    input.value='';
+    input.focus();
+    return;
+  }
+
+  error.textContent='';
+  document.getElementById('changePinVerifyStep').style.display='none';
+  document.getElementById('changePinNewStep').style.display='block';
+  setTimeout(()=>document.getElementById('newPin')?.focus(),80);
+}
+
+function changePin(){
+  const input=document.getElementById('newPin');
+  const confirm=document.getElementById('confirmNewPin');
+  const error=document.getElementById('newPinError');
+  const v=input?.value || '';
+  const c=confirm?.value || '';
+
+  if(v.length < 4){
+    if(error) error.textContent='4文字以上にしてください';
+    input?.focus();
+    return;
+  }
+  if(v !== c){
+    if(error) error.textContent='新しいPINが一致しません';
+    if(confirm){confirm.value='';confirm.focus();}
+    return;
+  }
+  if(v === config.pin){
+    if(error) error.textContent='現在のPINとは違うPINを設定してください';
+    input?.focus();
+    return;
+  }
+
+  config.pin=v;
+  pin=v;
+  saveConfig();
+  closeChangePinDialog();
+  toast('PINを変更しました');
+}
     function changeUsername(){
 
   const input =
@@ -12783,7 +12930,7 @@ function initOneDesktopIcon(el){
   powerpointer:{x: 90, y: 200},
   word:        {x: 90,  y: 106},
   taskmgr:     {x: 90,  y: 294},
-  terminal:    {x: 90,  y: 294 },
+  terminal:    {x: 90,  y: 388},
   settings:    {x: 168,  y: 12}
 };
 
