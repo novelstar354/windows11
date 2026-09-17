@@ -9907,33 +9907,170 @@ function tmEndSelected(){
 }
 
 function openCalculator(){
- const html=`<div style="height:100%;background:#202020;padding:14px;display:flex;flex-direction:column">
-  <input id="calcDisplay" readonly value="0" style="height:70px;background:#111;color:#fff;border:0;text-align:right;padding:10px;font-size:30px">
-  <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:10px;flex:1">
-   ${['C','⌫','%','÷','7','8','9','×','4','5','6','−','1','2','3','+','±','0','.','='].map(x=>`<button onclick="calcPress('${x}')" style="font-size:20px;background:${x==='='?'#1683d8':'#3a3a3a'};color:#fff;border:0;cursor:pointer">${x}</button>`).join('')}
+ const html=`<div class="calculator-app" style="height:100%;background:#202020;padding:12px;display:flex;flex-direction:column;gap:8px;color:#fff">
+  <div style="display:flex;gap:6px;align-items:center">
+    <input class="calc-display" readonly value="0" aria-label="計算結果" style="height:62px;flex:1;min-width:0;background:#111;color:#fff;border:1px solid #444;border-radius:6px;text-align:right;padding:8px 12px;font-size:28px;outline:none">
   </div>
+  <div class="calc-keypad" style="display:grid;grid-template-columns:repeat(6,1fr);gap:5px;flex:1;min-height:0">
+   ${[
+    ['sin','sin('],['cos','cos('],['tan','tan('],['√','sqrt('],['xʸ','^'],['x!','!'],
+    ['(', '('],[')', ')'],['π','pi'],['e','e'],['%','%'],['⌫','⌫'],
+    ['C','C'],['7','7'],['8','8'],['9','9'],['÷','÷'],['±','±'],
+    ['4','4'],['5','5'],['6','6'],['×','×'],['−','−'],['+','+'],
+    ['1','1'],['2','2'],['3','3'],['.','.'],['0','0'],['=','=']
+   ].map(([label,value])=>`<button type="button" data-calc-key="${value}" onclick="calcPress('${value.replace(/'/g,"\\'")}', this.closest('.calculator-app'))" style="font-size:17px;background:${value==='='?'#1683d8':'#3a3a3a'};color:#fff;border:1px solid #4a4a4a;border-radius:5px;cursor:pointer;min-height:38px">${label}</button>`).join('')}
+  </div>
+  <div style="font-size:10px;color:#aaa;text-align:center">角度: 度（sin / cos / tan）　キーボード入力対応</div>
  </div>`;
- return makeWindow('電卓',html,'🧮',{width:330,height:490});
+ const id=makeWindow('電卓',html,'🧮',{width:420,height:560});
+ const w=windowsMap[id]?.w;
+ if(w){
+   w.dataset.calculator='true';
+   const app=w.querySelector('.calculator-app');
+   if(app){
+     app.dataset.calcId=id;
+     calcStates.set(id,{expr:'',justEvaluated:false});
+     app.addEventListener('mousedown',()=>focusWindow(id));
+   }
+ }
+ return id;
 }
-let calcExpr='';
-function calcPress(x){
- const d=document.getElementById('calcDisplay');if(!d)return;
- if(x==='C'){calcExpr='';d.value='0';return}
- if(x==='⌫'){calcExpr=calcExpr.slice(0,-1);d.value=calcExpr||'0';return}
+
+const calcStates = new Map();
+
+function getCalcState(app){
+ if(!app) return null;
+ const id=app.dataset.calcId;
+ if(!id) return null;
+ if(!calcStates.has(id)) calcStates.set(id,{expr:'',justEvaluated:false});
+ return calcStates.get(id);
+}
+
+function calcDisplay(app){
+ return app?.querySelector('.calc-display') || null;
+}
+
+function calcFormatNumber(value){
+ if(!Number.isFinite(value)) throw new Error('計算できません');
+ if(Math.abs(value) < 1e-12) value=0;
+ return Number(value.toPrecision(12)).toString();
+}
+
+function calcFactorial(n){
+ if(!Number.isFinite(n) || n < 0 || !Number.isInteger(n) || n > 170) throw new Error('階乗の範囲外です');
+ let r=1;
+ for(let i=2;i<=n;i++) r*=i;
+ return r;
+}
+
+function calcEvaluate(expr){
+ let safe=String(expr)
+   .replace(/×/g,'*').replace(/÷/g,'/').replace(/−/g,'-')
+   .replace(/π/g,'pi')
+   .replace(/√/g,'sqrt')
+   .replace(/\^/g,'**');
+
+ // パーセント: 数値% → 数値/100
+ safe=safe.replace(/(\d+(?:\.\d+)?)%/g,'($1/100)');
+ // 暗黙の掛け算（2π、2sin(30)、)(5 など）
+ safe=safe.replace(/(\d|\))(?=(?:pi|e|sin\(|cos\(|tan\(|sqrt\(|\())/g,'$1*');
+ safe=safe.replace(/(pi|e|\))(?=\d)/g,'$1*');
+
+ // 階乗: 数値または括弧式の末尾に対応
+ let previous='';
+ while(safe!==previous){
+   previous=safe;
+   safe=safe.replace(/(\d+(?:\.\d+)?|\([^()]*\))!/g,'fact($1)');
+ }
+
+ // 関数名・定数以外を許可しない
+ if(!/^(?:(?:\d+(?:\.\d+)?)|(?:sin|cos|tan|sqrt|fact)|(?:pi|e)|[+\-*/().,\s]|\*\*)+$/.test(safe)) throw new Error('不正な式です');
+
+ const sin=x=>Math.sin(x*Math.PI/180);
+ const cos=x=>Math.cos(x*Math.PI/180);
+ const tan=x=>Math.tan(x*Math.PI/180);
+ const sqrt=x=>Math.sqrt(x);
+ const fact=x=>calcFactorial(x);
+ const pi=Math.PI;
+ const e=Math.E;
+ const result=Function('sin','cos','tan','sqrt','fact','pi','e','"use strict";return ('+safe+')')(sin,cos,tan,sqrt,fact,pi,e);
+ return calcFormatNumber(result);
+}
+
+function calcPress(x,app){
+ const state=getCalcState(app);
+ const d=calcDisplay(app);
+ if(!state||!d)return;
+
+ if(x==='C'){
+   state.expr=''; state.justEvaluated=false; d.value='0'; return;
+ }
+ if(x==='⌫'){
+   state.expr=state.expr.slice(0,-1); state.justEvaluated=false; d.value=state.expr||'0'; return;
+ }
  if(x==='='){
+   if(!state.expr)return;
    try{
-     const safe=calcExpr.replace(/×/g,'*').replace(/÷/g,'/').replace(/−/g,'-').replace(/%/g,'/100');
-     if(!/^[0-9+*/(). -]+$/.test(safe))throw Error();
-     const result=Function('"use strict";return ('+safe+')')();
-     calcExpr=String(result);d.value=calcExpr;
-   }catch{d.value='エラー';calcExpr=''}
-   return
+     const result=calcEvaluate(state.expr);
+     state.expr=result;
+     state.justEvaluated=true;
+     d.value=result;
+   }catch(e){
+     d.value='エラー';
+     state.expr='';
+     state.justEvaluated=true;
+   }
+   return;
  }
  if(x==='±'){
-   if(calcExpr.startsWith('-'))calcExpr=calcExpr.slice(1);else calcExpr='-'+calcExpr;
- }else calcExpr+=x;
- d.value=calcExpr||'0';
+   if(!state.expr){state.expr='-';}
+   else if(/^-(?:\d+(?:\.\d+)?)$/.test(state.expr)) state.expr=state.expr.slice(1);
+   else state.expr='-('+state.expr+')';
+   state.justEvaluated=false; d.value=state.expr||'0'; return;
+ }
+ if(state.justEvaluated && /^(?:\d|\.|pi|e|sin\(|cos\(|tan\(|sqrt\(|\()$/.test(x)){
+   state.expr='';
+ }
+ if(state.justEvaluated && /^(?:[+−×÷^%!)])$/.test(x)){
+   // 演算子なら直前の結果から続ける
+ }
+ if(x==='sin('||x==='cos('||x==='tan('||x==='sqrt('){
+   state.expr+=x;
+ }else{
+   state.expr+=x;
+ }
+ state.justEvaluated=false;
+ d.value=state.expr||'0';
 }
+
+function calcGetActiveApp(){
+ const visible=Object.values(windowsMap).filter(o=>o&&o.w&&o.w.dataset.calculator==='true'&&o.w.style.display!=='none');
+ if(!visible.length)return null;
+ visible.sort((a,b)=>Number(a.w.style.zIndex||0)-Number(b.w.style.zIndex||0));
+ return visible[visible.length-1].w.querySelector('.calculator-app');
+}
+
+function calcKeydown(e){
+ const app=calcGetActiveApp();
+ if(!app)return;
+ const map={
+   '*':'×','/':'÷','-':'−','+':'+','^':'^','%':'%',
+   'Enter':'=','=':'=','Backspace':'⌫','Escape':'C',
+   '(': '(',')':')','.' : '.',
+   's':'sin(','S':'sin(','c':'cos(','C':'cos(',
+   't':'tan(','T':'tan(','r':'sqrt(','R':'sqrt(','!':'!'
+ };
+ let key=e.key;
+ if(/^[0-9]$/.test(key)){
+   e.preventDefault(); calcPress(key,app); return;
+ }
+ if(map[key]){
+   // CはEscape、cosはShift+Cのときだけ。通常のCはクリア。
+   if(key==='C' && !e.shiftKey){ calcPress('C',app); }
+   else { e.preventDefault(); calcPress(map[key],app); }
+ }
+}
+window.addEventListener('keydown',calcKeydown);
 
 function browserLoadLocalList(key){
   try{
