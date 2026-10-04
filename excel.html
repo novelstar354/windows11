@@ -8,6 +8,21 @@
 body{margin:0;font-family:Segoe UI,Arial;background:#f1f3f4;}
 #toolbar{background:#202124;color:white;padding:8px;display:flex;gap:6px;user-select: none;
   -webkit-user-select: none;}
+#toolbar {
+    height: 50px;
+    min-height: 70px;
+    padding: 6px 10px;
+    box-sizing: border-box;
+
+    display: flex;
+    align-items: flex-start;
+}
+#toolbar button {
+    height: 28px;
+    min-height: 28px;
+    padding: 3px 8px;
+    font-size: 13px;
+}
 button{padding:6px 10px;}
 #formulaBar{width:100%;padding:6px;font-size:16px;border:none;box-sizing:border-box;}
 #sheetWrap {
@@ -40,23 +55,124 @@ margin-top:15px;
 border-bottom:1px solid #ddd;
 padding-bottom:3px;
 }
+
+/* ===== Microsoft Excel inspired UI ===== */
+:root{--office-green:#217346;--office-border:#d6d6d6}
+*{box-sizing:border-box}
+html,body{margin:0;width:100%;height:100%;font-family:"Aptos","Segoe UI",Arial,sans-serif;background:#f7f7f7;color:#242424}
+body{overflow:hidden}
+.excel-titlebar{height:36px;background:#217346;color:#fff;display:flex;align-items:center;padding:0 12px;gap:12px;user-select:none;flex-shrink:0}
+.excel-mark{font-weight:800;font-size:17px;border:1px solid #fff;width:23px;height:23px;display:grid;place-items:center;border-radius:2px}
+.excel-name{font-size:13px}.excel-actions{margin-left:auto;display:flex;gap:2px}
+.excel-actions button{width:36px;height:28px;color:#fff;background:transparent;border:0;border-radius:3px}
+.excel-actions button:hover{background:#ffffff2e}
+.excel-tabs{height:34px;background:#fff;border-bottom:1px solid var(--office-border);display:flex;align-items:flex-end;padding-left:8px;gap:2px;flex-shrink:0}
+.excel-tabs span{height:34px;padding:9px 17px 7px;font-size:13px;cursor:pointer}
+.excel-tabs span:hover{background:#f2f2f2}
+.excel-tabs .active{color:#217346;font-weight:600;border-bottom:2px solid #217346}
+#toolbar{height:92px;background:#fff;color:#222;padding:7px 10px;display:flex;align-items:stretch;gap:3px;border-bottom:1px solid var(--office-border);user-select:none;overflow-x:auto;flex-shrink:0}
+#toolbar button{min-width:58px;border:1px solid transparent;background:transparent;color:#242424;padding:4px 8px;border-radius:3px;cursor:pointer;font-family:inherit;font-size:11px;display:flex;align-items:center;justify-content:center;white-space:nowrap}
+#toolbar button:hover{background:#f1f1f1;border-color:#d5d5d5}
+#toolbar button:active{background:#e2e2e2}
+#toolbar button:nth-child(1),#toolbar button:nth-child(2){background:#f7f7f7;border-color:#ddd}
+#formulaBar{width:100%;height:34px;padding:6px 10px;font-size:14px;border:0;border-bottom:1px solid var(--office-border);background:#fff;outline:none;font-family:inherit}
+#formulaBar:focus{box-shadow:inset 0 -2px 0 #217346}
+#sheetWrap{overflow:auto;height:calc(100vh - 232px);width:100vw;box-sizing:border-box;background:#fff}
+table{border-collapse:collapse;background:white;border:1px solid #c8c8c8;table-layout:fixed;min-width:max-content}
+th,td{border:1px solid #d9d9d9;width:90px;height:28px;text-align:center;position:relative}
+th{background:#f3f3f3;font-weight:600;color:#444}
+td:hover{outline:1px solid #70ad47;outline-offset:-1px}
+input:focus{outline:2px solid #217346;z-index:1}
+input{width:100%;height:100%;border:none;outline:none;text-align:center;font-family:inherit;background:transparent}
+.selected{background:#e2f0d9;outline:2px solid #217346;outline-offset:-2px}
+.col-resize{position:absolute;right:0;top:0;width:5px;height:100%;cursor:col-resize}
+#sheets{height:36px;display:flex;gap:2px;padding:4px 8px;background:#fff;border-top:1px solid #ccc;overflow-x:auto}
+.sheetTab{background:#fff;padding:7px 18px 6px;cursor:pointer;border:0;border-bottom:2px solid transparent;font-size:12px}
+.sheetTab:hover{background:#f2f2f2}.activeSheet{color:#217346;border-bottom:2px solid #217346;font-weight:600}
+#functionPanel{position:fixed;right:20px;top:170px;width:300px;background:#fff;border:1px solid #bbb;padding:15px;display:none;box-shadow:0 8px 25px #0003;overflow:auto;max-height:65vh;z-index:50}
+#functionPanel h3{color:#217346;margin-top:0}
+.excel-ribbon-panel{display:none;align-items:stretch;gap:3px;width:100%}.excel-ribbon-panel.active{display:flex}
+
+
+.excel-ribbon-panel{display:none;align-items:center;gap:6px;flex-wrap:wrap;width:100%;height:100%}
+.excel-ribbon-panel.active{display:flex}
 </style>
 </head>
 <body>
 
+<div class="excel-titlebar">
+  <div class="excel-mark">X</div>
+  <div class="excel-name">Book1.excel — Excel</div>
+  <div class="excel-actions"><button title="元に戻す">↶</button><button title="やり直し">↷</button></div>
+</div>
+<div class="excel-tabs" id="excelTabs">
+  <span class="active" data-panel="excel-home">ホーム</span>
+  <span data-panel="excel-insert">挿入</span>
+  <span data-panel="excel-layout">ページ レイアウト</span>
+  <span data-panel="excel-formula">数式</span>
+  <span data-panel="excel-data">データ</span>
+  <span data-panel="excel-view">表示</span>
+</div>
 <div id="toolbar">
-<button onclick="saveExcelAs()">名前を付けて保存</button>
-<button onclick="openExcelFilePicker()">開く</button>
-<button onclick="addRow()">行+</button>
-<button onclick="addCol()">列+</button>
-<button onclick="deleteRows()">行削除</button>
-<button onclick="deleteCols()">列削除</button>
-<button onclick="undo()">Undo</button>
-<button onclick="redo()">Redo</button>
-<button onclick="addSheet()">シート+</button>
-<button onclick="deleteSheet()">シート削除</button>
-<button onclick="showFunctions()">関数</button>
-<button onclick="clearAll()">全削除</button>
+  <div class="excel-ribbon-panel active" id="excel-home">
+    <button onclick="saveExcelAs()">名前を付けて保存</button>
+    <button onclick="openExcelFilePicker()">開く</button>
+    <button onclick="addRow()">行+</button>
+    <button onclick="addCol()">列+</button>
+    <button onclick="deleteRows()">行削除</button>
+    <button onclick="deleteCols()">列削除</button>
+    <button onclick="undo()">Undo</button>
+    <button onclick="redo()">Redo</button>
+    <button onclick="clearAll()">全削除</button>
+  </div>
+  <div class="excel-ribbon-panel" id="excel-insert">
+    <button onclick="addRow();flashExcel('行を挿入しました')">行を挿入</button>
+    <button onclick="addCol();flashExcel('列を挿入しました')">列を挿入</button>
+    <button onclick="addSheet();flashExcel('新しいシートを追加しました')">新しいシート</button>
+    <button onclick="deleteSheet();flashExcel('シートを削除しました')">シートを削除</button>
+    <button onclick="insertExcelDate()">日付</button>
+    <button onclick="insertExcelTime()">時刻</button>
+    <button onclick="insertExcelTable()">テーブル</button>
+    <button onclick="insertExcelText()">文字</button>
+    <button onclick="insertExcelLink()">リンク</button>
+    <button onclick="showFunctions()">関数</button>
+  </div>
+  <div class="excel-ribbon-panel" id="excel-layout">
+    <button onclick="autoFitExcelColumns()">列幅を自動調整</button>
+    <button onclick="setSelectedColumnWidth()">列幅</button>
+    <button onclick="setSelectedRowHeight()">行の高さ</button>
+    <button onclick="setExcelGrid(true)">グリッド線を表示</button>
+    <button onclick="setExcelGrid(false)">グリッド線を非表示</button>
+    <button onclick="setCellBackground()">セル背景色</button>
+    <button onclick="setCellTextColor()">文字色</button>
+  </div>
+  <div class="excel-ribbon-panel" id="excel-formula">
+    <button onclick="showFunctions()">関数一覧</button>
+    <button onclick="insertExcelFormula('=SUM(A1:A5)')">SUM</button>
+    <button onclick="insertExcelFormula('=AVERAGE(A1:A5)')">AVERAGE</button>
+    <button onclick="insertExcelFormula('=MAX(A1:A5)')">MAX</button>
+    <button onclick="insertExcelFormula('=MIN(A1:A5)')">MIN</button>
+    <button onclick="insertExcelFormula('=COUNT(A1:A5)')">COUNT</button>
+    <button onclick="insertExcelFormula('=PRODUCT(A1:A5)')">PRODUCT</button>
+    <button onclick="insertExcelFormula('=IF(A1>10,OK,NG)')">IF</button>
+    <button onclick="insertExcelFormula('=ROUND(A1)')">ROUND</button>
+    <button onclick="insertExcelFormula('=SQRT(A1)')">SQRT</button>
+  </div>
+  <div class="excel-ribbon-panel" id="excel-data">
+    <button onclick="sortExcelCurrentColumn()">昇順</button>
+    <button onclick="sortExcelCurrentColumn(true)">降順</button>
+    <button onclick="duplicateCurrentSheet()">シート複製</button>
+    <button onclick="deleteSheet()">現在のシートを削除</button>
+    <button onclick="clearSelectedCells()">選択セルをクリア</button>
+    <button onclick="clearAll()">データをクリア</button>
+  </div>
+  <div class="excel-ribbon-panel" id="excel-view">
+    <button onclick="focusExcelCell()">選択セルを表示</button>
+    <button onclick="document.getElementById('formulaBar').focus()">数式バー</button>
+    <button onclick="setExcelZoom()">ズーム</button>
+    <button onclick="toggleExcelFullscreen()">全画面</button>
+    <button onclick="build();calculateAll()">再描画</button>
+  </div>
 </div>
 
 <input id="formulaBar">
@@ -259,7 +375,7 @@ try {
   window.currentExcelFileName ||
   "Book1.excel";
 
-const path = "Documents/" + filename;
+const path = window.currentExcelFilePath || ("Documents/" + filename);
 
 files[path] = {
   type: "file",
@@ -280,6 +396,10 @@ files[path] = {
 
 localStorage.setItem(
   STORAGE_KEY,
+  JSON.stringify(files)
+);
+localStorage.setItem(
+  "files",
   JSON.stringify(files)
 );
 
@@ -426,21 +546,18 @@ buildTabs();
     sheetTabs.appendChild(tab);
   })
 }function deleteSheet(){
-  if(sheets.length === 1){
+  if(sheets.length <= 1){
     alert("最後のシートは削除できません");
     return;
   }
-
-  if(!confirm("このシートを削除しますか？")) return;
-
+  const name=sheetNames[currentSheet] || ("Sheet"+(currentSheet+1));
+  if(!confirm("「"+name+"」を削除しますか？")) return;
   sheets.splice(currentSheet,1);
-
-  if(currentSheet >= sheets.length){
-    currentSheet = sheets.length - 1;
-  }
-
+  sheetNames.splice(currentSheet,1);
+  if(currentSheet >= sheets.length) currentSheet=sheets.length-1;
   build();
   calculateAll();
+  buildTabs();
   saveSheets();
 }
 // ---------- 操作 ----------
@@ -1219,6 +1336,109 @@ document.addEventListener("keydown", function(e){
         selectedCell = next;
     }
 });
+
+// ==============================
+// Excel リボン
+// ==============================
+(function(){
+  const tabs=document.querySelectorAll('#excelTabs span');
+  const panels=document.querySelectorAll('.excel-ribbon-panel');
+  tabs.forEach(tab=>{
+    tab.addEventListener('click',()=>{
+      tabs.forEach(t=>t.classList.remove('active'));
+      panels.forEach(p=>p.classList.remove('active'));
+      tab.classList.add('active');
+      const panel=document.getElementById(tab.dataset.panel);
+      if(panel) panel.classList.add('active');
+    });
+  });
+})();
+function flashExcel(message){
+  const old=document.getElementById('excelFlash'); if(old) old.remove();
+  const el=document.createElement('div'); el.id='excelFlash'; el.textContent=message;
+  el.style.cssText='position:fixed;right:18px;bottom:18px;background:#217346;color:white;padding:9px 14px;border-radius:5px;z-index:9999;font-size:12px;box-shadow:0 3px 12px #0003';
+  document.body.appendChild(el); setTimeout(()=>el.remove(),1400);
+}
+function insertExcelDate(){
+  if(!selectedCell){flashExcel('セルを選択してください');return;}
+  const r=+selectedCell.dataset.r,c=+selectedCell.dataset.c,v=new Date().toLocaleDateString('ja-JP');
+  sheets[currentSheet][r][c].value=v;sheets[currentSheet][r][c].formula=v;selectedCell.value=v;saveSheets();
+}
+function insertExcelTime(){
+  if(!selectedCell){flashExcel('セルを選択してください');return;}
+  const r=+selectedCell.dataset.r,c=+selectedCell.dataset.c,v=new Date().toLocaleTimeString('ja-JP');
+  sheets[currentSheet][r][c].value=v;sheets[currentSheet][r][c].formula=v;selectedCell.value=v;saveSheets();
+}
+function insertExcelFormula(formula){
+  if(!selectedCell){flashExcel('セルを選択してください');return;}
+  const r=+selectedCell.dataset.r,c=+selectedCell.dataset.c; selectedCell.value=formula;
+  sheets[currentSheet][r][c].formula=formula;updateCell(r,c);calculateAll();saveSheets();
+}
+function insertExcelTable(){
+  if(!selectedCell){flashExcel('開始セルを選択してください');return;}
+  const r=+selectedCell.dataset.r,c=+selectedCell.dataset.c;
+  for(let y=0;y<3;y++)for(let x=0;x<3;x++)if(r+y<rows&&c+x<cols){const cell=sheets[currentSheet][r+y][c+x];cell.value=y===0?'項目'+(x+1):'データ';cell.formula=cell.value;}
+  build();calculateAll();saveSheets();flashExcel('3×3テーブルを挿入しました');
+}
+function autoFitExcelColumns(){colWidths=colWidths.map(()=>120);build();flashExcel('列幅を調整しました');}
+function setExcelGrid(show){document.getElementById('sheet').style.borderCollapse=show?'collapse':'separate';flashExcel(show?'グリッド線を表示':'グリッド線を非表示');}
+function sortExcelCurrentColumn(desc=false){
+  if(!selectedCell){flashExcel('列を選択してください');return;}
+  const c=+selectedCell.dataset.c;sheets[currentSheet].sort((a,b)=>{const n=String(a[c]?.value||'').localeCompare(String(b[c]?.value||''),'ja',{numeric:true});return desc?-n:n;});
+  build();calculateAll();saveSheets();flashExcel('並べ替えました');
+}
+function focusExcelCell(){if(selectedCell){selectedCell.scrollIntoView({block:'center',inline:'center'});selectedCell.focus();}else flashExcel('セルを選択してください');}
+
+// ===== 追加Excel機能 =====
+function selectedExcelData(){
+  if(!selectedCell) return null;
+  return sheets[currentSheet][Number(selectedCell.dataset.r)][Number(selectedCell.dataset.c)];
+}
+function insertExcelText(){
+  if(!selectedCell){flashExcel('セルを選択してください');return;}
+  const v=prompt('入力する文字','文字'); if(v===null)return;
+  selectedCell.value=v; selectedExcelData().formula=v; updateCell(Number(selectedCell.dataset.r),Number(selectedCell.dataset.c)); saveSheets();
+}
+function insertExcelLink(){
+  if(!selectedCell){flashExcel('セルを選択してください');return;}
+  const url=prompt('URLを入力','https://'); if(!url)return;
+  const label=prompt('表示文字',url)||url;
+  selectedExcelData().formula=label+' ('+url+')'; selectedExcelData().value=label+' ('+url+')'; build(); saveSheets();
+}
+function setSelectedColumnWidth(){
+  if(!selectedCell){flashExcel('セルを選択してください');return;}
+  const c=Number(selectedCell.dataset.c), v=parseInt(prompt('列幅(px)',String(colWidths[c])));
+  if(!isNaN(v)&&v>30){colWidths[c]=v;build();saveSheets();}
+}
+function setSelectedRowHeight(){
+  if(!selectedCell){flashExcel('セルを選択してください');return;}
+  const v=parseInt(prompt('行の高さ(px)','28')); if(isNaN(v)||v<18)return;
+  document.querySelectorAll(`input[data-r="${selectedCell.dataset.r}"]`).forEach(x=>x.parentElement.style.height=v+'px');
+}
+function setCellBackground(){
+  if(!selectedCell){flashExcel('セルを選択してください');return;}
+  const color=prompt('背景色（例: #fff2cc）','#fff2cc'); if(!color)return;
+  selectedCell.parentElement.style.background=color;
+}
+function setCellTextColor(){
+  if(!selectedCell){flashExcel('セルを選択してください');return;}
+  const color=prompt('文字色（例: #ff0000）','#ff0000'); if(!color)return;
+  selectedCell.style.color=color;
+}
+function duplicateCurrentSheet(){
+  const copy=JSON.parse(JSON.stringify(sheets[currentSheet]));
+  sheets.splice(currentSheet+1,0,copy); sheetNames.splice(currentSheet+1,0,(sheetNames[currentSheet]||'Sheet')+' のコピー'); currentSheet++; build();calculateAll();saveSheets();
+}
+function clearSelectedCells(){
+  if(!selectedRange.length){flashExcel('セルを選択してください');return;}
+  selectedRange.forEach(x=>{const r=+x.dataset.r,c=+x.dataset.c;sheets[currentSheet][r][c]={formula:'',value:'',dependents:[]};}); build();saveSheets();
+}
+function setExcelZoom(){
+  const z=parseInt(prompt('ズーム（50〜150）','100')); if(isNaN(z))return; document.getElementById('sheetWrap').style.zoom=Math.max(50,Math.min(150,z))/100;
+}
+function toggleExcelFullscreen(){
+  if(!document.fullscreenElement) document.documentElement.requestFullscreen?.(); else document.exitFullscreen?.();
+}
 
 </script>
 </body>
