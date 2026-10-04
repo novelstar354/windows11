@@ -3900,7 +3900,25 @@ let config=Object.assign(
 );
 let z=200, winId=0, activeFile='README.md', windowsMap={};
 
-function saveFiles(){localStorage.setItem(STORE,JSON.stringify(files))}
+function saveFiles(){
+  localStorage.setItem(STORE,JSON.stringify(files));
+  // 旧形式の共有キーも同期
+  localStorage.setItem("files",JSON.stringify(files));
+}
+
+// Excel / Wordを別タブ・iframeで保存した場合もExplorerを即時更新
+window.addEventListener("storage", function(e){
+  if(e.key !== STORE && e.key !== "files") return;
+  try{
+    const shared = JSON.parse(e.newValue || "{}");
+    if(shared && typeof shared === "object"){
+      files = shared;
+      const explorer = getExplorerWindow();
+      if(explorer) renderFiles(explorer.id);
+      if(typeof renderExplorerFolderTree === "function") renderExplorerFolderTree();
+    }
+  }catch(err){}
+});
 
 /* ==========================================================
    Officeアプリ（Word / Excel）からのファイル保存を受信
