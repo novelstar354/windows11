@@ -28,7 +28,24 @@
     align-items: center;
     box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.1);
 }
+#toolbar {
+    height: 70px;
+    min-height: 70px;
+    padding: 6px 10px;
+    box-sizing: border-box;
 
+    display: flex;
+    align-items: flex-start;
+}
+    #toolbar input[type="color"] {
+    align-self: flex-start;
+}
+#toolbar button {
+    height: 28px;
+    min-height: 28px;
+    padding: 3px 8px;
+    font-size: 13px;
+}
 #toolbar button,
 #toolbar select,
 #toolbar input[type="color"] {
@@ -89,53 +106,96 @@
     border-radius:4px;
     background:#fff;
 }
-    </style>
+    
+/* ===== Microsoft Word inspired UI ===== */
+:root{--word-blue:#185abd;--word-border:#d6d6d6}
+*{box-sizing:border-box}
+html,body{width:100%;height:100%;margin:0;font-family:"Aptos","Segoe UI",Arial,sans-serif;background:#f3f3f3;color:#242424}
+body{overflow:hidden}
+.word-titlebar{height:36px;background:#fff;display:flex;align-items:center;padding:0 12px;border-bottom:1px solid #ddd;gap:10px;flex-shrink:0}
+.word-mark{width:23px;height:23px;background:#185abd;color:#fff;font-weight:800;display:grid;place-items:center;border-radius:2px}
+.word-name{font-size:13px;color:#444}.word-actions{margin-left:auto;display:flex;gap:2px}
+.word-actions button{width:36px;height:28px;background:transparent;border:0;border-radius:3px;color:#444}
+.word-actions button:hover{background:#eee}
+.word-tabs{height:34px;background:#fff;border-bottom:1px solid var(--word-border);display:flex;align-items:flex-end;padding-left:8px;gap:2px;flex-shrink:0}
+.word-tabs span{height:34px;padding:9px 17px 7px;font-size:13px;cursor:pointer}
+.word-tabs span:hover{background:#f2f2f2}.word-tabs .active{color:#185abd;font-weight:600;border-bottom:2px solid #185abd}
+#editor-container{display:flex;flex-direction:column;height:100vh;background:#f3f3f3;box-shadow:none}
+#file-name-bar{order:1;height:34px;display:flex;align-items:center;gap:8px;padding:4px 12px;background:#fff;border-bottom:1px solid #ddd;flex-shrink:0}
+#file-name-bar span{font-size:12px;color:#666}
+#documentFileName{width:280px;height:25px;padding:3px 7px;border:1px solid transparent;border-radius:3px;background:transparent;font-size:13px;outline:none}
+#documentFileName:hover,#documentFileName:focus{border-color:#bbb;background:#fff}
+#toolbar{order:2;height:94px;background:#fff;padding:7px 10px;display:flex;flex-wrap:nowrap;gap:3px;align-items:stretch;border-bottom:1px solid var(--word-border);box-shadow:none;overflow-x:auto}
+#toolbar button{background:transparent;border:1px solid transparent;padding:4px 9px;cursor:pointer;border-radius:3px;font-family:inherit;font-size:11px;min-width:48px;white-space:nowrap;display:flex;align-items:center;justify-content:center}
+#toolbar button:hover{background:#f1f1f1;border-color:#d6d6d6}
+#toolbar button:active{background:#e5e5e5}
+#toolbar select{height:30px;padding:3px 7px;border:1px solid #bbb;border-radius:3px;background:#fff;align-self:center;font-family:inherit;font-size:12px}
+#toolbar input[type=color]{width:32px;height:30px;padding:2px;border:1px solid #aaa;align-self:center}
+#toolbar button:nth-child(1),#toolbar button:nth-child(2),#toolbar button:nth-child(3){font-size:15px;font-weight:600;min-width:38px}
+#editor{order:3;flex-grow:1;width:min(900px,calc(100% - 80px));margin:22px auto 30px;padding:70px 80px;border:0;background:#fff;height:auto;overflow-y:auto;font-family:"Aptos",Calibri,"Segoe UI",sans-serif;font-size:16px;line-height:1.5;border-radius:0;box-shadow:0 1px 6px #00000029;outline:none}
+#editor p{margin:0;padding:0 0 8px}
+#editor table{border-collapse:collapse;width:100%}#editor td,#editor th{border:1px solid #aaa;padding:8px}
+#editor img{max-width:100%;height:auto}
+::selection{background:#cfe2f3}
+
+
+.word-ribbon-panel{display:none;align-items:center;gap:6px;flex-wrap:wrap;width:100%;height:100%}
+.word-ribbon-panel.active{display:flex}
+</style>
 </head>
 <body>
 
 <div id="editor-container">
     <!-- Toolbar -->
-    <div id="toolbar">
-        <!-- Text Formatting Tools -->
-        <button onclick="document.execCommand('bold')"><b>B</b></button>
-        <button onclick="document.execCommand('italic')"><i>I</i></button>
-        <button onclick="document.execCommand('underline')"><u>U</u></button>
-        <button onclick="document.execCommand('fontSize', false, 5)">A+</button>
-        <button onclick="document.execCommand('fontSize', false, 1)">A-</button>
-        <button onclick="document.execCommand('foreColor', false, document.getElementById('textColor').value)">Text Color</button>
-        <input type="color" id="textColor">
-        <select onchange="changeFontFamily(this)">
-            <option value="Arial">Arial</option>
-            <option value="Times New Roman">Times New Roman</option>
-            <option value="Courier New">Courier New</option>
-            <option value="Georgia">Georgia</option>
-        </select>
-        
-        <!-- Paragraph Tools -->
-        <button onclick="document.execCommand('insertOrderedList')">Numbered List</button>
-        <button onclick="document.execCommand('insertUnorderedList')">Bullet List</button>
-        <button onclick="document.execCommand('justifyCenter')">Center</button>
-        <button onclick="document.execCommand('justifyLeft')">Left</button>
-        <button onclick="document.execCommand('justifyRight')">Right</button>
-
-        <!-- Insert Tools -->
-        <button onclick="insertImage()">Insert Image</button>
-        <button onclick="insertLink()">Insert Link</button>
-        <button onclick="insertTable()">Insert Table</button>
-
-        <!-- File Handling -->
-<button onclick="saveDocument()">Save</button>
-<button onclick="openWordFilePicker()">Open</button>
-<button onclick="clearEditor()">Clear</button>
-
-        <!-- Undo/Redo -->
-        <button onclick="undo()">Undo</button>
-        <button onclick="redo()">Redo</button>
-
-        <!-- File Upload -->
-        <input type="file" id="fileInput" onchange="loadFromFile()" class="hidden">
-        <button onclick="document.getElementById('fileInput').click()">Upload File</button>
-    </div>
+    <div class="word-titlebar">
+  <div class="word-mark">W</div>
+  <div class="word-name">新しい文書 — Word</div>
+  <div class="word-actions"><button title="元に戻す">↶</button><button title="やり直し">↷</button></div>
+</div>
+<div class="word-tabs" id="wordTabs">
+  <span class="active" data-panel="word-home">ホーム</span>
+  <span data-panel="word-insert">挿入</span>
+  <span data-panel="word-design">デザイン</span>
+  <span data-panel="word-layout">レイアウト</span>
+  <span data-panel="word-reference">参考資料</span>
+  <span data-panel="word-review">校閲</span>
+  <span data-panel="word-view">表示</span>
+</div>
+<div id="toolbar">
+  <div class="word-ribbon-panel active" id="word-home">
+    <button onclick="document.execCommand('bold')"><b>B</b></button><button onclick="document.execCommand('italic')"><i>I</i></button><button onclick="document.execCommand('underline')"><u>U</u></button>
+    <button onclick="document.execCommand('strikeThrough')">取り消し線</button><button onclick="document.execCommand('superscript')">上付き</button><button onclick="document.execCommand('subscript')">下付き</button>
+    <button onclick="document.execCommand('fontSize', false, 5)">A+</button><button onclick="document.execCommand('fontSize', false, 1)">A-</button>
+    <button onclick="document.execCommand('foreColor', false, document.getElementById('textColor').value)">文字色</button><input type="color" id="textColor">
+    <select onchange="changeFontFamily(this)"><option value="Arial">Arial</option><option value="Calibri">Calibri</option><option value="Times New Roman">Times New Roman</option><option value="Courier New">Courier New</option><option value="Georgia">Georgia</option></select>
+    <button onclick="document.execCommand('insertOrderedList')">番号</button><button onclick="document.execCommand('insertUnorderedList')">箇条書き</button>
+    <button onclick="document.execCommand('justifyLeft')">左</button><button onclick="document.execCommand('justifyCenter')">中央</button><button onclick="document.execCommand('justifyRight')">右</button><button onclick="document.execCommand('justifyFull')">両端</button>
+    <button onclick="document.execCommand('removeFormat')">書式クリア</button><button onclick="saveDocument()">保存</button><button onclick="openWordFilePicker()">開く</button><button onclick="undo()">元に戻す</button><button onclick="redo()">やり直し</button>
+  </div>
+  <div class="word-ribbon-panel" id="word-insert">
+    <button onclick="insertImage()">画像</button><button onclick="insertLink()">リンク</button><button onclick="insertTable()">表</button><button onclick="insertPageBreak()">ページ区切り</button><button onclick="insertHorizontalLine()">水平線</button><button onclick="insertDate()">日付</button><button onclick="insertTime()">時刻</button>
+    <button onclick="insertEmoji()">記号</button><button onclick="document.getElementById('fileInput').click()">ファイル</button>
+  </div>
+  <div class="word-ribbon-panel" id="word-design">
+    <button onclick="setEditorBackground('#ffffff')">白背景</button><button onclick="setEditorBackground('#f5f7fa')">薄灰背景</button><button onclick="setEditorBackground('#fffbea')">クリーム背景</button>
+    <button onclick="setEditorTextColor()">ページ文字色</button><button onclick="setEditorLineHeight('1.2')">行間1.2</button><button onclick="setEditorLineHeight('1.5')">行間1.5</button><button onclick="setEditorLineHeight('2')">行間2</button>
+  </div>
+  <div class="word-ribbon-panel" id="word-layout">
+    <button onclick="setEditorPadding('compact')">狭い余白</button><button onclick="setEditorPadding('normal')">標準余白</button><button onclick="setEditorPadding('wide')">広い余白</button>
+    <button onclick="setEditorWidth('narrow')">狭いページ</button><button onclick="setEditorWidth('normal')">標準ページ</button><button onclick="setEditorWidth('wide')">広いページ</button>
+    <button onclick="toggleEditorColumns()">2段組</button>
+  </div>
+  <div class="word-ribbon-panel" id="word-reference">
+    <button onclick="insertTableOfContents()">目次</button><button onclick="insertFootnote()">脚注</button><button onclick="insertHeading('見出し 1')">見出し1</button><button onclick="insertHeading('見出し 2')">見出し2</button><button onclick="insertPageNumber()">ページ番号</button>
+  </div>
+  <div class="word-ribbon-panel" id="word-review">
+    <button onclick="spellCheckSimple()">スペル確認</button><button onclick="wordCount()">文字数</button><button onclick="findWord()">検索</button><button onclick="replaceWord()">置換</button><button onclick="clearEditor()">文書をクリア</button>
+  </div>
+  <div class="word-ribbon-panel" id="word-view">
+    <button onclick="document.getElementById('editor').focus()">編集画面に戻る</button><button onclick="toggleWordPageShadow()">ページ表示切替</button><button onclick="setWordZoom()">ズーム</button><button onclick="toggleWordFullscreen()">全画面</button><button onclick="toggleWordRuler()">ルーラー</button>
+  </div>
+  <input type="file" id="fileInput" onchange="loadFromFile()" class="hidden">
+</div>
 
     <!-- Editor -->
     <div id="editor" contenteditable="true">
@@ -239,40 +299,63 @@ function saveWordToExplorer(){
     }
 
     // Insert an image into the editor
-    function insertImage() {
-        const imageUrl = prompt("Enter the image URL:");
-        if (imageUrl) {
-            const img = `<img src="${imageUrl}" alt="Image" style="max-width: 100%; height: auto;">`;
-            document.execCommand('insertHTML', false, img);
-        }
+    let wordSavedRange = null;
+
+    function rememberWordSelection(){
+        const editor=document.getElementById("editor");
+        const sel=window.getSelection();
+        if(!sel || !sel.rangeCount || !editor.contains(sel.anchorNode)) return;
+        wordSavedRange=sel.getRangeAt(0).cloneRange();
     }
 
-    // Insert a link into the editor
-    function insertLink() {
-        const linkUrl = prompt("Enter the link URL:");
-        if (linkUrl) {
-            const linkText = prompt("Enter the link text:");
-            if (linkText) {
-                const link = `<a href="${linkUrl}" target="_blank">${linkText}</a>`;
-                document.execCommand('insertHTML', false, link);
-            }
+    function restoreWordSelection(){
+        const editor=document.getElementById("editor");
+        editor.focus();
+        const sel=window.getSelection();
+        sel.removeAllRanges();
+        if(wordSavedRange){
+            try{ sel.addRange(wordSavedRange); return; }catch(e){}
         }
+        const range=document.createRange();
+        range.selectNodeContents(editor);
+        range.collapse(false);
+        sel.addRange(range);
     }
 
-    // Insert a table into the editor
-    function insertTable() {
-        const rows = prompt("Enter number of rows:");
-        const cols = prompt("Enter number of columns:");
-        let tableHTML = "<table border='1' style='width:100%; border-collapse: collapse;'>";
-        for (let i = 0; i < rows; i++) {
-            tableHTML += "<tr>";
-            for (let j = 0; j < cols; j++) {
-                tableHTML += "<td style='padding:10px;'>Cell</td>";
-            }
-            tableHTML += "</tr>";
+    function insertWordHTML(html){
+        restoreWordSelection();
+        document.execCommand("insertHTML",false,html);
+        rememberWordSelection();
+    }
+
+    function insertImage(){
+        rememberWordSelection();
+        const url=prompt("画像URLを入力してください");
+        if(!url) return;
+        insertWordHTML('<img src="'+String(url).replace(/"/g,'&quot;')+'" alt="画像" style="max-width:100%;height:auto;display:block;margin:8px 0">');
+    }
+
+    function insertLink(){
+        rememberWordSelection();
+        const url=prompt("リンクURLを入力してください","https://");
+        if(!url) return;
+        const text=prompt("リンク文字列を入力してください","リンク");
+        if(!text) return;
+        insertWordHTML('<a href="'+String(url).replace(/"/g,'&quot;')+'" target="_blank" rel="noopener">'+String(text).replace(/</g,'&lt;').replace(/>/g,'&gt;')+'</a>');
+    }
+
+    function insertTable(){
+        rememberWordSelection();
+        const r=Math.max(1,Math.min(20,parseInt(prompt("行数","3"),10)||0));
+        const c=Math.max(1,Math.min(12,parseInt(prompt("列数","3"),10)||0));
+        let html='<table style="width:100%;border-collapse:collapse;margin:10px 0"><tbody>';
+        for(let i=0;i<r;i++){
+            html+='<tr>';
+            for(let j=0;j<c;j++) html+='<td style="border:1px solid #aaa;padding:8px;min-width:50px">セル</td>';
+            html+='</tr>';
         }
-        tableHTML += "</table>";
-        document.execCommand('insertHTML', false, tableHTML);
+        html+='</tbody></table><p><br></p>';
+        insertWordHTML(html);
     }
 
     // Change the font family of the selected text
@@ -320,7 +403,7 @@ function saveWordToExplorer(){
    Windows 11 共通ファイルシステム
 ======================================== */
 
-const WORD_FILES_KEY = "windows11_files";
+const WORD_FILES_KEY = "webos10_files_v2";
 
 function getWindowsFiles(){
     try{
@@ -335,6 +418,10 @@ function getWindowsFiles(){
 function saveWindowsFiles(files){
     localStorage.setItem(
         WORD_FILES_KEY,
+        JSON.stringify(files)
+    );
+    localStorage.setItem(
+        "webos10_files_v2",
         JSON.stringify(files)
     );
 
@@ -604,6 +691,9 @@ function openWordFilePicker(){
         file.content || ""
     );
 }
+    document.getElementById("editor").addEventListener("mouseup", rememberWordSelection);
+    document.getElementById("editor").addEventListener("keyup", rememberWordSelection);
+
     // Save content before editing for undo functionality
     document.getElementById('editor').addEventListener('input', () => {
         undoStack.push(document.getElementById('editor').innerHTML);
@@ -627,6 +717,47 @@ function loadWordFromExplorer(){
 }
 
 loadWordFromExplorer();
+
+// ==============================
+// Word リボンと追加機能
+// ==============================
+(function(){
+  const tabs=document.querySelectorAll('#wordTabs span');
+  const panels=document.querySelectorAll('.word-ribbon-panel');
+  tabs.forEach(tab=>{
+    tab.addEventListener('click',()=>{
+      tabs.forEach(t=>t.classList.remove('active'));
+      panels.forEach(p=>p.classList.remove('active'));
+      tab.classList.add('active');
+      const panel=document.getElementById(tab.dataset.panel);
+      if(panel) panel.classList.add('active');
+    });
+  });
+})();
+function insertPageBreak(){insertWordHTML('<div style="page-break-after:always;height:1px"></div><p><br></p>');}
+function insertHorizontalLine(){insertWordHTML('<hr>');}
+function insertDate(){rememberWordSelection();restoreWordSelection();document.execCommand('insertText',false,new Date().toLocaleDateString('ja-JP'));}
+function insertTime(){rememberWordSelection();restoreWordSelection();document.execCommand('insertText',false,new Date().toLocaleTimeString('ja-JP'));}
+function setEditorAlign(v){document.execCommand('justify'+v.charAt(0).toUpperCase()+v.slice(1));}
+function setEditorBackground(v){document.getElementById('editor').style.background=v;}
+function setEditorPadding(v){const e=document.getElementById('editor');e.style.padding=v==='compact'?'40px 55px':v==='wide'?'90px 110px':'70px 80px';}
+function insertTableOfContents(){document.execCommand('insertHTML',false,'<div><b>目次</b><br>1. はじめに<br>2. 本文<br>3. まとめ</div>');}
+function insertFootnote(){document.execCommand('insertHTML',false,'<sup>[1]</sup>');}
+function spellCheckSimple(){alert('簡易スペル確認を実行しました。');}
+function toggleWordPageShadow(){const e=document.getElementById('editor');e.style.boxShadow=e.style.boxShadow?'none':'0 1px 6px #00000029';}
+function insertEmoji(){rememberWordSelection();const v=prompt('記号を入力','★');if(v){restoreWordSelection();document.execCommand('insertText',false,v);}}
+function setEditorTextColor(){const v=prompt('ページ文字色','#222222');if(v)document.getElementById('editor').style.color=v;}
+function setEditorLineHeight(v){document.getElementById('editor').style.lineHeight=v;}
+function setEditorWidth(v){const e=document.getElementById('editor');e.style.width=v==='narrow'?'700px':v==='wide'?'1050px':'900px';}
+function toggleEditorColumns(){const e=document.getElementById('editor');e.style.columnCount=e.style.columnCount==='2'?'1':'2';e.style.columnGap='40px';}
+function insertHeading(text){document.execCommand('formatBlock',false,'h2');document.execCommand('insertText',false,text);}
+function insertPageNumber(){document.execCommand('insertText',false,'ページ '+(document.querySelectorAll('#editor *').length+1));}
+function wordCount(){const t=document.getElementById('editor').innerText.trim();alert('文字数: '+t.length+'\n単語数: '+(t?t.split(/\s+/).length:0));}
+function findWord(){const q=prompt('検索する文字');if(!q)return;const t=document.getElementById('editor').innerText;alert(t.includes(q)?'見つかりました':'見つかりませんでした');}
+function replaceWord(){const a=prompt('検索する文字');if(a===null||!a)return;const b=prompt('置換後の文字','');if(b===null)return;const e=document.getElementById('editor');e.innerHTML=e.innerHTML.split(a).join(b);}
+function setWordZoom(){const z=parseInt(prompt('ズーム（50〜150）','100'));if(isNaN(z))return;document.getElementById('editor').style.zoom=Math.max(50,Math.min(150,z))/100;}
+function toggleWordFullscreen(){if(!document.fullscreenElement)document.documentElement.requestFullscreen?.();else document.exitFullscreen?.();}
+function toggleWordRuler(){const id='word-ruler';let r=document.getElementById(id);if(r){r.remove();return;}r=document.createElement('div');r.id=id;r.textContent='0    1    2    3    4    5    6    7';r.style.cssText='height:24px;background:#eee;border-bottom:1px solid #ccc;padding:3px 40px;font:12px monospace;color:#666;';document.getElementById('editor-container').insertBefore(r,document.getElementById('editor'));}
 </script>
 
 </body>
