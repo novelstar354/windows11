@@ -116,6 +116,7 @@ input{width:100%;height:100%;border:none;outline:none;text-align:center;font-fam
 <div id="toolbar">
   <div class="excel-ribbon-panel active" id="excel-home">
     <button onclick="saveExcelAs()">名前を付けて保存</button>
+    <button onclick="saveExcel()">保存</button>
     <button onclick="openExcelFilePicker()">開く</button>
     <button onclick="addRow()">行+</button>
     <button onclick="addCol()">列+</button>
@@ -349,6 +350,11 @@ function initSheet(){
   sheets.push(data);
   sheetNames.push("Sheet"+sheets.length);
 }
+function saveExcel(){
+    saveSheets();
+    flashExcel("保存しました");
+}
+// 自動保存はしない。保存は「保存」または「名前を付けて保存」を押したときだけ実行する。
 function saveSheets(){
   // Excel自身の保存
   localStorage.setItem("excelJS_sheets", JSON.stringify(sheets));
@@ -468,7 +474,7 @@ function build(){
     cell.formula=input.value;
     updateCell(r,c);
     calculateAll();   // 追加
-    saveSheets();
+
 }
       input.onmousedown=()=>{clearSelect(); selectedRange=[input]; td.classList.add("selected");}
       input.onmouseover=e=>{if(e.buttons===1){selectedRange.push(input); td.classList.add("selected");}}
@@ -502,7 +508,7 @@ const name=prompt("シート名を入力",sheetNames[i]);
 
 if(name){
 sheetNames[i]=name;
-saveSheets();
+
 buildTabs();
 }
 
@@ -512,7 +518,7 @@ buildTabs();
       const name=prompt("シート名を入力", sheetNames[i]);
       if(name){
         sheetNames[i]=name;
-        saveSheets();
+
         buildTabs();
       }
     };
@@ -540,7 +546,7 @@ buildTabs();
 
       build();
       calculateAll();
-      saveSheets();
+
     };
 
     sheetTabs.appendChild(tab);
@@ -558,10 +564,10 @@ buildTabs();
   build();
   calculateAll();
   buildTabs();
-  saveSheets();
+
 }
 // ---------- 操作 ----------
-function addSheet(){initSheet(); build(); saveSheets();}
+function addSheet(){initSheet(); build(); }
 function clearSelect(){document.querySelectorAll(".selected").forEach(e=>e.classList.remove("selected")); selectedRange=[];}
 function getCell(r,c){return document.querySelector(`input[data-r="${r}"][data-c="${c}"]`);}
 function addRow() {
@@ -574,7 +580,7 @@ function addRow() {
         s.push(row);
     });
     build();
-    saveSheets();
+
 }
 function addCol() {
     if (cols >= 100) return; // 100列まで許可
@@ -582,7 +588,7 @@ function addCol() {
     colWidths.push(90);
     sheets.forEach(s => s.forEach(r => r.push({formula:"", value:"", dependents:[]})));
     build();
-    saveSheets();
+
 }
 function deleteRows() {
     if (rows <= 1) {
@@ -610,7 +616,7 @@ function deleteRows() {
 
     build();
     calculateAll();
-    saveSheets();
+
     clearSelect();
 }
 function deleteCols() {
@@ -644,7 +650,7 @@ function deleteCols() {
 
     build();
     calculateAll();
-    saveSheets();
+
     clearSelect();
 }
 
@@ -987,15 +993,15 @@ formulaBar.oninput=()=>{
     const r=selectedCell.dataset.r, c=selectedCell.dataset.c;
     sheets[currentSheet][r][c].formula=formulaBar.value;
     updateCell(r,c);
-    saveSheets();
+
   }
 }
 
 // ---------- 履歴 ----------
 function recordHistory(){history.push(JSON.stringify(sheets)); if(history.length>100) history.shift();}
-function undo(){if(history.length===0) return; redoStack.push(JSON.stringify(sheets)); sheets=JSON.parse(history.pop()); build(); calculateAll(); saveSheets();}
-function redo(){if(redoStack.length===0) return; history.push(JSON.stringify(sheets)); sheets=JSON.parse(redoStack.pop()); build(); calculateAll(); saveSheets();}
-function clearAll(){if(!confirm("全てのセルを削除しますか？")) return; sheets.forEach(s=>s.forEach(r=>{for(let c=0;c<r.length;c++) r[c]={formula:"",value:"",dependents:[]};})); build(); saveSheets();}
+function undo(){if(history.length===0) return; redoStack.push(JSON.stringify(sheets)); sheets=JSON.parse(history.pop()); build(); calculateAll(); }
+function redo(){if(redoStack.length===0) return; history.push(JSON.stringify(sheets)); sheets=JSON.parse(redoStack.pop()); build(); calculateAll(); }
+function clearAll(){if(!confirm("全てのセルを削除しますか？")) return; sheets.forEach(s=>s.forEach(r=>{for(let c=0;c<r.length;c++) r[c]={formula:"",value:"",dependents:[]};})); build(); }
 
 // ---------- 関数パネル ----------
 function showFunctions(){document.getElementById("functionPanel").style.display="block";}
@@ -1072,7 +1078,7 @@ sheets[currentSheet][r][c]=JSON.parse(JSON.stringify(item.data));
 
 build();
 calculateAll();
-saveSheets();
+
 
 }
 
@@ -1362,30 +1368,30 @@ function flashExcel(message){
 function insertExcelDate(){
   if(!selectedCell){flashExcel('セルを選択してください');return;}
   const r=+selectedCell.dataset.r,c=+selectedCell.dataset.c,v=new Date().toLocaleDateString('ja-JP');
-  sheets[currentSheet][r][c].value=v;sheets[currentSheet][r][c].formula=v;selectedCell.value=v;saveSheets();
+  sheets[currentSheet][r][c].value=v;sheets[currentSheet][r][c].formula=v;selectedCell.value=v;
 }
 function insertExcelTime(){
   if(!selectedCell){flashExcel('セルを選択してください');return;}
   const r=+selectedCell.dataset.r,c=+selectedCell.dataset.c,v=new Date().toLocaleTimeString('ja-JP');
-  sheets[currentSheet][r][c].value=v;sheets[currentSheet][r][c].formula=v;selectedCell.value=v;saveSheets();
+  sheets[currentSheet][r][c].value=v;sheets[currentSheet][r][c].formula=v;selectedCell.value=v;
 }
 function insertExcelFormula(formula){
   if(!selectedCell){flashExcel('セルを選択してください');return;}
   const r=+selectedCell.dataset.r,c=+selectedCell.dataset.c; selectedCell.value=formula;
-  sheets[currentSheet][r][c].formula=formula;updateCell(r,c);calculateAll();saveSheets();
+  sheets[currentSheet][r][c].formula=formula;updateCell(r,c);calculateAll();
 }
 function insertExcelTable(){
   if(!selectedCell){flashExcel('開始セルを選択してください');return;}
   const r=+selectedCell.dataset.r,c=+selectedCell.dataset.c;
   for(let y=0;y<3;y++)for(let x=0;x<3;x++)if(r+y<rows&&c+x<cols){const cell=sheets[currentSheet][r+y][c+x];cell.value=y===0?'項目'+(x+1):'データ';cell.formula=cell.value;}
-  build();calculateAll();saveSheets();flashExcel('3×3テーブルを挿入しました');
+  build();calculateAll();flashExcel('3×3テーブルを挿入しました');
 }
 function autoFitExcelColumns(){colWidths=colWidths.map(()=>120);build();flashExcel('列幅を調整しました');}
 function setExcelGrid(show){document.getElementById('sheet').style.borderCollapse=show?'collapse':'separate';flashExcel(show?'グリッド線を表示':'グリッド線を非表示');}
 function sortExcelCurrentColumn(desc=false){
   if(!selectedCell){flashExcel('列を選択してください');return;}
   const c=+selectedCell.dataset.c;sheets[currentSheet].sort((a,b)=>{const n=String(a[c]?.value||'').localeCompare(String(b[c]?.value||''),'ja',{numeric:true});return desc?-n:n;});
-  build();calculateAll();saveSheets();flashExcel('並べ替えました');
+  build();calculateAll();flashExcel('並べ替えました');
 }
 function focusExcelCell(){if(selectedCell){selectedCell.scrollIntoView({block:'center',inline:'center'});selectedCell.focus();}else flashExcel('セルを選択してください');}
 
@@ -1397,18 +1403,18 @@ function selectedExcelData(){
 function insertExcelText(){
   if(!selectedCell){flashExcel('セルを選択してください');return;}
   const v=prompt('入力する文字','文字'); if(v===null)return;
-  selectedCell.value=v; selectedExcelData().formula=v; updateCell(Number(selectedCell.dataset.r),Number(selectedCell.dataset.c)); saveSheets();
+  selectedCell.value=v; selectedExcelData().formula=v; updateCell(Number(selectedCell.dataset.r),Number(selectedCell.dataset.c)); 
 }
 function insertExcelLink(){
   if(!selectedCell){flashExcel('セルを選択してください');return;}
   const url=prompt('URLを入力','https://'); if(!url)return;
   const label=prompt('表示文字',url)||url;
-  selectedExcelData().formula=label+' ('+url+')'; selectedExcelData().value=label+' ('+url+')'; build(); saveSheets();
+  selectedExcelData().formula=label+' ('+url+')'; selectedExcelData().value=label+' ('+url+')'; build(); 
 }
 function setSelectedColumnWidth(){
   if(!selectedCell){flashExcel('セルを選択してください');return;}
   const c=Number(selectedCell.dataset.c), v=parseInt(prompt('列幅(px)',String(colWidths[c])));
-  if(!isNaN(v)&&v>30){colWidths[c]=v;build();saveSheets();}
+  if(!isNaN(v)&&v>30){colWidths[c]=v;build();}
 }
 function setSelectedRowHeight(){
   if(!selectedCell){flashExcel('セルを選択してください');return;}
@@ -1427,11 +1433,11 @@ function setCellTextColor(){
 }
 function duplicateCurrentSheet(){
   const copy=JSON.parse(JSON.stringify(sheets[currentSheet]));
-  sheets.splice(currentSheet+1,0,copy); sheetNames.splice(currentSheet+1,0,(sheetNames[currentSheet]||'Sheet')+' のコピー'); currentSheet++; build();calculateAll();saveSheets();
+  sheets.splice(currentSheet+1,0,copy); sheetNames.splice(currentSheet+1,0,(sheetNames[currentSheet]||'Sheet')+' のコピー'); currentSheet++; build();calculateAll();
 }
 function clearSelectedCells(){
   if(!selectedRange.length){flashExcel('セルを選択してください');return;}
-  selectedRange.forEach(x=>{const r=+x.dataset.r,c=+x.dataset.c;sheets[currentSheet][r][c]={formula:'',value:'',dependents:[]};}); build();saveSheets();
+  selectedRange.forEach(x=>{const r=+x.dataset.r,c=+x.dataset.c;sheets[currentSheet][r][c]={formula:'',value:'',dependents:[]};}); build();
 }
 function setExcelZoom(){
   const z=parseInt(prompt('ズーム（50〜150）','100')); if(isNaN(z))return; document.getElementById('sheetWrap').style.zoom=Math.max(50,Math.min(150,z))/100;
